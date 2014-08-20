@@ -1,8 +1,10 @@
 ztmtoosm
 ========
 aby skompilować wystarczy podać plik htmlgenerator.cpp
-uruchom ./htmlgenerator plikosm plikztm wyjsciehtml [wyjsciecsv]
-
+uruchom
+```
+./htmlgenerator plikosm plikztm wyjsciehtml [wyjsciecsv]
+```
 plikosm - plik *.osm z danymi
 plikztm - plik z bazy danych ztm
 wyjsciehtml - tu będzie zapisany html
