@@ -156,8 +156,8 @@ int main(int argc, char** argv)
 		string id=ztm.dane[j].id;
 		akt_lon=ztm.dane[j].lon;
 		akt_lat=ztm.dane[j].lat;
-		if(id[4]<'5')
-		{
+	//	if(id[4]<'5')
+	//	{
 			html<<"<tr>";
 			html<<"<td>"<<akt_lon<<"</td>";
 			html<<"<td>"<<akt_lat<<"</td>";
@@ -202,7 +202,7 @@ int main(int argc, char** argv)
 			}
 			html<<"</td>";
 			html<<"</tr>"<<endl;
-		}
+	//	}
 	}
 	html<<"</table></html>"<<endl;
 }
