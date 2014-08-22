@@ -1,6 +1,6 @@
 ztmtoosm
 ========
-aby skompilować wystarczy podać plik htmlgenerator.cpp
+aby skompilować: g++ htmlgenerator.cpp stringspecial.cpp -o htmlgenerator
 
 uruchom
 ```
