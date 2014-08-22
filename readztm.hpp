@@ -3,21 +3,51 @@
 #include <vector>
 #include <cstring>
 #include <sstream>
+#include "stringspecial.hpp"
 using namespace std;
 #ifndef READZTM_HPP
 #define READZTM_HPP
-struct plik2
+struct przystanek
 {
 	string name;
 	string id;
 	double lon;
 	double lat;
 };
+enum typ_postoju
+{
+
+};
+enum dni_kursowania
+{
+
+};
+struct postoj
+{
+	string stop_id;
+	int time;
+	typ_postoju typ;
+};
+struct kurs
+{
+	string linia;
+	vector <postoj> postoje;
+	dni_kursowania dni;
+};
 class ztmread
 {
+	string sciez;
 	public:
-	vector <plik2> dane;
-	ztmread (string sciez)
+	virtual void nowy_kurs(kurs nowy)
+	{
+	}
+	virtual void nowy_przystanek(przystanek nowy)
+	{
+	}
+	ztmread (string sciezka) : sciez(sciezka)
+	{
+	}
+	void run()
 	{
 		fstream plik;
 		plik.open(sciez.c_str());
@@ -62,8 +92,6 @@ class ztmread
 			wynik2+=wynik[i];
 		return wynik2;
 	}
-
-
 	void readobszar(string nazwa, fstream& plik)
 	{
 		nazwa="#"+nazwa;
@@ -81,6 +109,7 @@ class ztmread
 	}
 	void readwk(string nazwa, fstream& plik, string nazwa2)
 	{
+		vector <postoj> postoje;
 		nazwa="#"+nazwa;
 		char data[100000];
 		bool ok=1;
@@ -100,10 +129,28 @@ class ztmread
 				plt>>type;
 				string time;
 				plt>>time;
+				postoj foo;
+				int czas=get_times(time)*60;
+				if(czas<(3*60*60))
+					czas+=(1440*60);
+				foo.time=czas;
+				foo.stop_id=id;
+				postoje.push_back(foo);
 				if(!plt.eof())
 				{
 					string zik;
 					plt>>zik;
+					if(zik=="P")
+					{
+						if(type=="DP")
+						{
+							kurs nowy;
+							nowy.postoje=postoje;
+							cout<<nazwa2<<endl;
+							nowy_kurs(nowy);
+						}
+						postoje.clear();
+					}
 				}
 			}
 		}
@@ -204,12 +251,12 @@ class ztmread
 				}
 				if(x1>10 && y1>10)
 				{
-					plik2 foo;
+					przystanek foo;
 					foo.name=akt;
 					foo.id=lll;
 					foo.lon=x1;
 					foo.lat=y1;
-					dane.push_back(foo);
+					nowy_przystanek(foo);
 				}
 				pominlinie(licz, plik);
 			}
@@ -242,6 +289,19 @@ class ztmread
 				}
 			}
 		}
+	}
+};
+class ztmread_for_html : public ztmread
+{
+	public:
+	vector <przystanek> dane;
+	ztmread_for_html (string sciez) : ztmread(sciez)
+	{
+		run();
+	}
+	virtual void nowy_przystanek(przystanek nowy)
+	{
+		dane.push_back(nowy);
 	}
 };
 #endif

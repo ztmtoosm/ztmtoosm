@@ -142,11 +142,11 @@ int main(int argc, char** argv)
 	if(argc>3)
 	{
 		fstream wyj(argv[4], ios::out | ios::trunc);
-		wyj<<"longitude;latitude;highway;name;ref"<<endl;
 	}
+	wyj<<"longitude;latitude;highway;name;ref"<<endl;
 	char data[20000];
 	string arg2=argv[2];
-	ztmread ztm(arg2);
+	ztmread_for_html ztm(arg2);
 	int s9=ztm.dane.size();
 	cout<<"Obróbka danych..."<<endl;
 	html.precision(9);
@@ -179,6 +179,7 @@ int main(int argc, char** argv)
 			html<<"<td>";
 			if(position_lista.find(id)!=position_lista.end())
 			{
+				
 				long long idt=position_lista[id]->id;
 				double tlon=position_lista[id]->lon;
 				double tlat=position_lista[id]->lat;
@@ -186,13 +187,19 @@ int main(int argc, char** argv)
 				html<<"otagowany tym refem stop_position: "<<dist*1000<<" m; "<<"<a href=\"http://openstreetmap.org/node/"<<idt<<"\" >"<<idt<<"</a>";
 				ok=1;
 			}
+			else
+			{
+				if(ok)
+				{
+					wyj<<akt_lon<<";"<<akt_lat<<";bus_stop;"<<name<<" "<<id[4]<<id[5]<<";"<<id<<endl;
+				}
+			}
 			html<<"</td>";
 			html<<"<td>";
 
 
 			if(!ok)
 			{
-				wyj<<akt_lon<<";"<<akt_lat<<";bus_stop;"<<name<<" "<<id[4]<<id[5]<<";"<<id<<endl;
 				sort(listka.begin(), listka.end(), srt);
 				for(int i=0; i<1; i++)
 				{
