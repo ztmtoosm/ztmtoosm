@@ -66,11 +66,13 @@ class ztmread
 			}
 			if(roftl=="ZP")
 				readzp(roftl, plik);
-			if(roftl=="LL")
-				readll(roftl, plik);
-			
 			else
-				readobszar(roftl, plik);
+			{
+				if(roftl=="LL")
+					readll(roftl, plik);
+				else
+					readobszar(roftl, plik);
+			}
 		}
 	}
 	private:
@@ -149,7 +151,8 @@ class ztmread
 						{
 							kurs nowy;
 							nowy.postoje=postoje;
-							cout<<nazwa2<<endl;
+							nowy.linia=nazwa2;
+							//cout<<nazwa2<<endl;
 							nowy_kurs(nowy);
 						}
 						postoje.clear();
