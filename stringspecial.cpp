@@ -1,4 +1,4 @@
-#include "../stringspecial.hpp"
+#include "stringspecial.hpp"
 int toint(string dat)
 {
 	stringstream dd;

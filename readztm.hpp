@@ -66,6 +66,9 @@ class ztmread
 			}
 			if(roftl=="ZP")
 				readzp(roftl, plik);
+			if(roftl=="LL")
+				readll(roftl, plik);
+			
 			else
 				readobszar(roftl, plik);
 		}
