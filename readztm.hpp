@@ -1,3 +1,5 @@
+#ifndef READZTM_HPP
+#define READZTM_HPP
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -5,18 +7,9 @@
 #include <sstream>
 #include "stringspecial.hpp"
 using namespace std;
-#ifndef READZTM_HPP
-#define READZTM_HPP
-struct przystanek
-{
-	string name;
-	string id;
-	double lon;
-	double lat;
-};
 enum typ_postoju
 {
-
+	ZWYKLY, ZJAZDOWY, KONCOWY
 };
 enum dni_kursowania
 {
@@ -34,6 +27,15 @@ struct kurs
 	vector <postoj> postoje;
 	dni_kursowania dni;
 };
+struct przystanek
+{
+	string name;
+	string id;
+	double lon;
+	double lat;
+};
+
+
 class ztmread
 {
 	string sciez;
@@ -42,6 +44,9 @@ class ztmread
 	{
 	}
 	virtual void nowy_przystanek(przystanek nowy)
+	{
+	}
+	virtual void nowa_linia(string nazwa, vector <vector <string> > trasy)
 	{
 	}
 	ztmread (string sciezka) : sciez(sciezka)
@@ -141,20 +146,22 @@ class ztmread
 				foo.time=czas;
 				foo.stop_id=id;
 				postoje.push_back(foo);
+				foo.typ=ZWYKLY;
 				if(!plt.eof())
 				{
 					string zik;
 					plt>>zik;
+					if(zik=="B")
+					{
+						foo.typ=ZJAZDOWY;
+					}
 					if(zik=="P")
 					{
-						if(type=="DP")
-						{
-							kurs nowy;
-							nowy.postoje=postoje;
-							nowy.linia=nazwa2;
-							//cout<<nazwa2<<endl;
-							nowy_kurs(nowy);
-						}
+						foo.typ=KONCOWY;
+						kurs nowy;
+						nowy.postoje=postoje;
+						nowy.linia=nazwa2;
+						nowy_kurs(nowy);
 						postoje.clear();
 					}
 				}
@@ -188,6 +195,7 @@ class ztmread
 	}
 	void readll(string nazwa, fstream& plik)
 	{
+		vector <vector <string> > trasy;
 		nazwa="#"+nazwa;
 		char data[100000];
 		bool ok=1;
@@ -201,16 +209,70 @@ class ztmread
 			if(lll==nazwa)
 				ok=0;
 			if(lll=="*WK")
+			{
+				nowa_linia(nazwa1, trasy);
 				readwk("WK", plik, nazwa1);
+			}
+			if(lll=="*LW")
+			{
+				trasy.push_back(readlw("LW", plik));
+			}
 			if(lll=="Linia:")
 			{
+				trasy.clear();
 				string pup;
 				plt>>pup;
 				nazwa1=pup;
 			}
 		}
 	}
-
+	string searchdigits(string data2)
+	{
+		for(int i=0; i<data2.length()-6; i++)
+		{
+			bool ok=1;
+			for(int j=0; j<6; j++)
+			{
+				if(data2[i+j]<'0' || data2[i+j]>'9')
+					ok=0;
+			}
+			string wynik;
+			if(ok)
+			{
+				for(int j=0; j<6; j++)
+					wynik+=data2[i+j];
+				return wynik;
+			}
+		}
+		return "";
+	}
+	vector <string> readlw(string nazwa, fstream& plik)
+	{
+		vector <string> lista_przystankow;
+		nazwa="#"+nazwa;
+		char data[100000];
+		bool ok=1;
+		string aktnazwa;
+		while(ok && plik.getline(data, 100000))
+		{
+			stringstream plt;
+			plt<<data;
+			string lll;
+			plt>>lll;
+			if(lll==nazwa)
+				ok=0;
+			else
+			{
+				string data2=data;
+				string stop=searchdigits(data2);
+				if(stop!="")
+				{
+					lista_przystankow.push_back(stop);
+				}
+			}
+		}
+		return lista_przystankow;
+	}
 	void readpr(string nazwa, fstream& plik, string akt)
 	{
 		nazwa="#"+nazwa;
@@ -255,15 +317,12 @@ class ztmread
 						plt>>x1;
 					}
 				}
-				if(x1>10 && y1>10)
-				{
-					przystanek foo;
-					foo.name=akt;
-					foo.id=lll;
-					foo.lon=x1;
-					foo.lat=y1;
-					nowy_przystanek(foo);
-				}
+				przystanek foo;
+				foo.name=akt;
+				foo.id=lll;
+				foo.lon=x1;
+				foo.lat=y1;
+				nowy_przystanek(foo);
 				pominlinie(licz, plik);
 			}
 		}
@@ -295,19 +354,6 @@ class ztmread
 				}
 			}
 		}
-	}
-};
-class ztmread_for_html : public ztmread
-{
-	public:
-	vector <przystanek> dane;
-	ztmread_for_html (string sciez) : ztmread(sciez)
-	{
-		run();
-	}
-	virtual void nowy_przystanek(przystanek nowy)
-	{
-		dane.push_back(nowy);
 	}
 };
 #endif

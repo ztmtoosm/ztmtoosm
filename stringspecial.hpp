@@ -12,6 +12,7 @@
 using namespace std;
 int toint(string dat);
 string tostring(int alfa);
+double distance(double long1, double lat1, double long2, double lat2);
 double distance(long long laong1, long long laat1, long long laong2, long long laat2);
 int stringtoint(string abc);
 double stringtodouble(string abc);
@@ -21,6 +22,14 @@ vector <string> rozdziel(char* slowo);
 double todouble(string data);
 int get_times (string time);
 string godz(int godzina);
+template <typename T1> T1 fromstring(string alfa)
+{
+	stringstream foo;
+	foo<<alfa;
+	T1 foo2;
+	foo>>foo2;
+	return foo2;
+}
 struct dat
 {
 	vector <string> dd;
