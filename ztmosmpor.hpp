@@ -157,8 +157,6 @@ class ztmread_for_html : public ztmread
 	}
 	void nowa_linia(string nazwa, vector <vector <string> > trasy)
 	{
-		cout<<nazwa<<endl;
-		dane.clear();
 		int s1=trasy.size();
 		vector <vector <przystanek_big> > dane_tmp_big;
 		for(int i=0; i<s1; i++)

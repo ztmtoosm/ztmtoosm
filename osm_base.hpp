@@ -426,7 +426,6 @@ pair <long long, vector <long long> > relacje_linia(osm_base& roo, long long roo
 	pair<long long, vector <long long> > wynik;
 	wynik.first=0;
 	relation akt=roo.relations[root];
-	cout<<akt.id<<endl;
 	if(akt.tags["ref"]==linia)
 	{
 		if(akt.tags["type"]=="route")
@@ -488,7 +487,7 @@ set <string> extract_ref(osm_base& baza, long long rel)
 	return wynik;
 }
 
-bool szukaj_na_drogach(osm_base& baza, long long rel, set<long long> nodes_to_be)
+map <long long, string> szukaj_na_drogach(osm_base& baza, long long rel, map<long long, string> nodes_to_be)
 {
 	relation akt=baza.relations[rel];
 	int s1=akt.members.size();
@@ -511,6 +510,6 @@ bool szukaj_na_drogach(osm_base& baza, long long rel, set<long long> nodes_to_be
 			}
 		}
 	}
-	return nodes_to_be.empty();
+	return nodes_to_be;
 }
 #endif

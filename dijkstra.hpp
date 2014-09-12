@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <sstream>
+#include "osm_base.hpp"
 using namespace std;
 using namespace rapidxml;
 
@@ -187,9 +188,13 @@ struct dijkstra
 				if(akt_tags["highway"]=="unclassified")
 					przelicznik=1.2;
 				if(akt_tags["highway"]=="service")
-					przelicznik=1.2;
+					przelicznik=1.15;
 				if(akt_tags["highway"]=="living_street")
-					przelicznik=1.2;
+					przelicznik=1.3;
+				if(akt_tags["routing:ztm"]=="yes")
+					przelicznik=0.8;
+				if(akt_tags["access"]=="private")
+					przelicznik=0;
 		
 			}
 			if(przelicznik>0)

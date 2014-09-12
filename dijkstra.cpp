@@ -199,7 +199,6 @@ int main(int argc, char** argv)
 				high_stops[akt_linia].push_back(hig1);
 			}
 		}
-		cout<<"ok1"<<endl;
 		if(ok && ok2)
 		{
 			for(int g=0; g<ids[akt_linia].size(); g++)
@@ -232,7 +231,6 @@ int main(int argc, char** argv)
 		}
 		it1++;
 	}
-	cout<<"PART1 DONE"<<endl;
 	map<string, vector <vector <long long> > >::iterator it7=ids.begin();
 	plik5<<"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx>"<<endl;
 	while(it7!=ids.end())
@@ -244,7 +242,6 @@ int main(int argc, char** argv)
 		vector <long long> relation_ids;
 		vector <long long> prop_id=relacje_linia(bazuka, 3651336,akt_linia).second;
 		it1=ztm.dane_linia.find(akt_linia);
-		cout<<it1->second.size()<<" "<<ids[akt_linia].size()<<endl;
 		for(int g=0; g<ids[akt_linia].size(); g++)
 		{
 			long long aktoo=-1;
@@ -287,7 +284,6 @@ int main(int argc, char** argv)
 			}
 			for(int i=0; i<way_id2.size(); i++)
 			{
-				cout<<way_id2[i]<<" ";
 				wyb_w.insert(way_id2[i]);
 				relation_member foo;
 				foo.member_type=WAY;
@@ -295,7 +291,6 @@ int main(int argc, char** argv)
 				foo.role="";
 				rel.members.push_back(foo);
 			}
-			cout<<endl;
 			for(int i=0; i<high_stops[akt_linia][g].size(); i++)
 			{
 				string role="stop";
