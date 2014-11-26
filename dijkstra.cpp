@@ -18,20 +18,25 @@ struct way_part_data
 
 struct dij_data
 {
+	bool ok;
 	vector <long long> all_nodes;
 	vector <long long> all_ways;
 	map<long long, set<long long> > split_data;
-	dij_data(vector <long long> stop_nodes, dijkstra& dij)
+	dij_data(vector <long long> stop_nodes, dijkstra* dij)
 	{
+		ok=1;
 		vector <way_part_data> dtt;
 		int s5=stop_nodes.size();
 		for(int i=0; i<s5-1; i++)
 		{
-			dij.oblicz(stop_nodes[i], stop_nodes[i+1]);
-			punkt* from = dij.punkty[stop_nodes[i]];
-			punkt* destination = dij.punkty[stop_nodes[i+1]];
-			if(destination==NULL)
+			if(ok)
 			{
+			dij->oblicz(stop_nodes[i], stop_nodes[i+1]);
+			punkt* from = dij->punkty[stop_nodes[i]];
+			punkt* destination = dij->punkty[stop_nodes[i+1]];
+			if(from==NULL || destination==NULL)
+			{
+				ok=0;
 			}
 			else
 			{
@@ -70,6 +75,7 @@ struct dij_data
 				{
 					dtt.push_back(dtt2[j]);
 				}
+			}
 			}
 		}
 		long long akt_way=-1;
@@ -116,47 +122,354 @@ string nazwa_skrocona(string nazwa)
 	return wynik;
 }
 
+set <long long> merge(vector <dijkstra* > dij)
+{
+	set <long long> wynik;
+	for(int i=0; i<dij.size(); i++)
+	{
+		wynik.insert(dij[i]->eee3.begin(), dij[i]->eee3.end());
+	}
+	return wynik;
+}
+
+struct WariantTrasy
+{
+	dijkstra* dij;
+	string nazwa;
+	int wariantId;
+	vector <long long> stopPositions;
+	vector <long long> stopSigns;
+	osm_base* bazaOsm;
+	ztmread_for_html* bazaZtm;
+	void init1()
+	{
+		vector <przystanek_big> przystanki=bazaZtm->dane_linia[nazwa][wariantId];
+		for(int i=0; i<przystanki.size(); i++)
+		{
+			stopPositions.push_back(przystanki[i].stop_position);
+			if(przystanki[i].bus_stop!=0)
+			{
+				stopSigns.push_back(przystanki[i].bus_stop);
+			}
+			else
+			{
+				stopSigns.push_back(przystanki[i].stop_position);
+			}
+		}
+	}
+	void init2()
+	{
+		dij_data d0(stopPositions, dij);
+		if(d0.ok)
+		{
+			map <long long, set<long long> >::iterator it1=d0.split_data.begin();
+			while(it1!=d0.split_data.end())
+			{
+				vector <pair<long long, vector <long long> > > rozd=bazaOsm->rozdziel_way(it1->first, it1->second);
+				for(int i=0; i<rozd.size(); i++)
+				{
+					for(int j=0; j<rozd[i].second.size()-1; j++)
+					{
+						dij->dij_podmien(it1->first, rozd[i].first, rozd[i].second[j], rozd[i].second[j+1]);
+						dij->dij_podmien(it1->first, rozd[i].first, rozd[i].second[j+1], rozd[i].second[j]);
+					}
+				}
+				it1++;
+			}
+		}
+
+	}
+	relation generateRelationWithoutIdVersion()
+	{
+		//TODO BUS
+		string typ_maly="bus";
+		string typ_duzy="Bus";
+		relation rel;
+		rel.modify=1;
+		rel.tags["network"]="ZTM Warszawa";
+		rel.tags["type"]="route";
+		rel.tags["route"]=typ_maly;
+		rel.tags["ref"]=nazwa;
+		map <string, vector< vector<przystanek_big> > >::iterator it1=bazaZtm->dane_linia.find(nazwa);
+		rel.tags["name"]=typ_duzy+" "+nazwa+": "+nazwa_skrocona((it1->second)[wariantId][0].name_osm)+" => "+nazwa_skrocona((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm);
+		rel.tags["from"]=nazwa_skrocona((it1->second)[wariantId][0].name_osm);
+		rel.tags["to"]=nazwa_skrocona((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm);
+		/*
+		rel.tags["note"]="stan na "+today;
+		*/
+		rel.tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
+		dij_data d1(stopPositions, dij);
+		vector <long long> wszystkieDrogi=d1.all_ways;
+		vector <long long> wszystkieWierzcholki=d1.all_nodes;
+		for(int i=0; i<wszystkieDrogi.size(); i++)
+		{
+			relation_member foo;
+			foo.member_type=WAY;
+			foo.member_id=wszystkieDrogi[i];
+			foo.role="";
+			rel.members.push_back(foo);
+		}
+		for(int i=0; i<stopSigns.size(); i++)
+		{
+			string role="stop";
+			if(i==0)
+				role="stop_entry_only";
+			if(i==stopSigns.size()-1)
+				role="stop_exit_only";
+			relation_member foo;
+			foo.member_type=NODE;
+			foo.member_id=stopSigns[i];
+			foo.role=role;
+			rel.members.push_back(foo);
+		}
+		return rel;
+	}
+	void generateGPX(ostream& plik5)
+	{
+		dij_data d1(stopPositions, dij);
+		vector <long long> wszystkieWierzcholki=d1.all_nodes;
+		plik5<<"<trk>"<<endl;
+		plik5<<"<name>"<<nazwa<<" wariant "<<wariantId<<"</name>"<<endl;
+		plik5<<"<trkseg>"<<endl;
+		for(int i=0; i<wszystkieWierzcholki.size(); i++)
+		{
+			plik5<<"<trkpt lat=\""<<bazaOsm->nodes[wszystkieWierzcholki[i]].lat<<"\" lon=\""<<bazaOsm->nodes[wszystkieWierzcholki[i]].lon<<"\"></trkpt>"<<endl;
+		}
+		plik5<<"</trkseg>"<<endl;
+		plik5<<"</trk>"<<endl;
+	}
+	WariantTrasy(ztmread_for_html* bazaZtmW, osm_base* bazaOsmW, dijkstra* dijW, string nazwaW, int wariantIdW)
+	{
+		bazaZtm=bazaZtmW;
+		bazaOsm=bazaOsmW;
+		dij=dijW;
+		nazwa=nazwaW;
+		wariantId=wariantIdW;
+		init1();
+		init2();	
+	}
+};
+class PrzegladanieCzyPrawidloweLinie
+{
+	set <string> doPrzerobienia;
+	bool sprawdzLinie(string linia, vector <vector <przystanek_big> > drugi)
+	{
+		if(doPrzerobienia.find(linia)==doPrzerobienia.end())
+			return false;
+		int s9=drugi.size();
+		for(int i=0; i<s9; i++)
+		{
+			int s8=(drugi)[i].size();
+			vector <long long> ids1;
+			vector <long long> hig1;
+			for(int j=0; j<s8; j++)
+			{
+				przystanek_big& data=(drugi)[i][j];
+				if(data.stop_position==0)
+				{
+					cout<<"error: "<<data.name<<"-"<<data.id<<": "<<"BRAK STOP_POSITION"<<endl;
+					return false;
+				}
+				else
+				{
+					if(data.pos_error)
+					{
+						cout<<"error: "<<data.name<<"-"<<data.id<<": "<<"STOP_POSITION nie leży na drodze"<<endl;
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	public:
+	set <string> prawidlowe;
+	PrzegladanieCzyPrawidloweLinie(ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW)
+	{
+		doPrzerobienia=doPrzerobieniaW;
+		set <string>::iterator it1=doPrzerobienia.begin();
+		while(it1!=doPrzerobienia.end())
+		{
+			if(sprawdzLinie(*it1, bazaZtm->dane_linia[*it1]))
+			{
+				prawidlowe.insert(*it1);
+			}
+			it1++;
+		}
+	}
+};
+struct galk
+{
+	osm_base* bazaOsm;
+	ztmread_for_html* bazaZtm;
+	string ztmBasePath;
+	string osmBasePath;
+	string outPath;
+	string ztmBaseFreshTime;
+	set <string> linieDoPrzerobienia;
+	vector <dijkstra*> algorytmy;
+	map <string, vector <WariantTrasy> > warianty;
+	void readInput(char** argv)
+	{
+		ztmBasePath=argv[1];
+		osmBasePath=argv[2];
+		outPath=argv[3];
+		ztmBaseFreshTime=argv[4];
+		char data[10000];
+		cin.getline(data, 10000);
+		stringstream linki1;
+		linki1<<data;
+		string linki2;
+		while(linki1>>linki2)
+		{
+			linieDoPrzerobienia.insert(linki2);
+		}
+	}
+	void loadAlgorithms()
+	{
+		dijkstra* dijBus = new dijkstra();
+		dijBus->load_permisions();
+		dijBus->laduj_dijkstra_from_base(bazaOsm);
+		DijkstraTram* dijTram = new DijkstraTram();
+		dijTram->laduj_dijkstra_from_base(bazaOsm);
+		DijkstraRail* dijRail = new DijkstraRail();
+		dijRail->laduj_dijkstra_from_base(bazaOsm);
+		algorytmy.push_back(dijBus);
+		algorytmy.push_back(dijTram);
+		algorytmy.push_back(dijRail);
+	}
+	dijkstra* algorithmForLine(string lineName)
+	{
+		if(lineName=="WKD" || lineName[0]=='K' || lineName[0]=='S')
+			return algorytmy[2];
+		else
+			if(lineName.length()<3)
+				return algorytmy[1];
+		return algorytmy[0];
+	}
+	void generujLinie(string nazwa, int linia_licznik, ostream& plik5)
+	{
+		cout<<"GENEROWANIE "<<nazwa<<endl;
+		vector <long long> stareRelacje=relacje_linia(bazaOsm, 3651336, nazwa).second;
+		long long stareId=relacje_linia(bazaOsm, 3651336, nazwa).first;
+		vector <long long> noweRelacje;
+		for(int i=0; i<warianty[nazwa].size(); i++)
+		{
+			warianty[nazwa][i].generateGPX(plik5);
+			relation nowa=warianty[nazwa][i].generateRelationWithoutIdVersion();
+			//GENERUJ ID I WERSJĘ
+			if(i<stareRelacje.size())
+			{
+				nowa.id=stareRelacje[i];
+				nowa.version=bazaOsm->relations[stareRelacje[i]].version;
+			}
+			else
+			{
+				nowa.id=(i*-1)-linia_licznik*100;
+				nowa.version=-1;
+			}
+			noweRelacje.push_back(nowa.id);
+			bazaOsm->relations[nowa.id]=nowa;
+		}
+		for(int i=warianty[nazwa].size(); i<stareRelacje.size(); i++)
+		{
+			bazaOsm->relations[stareRelacje[i]].todelete=true;
+		}
+		cout<<"GENEROWANIE2 "<<nazwa<<endl;
+		//TODO
+		string typ_maly="bus";
+		string typ_duzy="Bus";
+		relation rel;
+		rel.modify=1;
+		rel.id=(-50)-linia_licznik*100;
+		if(stareId!=0)
+			rel.id=stareId;
+		rel.tags["network"]="ZTM Warszawa";
+		rel.tags["type"]="route_master";
+		rel.tags["route_master"]=typ_maly;
+		rel.tags["ref"]=nazwa;
+		rel.tags["url"]="http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+nazwa;
+		rel.tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
+		rel.tags["name"]=typ_duzy+" "+nazwa;
+		for(int g=0; g<noweRelacje.size(); g++)
+		{
+				relation_member foo;
+				foo.member_type=RELATION;
+				foo.member_id=noweRelacje[g];
+				foo.role="";
+				rel.members.push_back(foo);
+		}
+		if(rel.id>0)
+			rel.version=bazaOsm->relations[rel.id].version;
+		bazaOsm->relations[rel.id]=rel;
+	}
+	galk(char** argv)
+	{
+		readInput(argv);
+		bazaOsm = new osm_base(osmBasePath);
+		loadAlgorithms();
+		bazaZtm = new ztmread_for_html (osmBasePath, ztmBasePath, merge(algorytmy));
+		PrzegladanieCzyPrawidloweLinie przegl(bazaZtm, linieDoPrzerobienia);
+		linieDoPrzerobienia=przegl.prawidlowe;
+		set <string>::iterator it1=linieDoPrzerobienia.begin();
+		while(it1!=linieDoPrzerobienia.end())
+		{
+			for(int i=0; i<bazaZtm->dane_linia[*it1].size(); i++)
+			{
+				warianty[*it1].push_back(WariantTrasy(bazaZtm, bazaOsm, algorithmForLine(*it1), *it1, i));
+			}
+			it1++;
+		}
+		map <string, vector<WariantTrasy> >::iterator it2=warianty.begin();
+		string gpxPath = outPath+".gpx";
+		fstream plik5(gpxPath.c_str(), ios::out | ios::trunc);
+		plik5.precision(9);
+		int licznik=0;
+		plik5<<"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx>"<<endl;
+		while(it2!=warianty.end())
+		{
+			generujLinie(it2->first, licznik, plik5);
+			it2++;
+			licznik++;
+		}
+		plik5<<"</gpx>"<<endl;
+		plik5.close();
+		osm_base bazuka3=bazaOsm->wybrane(wyb_n, wyb_w, wyb_r);
+		osm_base bazuka4=bazaOsm->modified();
+		osm_base bazuka2=osm_base(bazuka4, bazuka3);
+		bazuka2.wypisz(outPath);
+	}
+	~galk()
+	{
+		delete bazaOsm;
+		delete bazaZtm;
+	}
+};
 int main(int argc, char** argv)
 {
-	set<long long> wyb_w;
+	galk foo(argv);
+	/*set<long long> wyb_w;
 	set<long long> wyb_n;
 	set<long long> wyb_r;
-	set<string> linki;
-	char data[10000];
-	cin.getline(data, 10000);
-	stringstream linki1;
-	linki1<<data;
-	string linki2;
-	while(linki1>>linki2)
-		linki.insert(linki2);
-	cin.getline(data, 10000);
-	string sciezka=data;
-	string sciezka2=sciezka+".gpx";
-	fstream plik5(sciezka2.c_str(), ios::out | ios::trunc);
-	string arg2=argv[1];
-	string arg5=argv[2];
-	osm_base bazuka(arg5);
-	dijkstra dij;
-	dij.laduj_dijkstra_from_base(bazuka);
-	ztmread_for_html ztm(arg5, arg2, dij.eee3);
 	int s9=ztm.dane.size();
 	map <string, vector< vector<przystanek_big> > >::iterator it1=ztm.dane_linia.begin();
 	bool przerabiaj=1;
 	int linia_licznik=0;
-	map<string, vector <vector <long long> > > ids;
-	map<string, vector <vector <long long> > > high_stops;
+	// map<string, vector <vector <long long> > > ids;
+	// map<string, vector <vector <long long> > > high_stops;
 	while(it1!=ztm.dane_linia.end())
 	{
 		string akt_linia=it1->first;
-	//	if(relacje_linia(bazuka, 3651336,akt_linia).first==0)
-	//		if(relacje_linia(bazuka, 3651336,akt_linia).second.size()==0)
-	//		{
-	//			linki.insert(akt_linia);
-	//		}
+		dijkstra* dij = &dijBus;
+		if(akt_linia=="WKD" || akt_linia[0]=='K' || akt_linia[0]=='S')
+			dij=&dijRail;
+		else
+			if(akt_linia.length()<3)
+				dij=&dijTram;
 		przerabiaj=1;
 		if(linki.find(akt_linia)==linki.end())
 			przerabiaj=0;
-		if(akt_linia.length()>2 && przerabiaj)
+		if(przerabiaj)
 		{
 		cout<<"#"<<akt_linia<<endl;
 		bool ok=1;
@@ -204,23 +517,15 @@ int main(int argc, char** argv)
 			for(int g=0; g<ids[akt_linia].size(); g++)
 			{
 				dij_data d0(ids[akt_linia][g], dij);
-				map <long long, set<long long> >::iterator it1=d0.split_data.begin();
-				while(it1!=d0.split_data.end())
+				if(!d0.ok)
+					ok=0;
+				if(ok && ok2)
 				{
-					vector <pair<long long, vector <long long> > > rozd=bazuka.rozdziel_way(it1->first, it1->second);
-					for(int i=0; i<rozd.size(); i++)
-					{
-						for(int j=0; j<rozd[i].second.size()-1; j++)
-						{
-							dij.dij_podmien(it1->first, rozd[i].first, rozd[i].second[j], rozd[i].second[j+1]);
-							dij.dij_podmien(it1->first, rozd[i].first, rozd[i].second[j+1], rozd[i].second[j]);
-						}
-					}
-					it1++;
+					
 				}
 			}
 		}
-		else
+		if(!ok || !ok2)
 		{
 			if(ids.find(akt_linia)!=ids.end())
 				ids.erase(ids.find(akt_linia));
@@ -231,11 +536,34 @@ int main(int argc, char** argv)
 		}
 		it1++;
 	}
+
+
 	map<string, vector <vector <long long> > >::iterator it7=ids.begin();
 	plik5<<"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx>"<<endl;
 	while(it7!=ids.end())
 	{
 		string akt_linia=it7->first;
+		dijkstra* dij = &dijBus;
+		string typ_maly="bus";
+		string typ_duzy="Bus";
+		if(akt_linia=="WKD" || akt_linia[0]=='K' || akt_linia[0]=='S')
+		{
+			typ_maly="train";
+			if(akt_linia[0]=='S')
+				typ_duzy="SKM";
+			else
+				typ_duzy="Koleje Mazowieckie";
+			dij=&dijRail;
+		}
+		else
+		{
+			if(akt_linia.length()<3)
+			{
+				dij=&dijTram;
+				typ_maly="tram";
+				typ_duzy="Tram";
+			}
+		}
 		string arglin=akt_linia+".gpx";
 		plik5.precision(9);
 		linia_licznik++;
@@ -250,11 +578,13 @@ int main(int argc, char** argv)
 			rel.modify=1;
 			rel.tags["network"]="ZTM Warszawa";
 			rel.tags["type"]="route";
-			rel.tags["route"]="bus";
+			rel.tags["route"]=typ_maly;
 			rel.tags["ref"]=akt_linia;
-			rel.tags["name"]="Bus "+akt_linia+": "+nazwa_skrocona((it1->second)[g][0].name_osm)+" => "+nazwa_skrocona((it1->second)[g][(it1->second)[g].size()-1].name_osm);
+			rel.tags["name"]=typ_duzy+" "+akt_linia+": "+nazwa_skrocona((it1->second)[g][0].name_osm)+" => "+nazwa_skrocona((it1->second)[g][(it1->second)[g].size()-1].name_osm);
 			rel.tags["from"]=nazwa_skrocona((it1->second)[g][0].name_osm);
 			rel.tags["to"]=nazwa_skrocona((it1->second)[g][(it1->second)[g].size()-1].name_osm);
+			rel.tags["note"]="stan na "+today;
+			rel.tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
 			long long kand_id=(g*-1)-linia_licznik*100;
 			if(prop_id.size()>0)
 			{
@@ -263,8 +593,9 @@ int main(int argc, char** argv)
 				{
 					cout<<i+1<<" "<<bazuka.relations[prop_id[i]].tags["name"]<<" "<<prop_id[i]<<endl;
 				}
-				int kand2;
-				cin>>kand2;
+				int kand2=0;
+				if(czy_rel)
+					cin>>kand2;
 				if(kand2>0)
 				{
 					kand_id=prop_id[kand2-1];
@@ -318,9 +649,12 @@ int main(int argc, char** argv)
 			rel.id=prop_ids;
 		rel.tags["network"]="ZTM Warszawa";
 		rel.tags["type"]="route_master";
-		rel.tags["route_master"]="bus";
+		rel.tags["route_master"]=typ_maly;
 		rel.tags["ref"]=akt_linia;
-		rel.tags["name"]="Bus "+akt_linia;
+		rel.tags["url"]="http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+akt_linia;
+		rel.tags["note"]="stan na "+today;
+		rel.tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
+		rel.tags["name"]=typ_duzy+" "+akt_linia;
 		for(int g=0; g<relation_ids.size(); g++)
 		{
 				relation_member foo;
@@ -340,11 +674,10 @@ int main(int argc, char** argv)
 	osm_base bazuka4=bazuka.modified();
 	osm_base bazuka2=osm_base(bazuka4, bazuka3);
 	bazuka2.wypisz(sciezka);
-	cout<<"WYPISANO NASTĘPUJĄCE LINIE/RELACJE: ";
 	it7=ids.begin();
 	while(it7!=ids.end())
 	{
 		cout<<it7->first<<endl;
 		it7++;
-	}
+	}*/
 }

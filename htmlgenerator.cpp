@@ -23,21 +23,32 @@ class csvfile
 	public:
 	csvfile(string sciezka)
 	{
-		cout<<"ok"<<endl;
 		plik.open(sciezka.c_str(), ios::out | ios::trunc);
 		plik<<"longitude;latitude;highway;name;ref"<<endl;
 	}
 	void send(double lon, double lat, string name, string ref)
 	{
-		cout<<"ok+"<<endl;
 		plik<<lon<<";"<<lat<<";bus_stop;"<<name<<";"<<ref<<endl;
 	}
 	
 };
-
+set <long long> merge(set<long long>& a, set <long long>& b)
+{
+	set <long long> wynik;
+	wynik.insert(a.begin(), a.end());
+	wynik.insert(b.begin(), b.end());
+	return wynik;
+}
+set <long long> merge(set<long long>& a, set <long long>& b, set <long long>& c)
+{
+	set <long long> wynik;
+	wynik.insert(a.begin(), a.end());
+	wynik.insert(b.begin(), b.end());
+	wynik.insert(c.begin(), c.end());
+	return wynik;
+}
 int main(int argc, char** argv)
 {
-	cout<<"Ładowanie OSM..."<<endl;
 	fstream html(argv[3], ios::out | ios::trunc);
 	html<<"<html>"<<endl;
 	csvfile csv1((string)argv[4]);
@@ -49,17 +60,23 @@ int main(int argc, char** argv)
 	osm_base bazuka(arg2);
 	dijkstra dij;
 	dij.laduj_dijkstra_from_base(bazuka);
-	cout<<"Ładowanie ZTM..."<<endl;
-	ztmread_for_html ztm(arg2, arg1, dij.eee3);
-	cout<<"Obróbka danych..."<<endl;
+	DijkstraTram dijTra;
+	dijTra.laduj_dijkstra_from_base(bazuka);
+	DijkstraRail dijRail;
+	dijRail.laduj_dijkstra_from_base(bazuka);
+	ztmread_for_html ztm(arg2, arg1, merge(dijRail.eee3, dij.eee3, dijTra.eee3));
 	html.precision(9);
 	map <string, vector< vector<przystanek_big> > >::iterator it1=ztm.dane_linia.begin();
+	set<string> nie_w_porzadku;
 	while(it1!=ztm.dane_linia.end())
 	{
+		bool w_porzadku=1;
 		string akt_linia=it1->first;
 		pair<long long, vector <long long> > akt_rel=relacje_linia(bazuka, 3651336,akt_linia);
 		html<<"<div>";
-		html<<"<b>"<<akt_linia<<"</b> ";
+		html<<"<b>";
+		html<<"<a href=\"http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="<<akt_linia<<"\">";
+		html<<akt_linia<<"</a></b> ";
 		set <string> extr;
 		set <string> extr0;
 		for(int i=0; i<it1->second.size(); i++)
@@ -71,7 +88,6 @@ int main(int argc, char** argv)
 			}
 		}
 		vector <int> longs_wyniki;
-		cout<<"ok1"<<endl;
 		html<<"<a href=\"http://www.openstreetmap.org/relation/"<<akt_rel.first<<"\">"<<akt_rel.first<<"</a></br>";
 		for(int i=0; i<akt_rel.second.size(); i++)
 		{
@@ -81,7 +97,6 @@ int main(int argc, char** argv)
 			set<string>::iterator it3=extr1.begin();
 			map <long long, string> longs;
 			int wynik_part=0;
-			cout<<"ok1.1"<<endl;
 			while(it3!=extr1.end())
 			{
 				if(ztm.dane0.find(*it3)!=ztm.dane0.end())
@@ -93,7 +108,6 @@ int main(int argc, char** argv)
 					wynik_part++;
 				it3++;
 			}
-			cout<<"ok1.2"<<endl;
 			map <long long, string> szu=szukaj_na_drogach(bazuka, akt_rel.second[i], longs);
 			map <long long, string>::iterator it4=szu.begin();
 			while(it4!=szu.end())
@@ -111,7 +125,6 @@ int main(int argc, char** argv)
 			}
 			html<<"</br>"<<endl;
 		}
-		cout<<"ok2"<<endl;
 		set<string>::iterator it3=extr.begin();
 		while(it3!=extr.end())
 		{
@@ -121,6 +134,7 @@ int main(int argc, char** argv)
 				if(ztm.dane0.find(*it3)!=ztm.dane0.end())
 					html<<"-"<<ztm.dane0[*it3].name;
 				html<<" OSM ";
+				w_porzadku=0;
 			}
 			it3++;
 		}
@@ -130,10 +144,12 @@ int main(int argc, char** argv)
 			if(extr.find(*it3)==extr.end())
 			{
 				html<<*it3<<"-"<<ztm.dane0[*it3].name<<" ZTM ";
+				w_porzadku=0;
 			}
 			it3++;
 		}
-		cout<<"ok3"<<endl;
+		if(!w_porzadku)
+			nie_w_porzadku.insert(it1->first);
 		html<<"</br>"<<endl;
 		html<<"</div>"<<endl;
 		it1++;
@@ -154,7 +170,9 @@ int main(int argc, char** argv)
 			html<<"<td>"<<akt_lat<<"</td>";
 			html<<"<td> <a href=\"http://www.openstreetmap.org/#map=19/"<<akt_lat<<"/"<<akt_lon<<"\"/>";
 			html<<name<<" "<<id[4]<<id[5]<<"</a></td>";
-			html<<"<td>"<<id<<"</td>";
+			html<<"<td>";
+			html<<"<a href=\"http://ztm.waw.pl/rozklad_nowy.php?c=183&l=1&a="<<id[0]<<id[1]<<id[2]<<id[3]<<"\">";
+			html<<id<<"</a></td>";
 			bool ok=0;
 			html<<"<td>";
 			if(teraz.bus_stop!=0)
@@ -191,4 +209,12 @@ int main(int argc, char** argv)
 		}
 	}
 	html<<"</table></html>"<<endl;
+	set<string>::iterator it8=nie_w_porzadku.begin();
+	while(it8!=nie_w_porzadku.end())
+	{
+		if((*it8)[0]!='L' && (*it8)[0]!='K' && (*it8)[0]!='S' && *it8!="WKD")
+			cout<<*it8<<" ";
+		it8++;
+	}
+	cout<<endl;
 }

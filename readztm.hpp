@@ -13,7 +13,7 @@ enum typ_postoju
 };
 enum dni_kursowania
 {
-
+	POWSZEDNI, INNY
 };
 struct postoj
 {
@@ -160,6 +160,12 @@ class ztmread
 						foo.typ=KONCOWY;
 						kurs nowy;
 						nowy.postoje=postoje;
+						if(type=="DP")
+							nowy.dni=POWSZEDNI;
+						else
+						{
+							nowy.dni=INNY;
+						}
 						nowy.linia=nazwa2;
 						nowy_kurs(nowy);
 						postoje.clear();
@@ -265,9 +271,10 @@ class ztmread
 			{
 				string data2=data;
 				string stop=searchdigits(data2);
-				if(stop!="")
+				if(stop!="" && stop.length()==6)
 				{
-					lista_przystankow.push_back(stop);
+					if(stop[4]!='7')
+						lista_przystankow.push_back(stop);
 				}
 			}
 		}

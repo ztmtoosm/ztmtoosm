@@ -381,7 +381,8 @@ struct osm_base
 		foo->lat=fromstring<double>(lat->value());
 		foo->lon=fromstring<double>(lon->value());
 		read_every(root, foo);
-		nodes[foo->id]=foo2;
+		if(nodes.find(foo->id)==nodes.end() || nodes[foo->id].version<foo2.version)
+			nodes[foo->id]=foo2;
 	}
 	void load_way(xml_node <>* root)
 	{
@@ -393,7 +394,8 @@ struct osm_base
 			foo->nodes.push_back(fromstring<long long>(val->value()));
 		}
 		read_every(root, foo);
-		ways[foo->id]=foo2;
+		if(ways.find(foo->id)==ways.end() || ways[foo->id].version<foo2.version)
+			ways[foo->id]=foo2;
 	}
 	void load_relation(xml_node <>* root)
 	{
@@ -417,15 +419,16 @@ struct osm_base
 			foo->members.push_back(foo2);
 		}
 		read_every(root, foo);
-		relations[foo->id]=foo2;
+		if(relations.find(foo->id)==relations.end() || relations[foo->id].version<foo2.version)
+			relations[foo->id]=foo2;
 	}
 	
 };
-pair <long long, vector <long long> > relacje_linia(osm_base& roo, long long root, string linia)
+pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long root, string linia)
 {
 	pair<long long, vector <long long> > wynik;
 	wynik.first=0;
-	relation akt=roo.relations[root];
+	relation akt=roo->relations[root];
 	if(akt.tags["ref"]==linia)
 	{
 		if(akt.tags["type"]=="route")
@@ -443,9 +446,9 @@ pair <long long, vector <long long> > relacje_linia(osm_base& roo, long long roo
 		if(akt.members[i].member_type==RELATION)
 		{
 			long long teraz_id=akt.members[i].member_id;
-			if(roo.relations.find(teraz_id)!=roo.relations.end())
+			if(roo->relations.find(teraz_id)!=roo->relations.end())
 			{
-				relation teraz=roo.relations[teraz_id];
+				relation teraz=roo->relations[teraz_id];
 				pair<long long, vector <long long> > tmp=relacje_linia(roo, teraz_id, linia);
 				if(tmp.first!=0)
 				{

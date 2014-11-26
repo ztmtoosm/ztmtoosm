@@ -34,10 +34,10 @@ struct odcinek
 
 struct dijkstra
 {
+	map <long long, double> permisions;
 	map <long long, punkt*> punkty;
 	set <punkt*> odwiedzone;
 	set <pair<double, punkt*> > do_odwiedzenia;
-
 	void usun_do_odwiedzenia(punkt* akt)
 	{
 		set <pair<double, punkt*> >::iterator it1=do_odwiedzenia.find(pair<double, punkt*>(akt->akt_distance, akt));
@@ -46,7 +46,18 @@ struct dijkstra
 			do_odwiedzenia.erase(it1);
 		}
 	}
-
+	void load_permisions()
+	{
+		fstream plik;
+		plik.open(".permisions");
+		long long id;
+		double per;
+		while(plik>>id)
+		{
+			plik>>per;
+			permisions[id]=per;
+		}
+	}
 	void nowa_krawedz_zaznaczona(punkt* akt, odcinek* from, double distance)
 	{
 		if(odwiedzone.find(akt)!=odwiedzone.end())
@@ -70,8 +81,11 @@ struct dijkstra
 		map<long long, punkt*>::iterator it1=punkty.begin();
 		while(it1!=punkty.end())
 		{
-			it1->second->akt_distance=1000000;
-			it1->second->from=NULL;
+			if(it1->second!=NULL)
+			{
+				it1->second->akt_distance=1000000;
+				it1->second->from=NULL;
+			}
 			it1++;
 		}
 	}
@@ -139,15 +153,58 @@ struct dijkstra
 		plik.close();
 	}
 
-	void laduj_dijkstra_from_base(osm_base& bazuka)
+	virtual double getPrzelicznikWagiDrog(int id, map <string, string> akt_tags)
 	{
-		map<long long, way>::iterator it1=bazuka.ways.begin();
-		while(it1!=bazuka.ways.end())
+		double przelicznik =-1;
+		if(akt_tags.find("highway")!=akt_tags.end())
+		{
+			//przelicznik=4;
+			if(akt_tags["highway"]=="motorway")
+				przelicznik=0.8;
+			if(akt_tags["highway"]=="motorway_link")
+				przelicznik=1;
+			if(akt_tags["highway"]=="trunk")
+				przelicznik=0.8;
+			if(akt_tags["highway"]=="trunk_link")
+				przelicznik=1;
+			if(akt_tags["highway"]=="primary")
+				przelicznik=1;
+			if(akt_tags["highway"]=="primary_link")
+				przelicznik=1;
+			if(akt_tags["highway"]=="secondary")
+				przelicznik=1;
+			if(akt_tags["highway"]=="secondary_link")
+				przelicznik=1;
+			if(akt_tags["highway"]=="tertiary")
+				przelicznik=1;
+			if(akt_tags["highway"]=="tertiary_link")
+				przelicznik=1;
+			if(akt_tags["highway"]=="residential")
+				przelicznik=1.2;
+			if(akt_tags["highway"]=="unclassified")
+				przelicznik=1.2;
+			if(akt_tags["highway"]=="service")
+				przelicznik=1.15;
+			if(akt_tags["highway"]=="living_street")
+				przelicznik=1.3;
+			if(akt_tags["routing:ztm"]=="yes")
+				przelicznik=0.8;
+			if(akt_tags["access"]=="private")
+				przelicznik=0;
+		}
+		if(permisions.find(id)!=permisions.end())
+			przelicznik=permisions[id];
+		return przelicznik;
+	}
+
+	void laduj_dijkstra_from_base(osm_base* bazuka)
+	{
+		map<long long, way>::iterator it1=bazuka->ways.begin();
+		while(it1!=bazuka->ways.end())
 		{
 			map <string, string> akt_tags=(it1->second).tags;
 			bool way1=1;
 			bool way2=1;
-			double przelicznik=-1;
 			if(akt_tags["oneway"]=="yes")
 				way2=0;
 			if(akt_tags["oneway"]=="-1")
@@ -160,50 +217,14 @@ struct dijkstra
 				way2=0;
 			if(akt_tags["oneway"]=="no")
 				way2=1;
-			if(akt_tags.find("highway")!=akt_tags.end())
-			{
-				//przelicznik=4;
-				if(akt_tags["highway"]=="motorway")
-					przelicznik=0.8;
-				if(akt_tags["highway"]=="motorway_link")
-					przelicznik=1;
-				if(akt_tags["highway"]=="trunk")
-					przelicznik=0.8;
-				if(akt_tags["highway"]=="trunk_link")
-					przelicznik=1;
-				if(akt_tags["highway"]=="primary")
-					przelicznik=1;
-				if(akt_tags["highway"]=="primary_link")
-					przelicznik=1;
-				if(akt_tags["highway"]=="secondary")
-					przelicznik=1;
-				if(akt_tags["highway"]=="secondary_link")
-					przelicznik=1;
-				if(akt_tags["highway"]=="tertiary")
-					przelicznik=1;
-				if(akt_tags["highway"]=="tertiary_link")
-					przelicznik=1;
-				if(akt_tags["highway"]=="residential")
-					przelicznik=1.2;
-				if(akt_tags["highway"]=="unclassified")
-					przelicznik=1.2;
-				if(akt_tags["highway"]=="service")
-					przelicznik=1.15;
-				if(akt_tags["highway"]=="living_street")
-					przelicznik=1.3;
-				if(akt_tags["routing:ztm"]=="yes")
-					przelicznik=0.8;
-				if(akt_tags["access"]=="private")
-					przelicznik=0;
-		
-			}
+			double przelicznik=getPrzelicznikWagiDrog(it1->first, akt_tags);
 			if(przelicznik>0)
 			{
 				vector <long long> akt_nodes=(it1->second).nodes;
 				int s1=akt_nodes.size();
 				for(int i=0; i<s1-1; i++)
 				{
-					double distance_abs=distance(bazuka.nodes[akt_nodes[i]].lon, bazuka.nodes[akt_nodes[i]].lat, bazuka.nodes[akt_nodes[i+1]].lon, bazuka.nodes[akt_nodes[i+1]].lat)*przelicznik;
+					double distance_abs=distance(bazuka->nodes[akt_nodes[i]].lon, bazuka->nodes[akt_nodes[i]].lat, bazuka->nodes[akt_nodes[i+1]].lon, bazuka->nodes[akt_nodes[i+1]].lat)*przelicznik;
 					if(way1)
 						dodaj_nowe(akt_nodes[i], akt_nodes[i+1], it1->first, distance_abs);
 					if(way2)
@@ -232,6 +253,34 @@ struct dijkstra
 	}
 };
 
-
-
+struct DijkstraTram : dijkstra
+{
+	double getPrzelicznikWagiDrog(int id, map <string, string> akt_tags)
+	{
+		double przelicznik =-1;
+		if(akt_tags.find("railway")!=akt_tags.end())
+		{
+			if(akt_tags["railway"]=="tram")
+				przelicznik=1;
+		}
+		return przelicznik;
+	}
+};
+struct DijkstraRail : dijkstra
+{
+	double getPrzelicznikWagiDrog(int id, map <string, string> akt_tags)
+	{
+		double przelicznik =-1;
+		if(akt_tags.find("railway")!=akt_tags.end())
+		{
+			if(akt_tags["railway"]=="rail")
+				przelicznik=1;
+			if(akt_tags["railway"]=="subway")
+				przelicznik=1;
+			if(akt_tags["railway"]=="light_rail")
+				przelicznik=1;
+		}
+		return przelicznik;
+	}
+};
 #endif
