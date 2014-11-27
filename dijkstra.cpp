@@ -15,7 +15,18 @@ struct way_part_data
 	long long from;
 	long long to;
 };
-
+string nazwa_mala(string lineName)
+{
+	if(lineName.length()<3)
+		return "tram";
+	return "bus";
+}
+string nazwa_duza(string lineName)
+{
+	if(lineName.length()<3)
+		return "Tram";
+	return "Bus";
+}
 struct dij_data
 {
 	bool ok;
@@ -141,8 +152,10 @@ struct WariantTrasy
 	vector <long long> stopSigns;
 	osm_base* bazaOsm;
 	ztmread_for_html* bazaZtm;
+	bool blad;
 	void init1()
 	{
+		blad=0;
 		vector <przystanek_big> przystanki=bazaZtm->dane_linia[nazwa][wariantId];
 		for(int i=0; i<przystanki.size(); i++)
 		{
@@ -177,13 +190,16 @@ struct WariantTrasy
 				it1++;
 			}
 		}
-
+		else
+		{
+			blad=1;
+			cout<<"BŁĄD - LINIA "<<nazwa<<endl;
+		}
 	}
-	relation generateRelationWithoutIdVersion(set& <long long> changeNodes, set& <long long> & changeWays)
+	relation generateRelationWithoutIdVersion(set <long long>& changeNodes, set <long long>& changeWays)
 	{
-		//TODO BUS
-		string typ_maly="bus";
-		string typ_duzy="Bus";
+		string typ_maly=nazwa_mala(nazwa);
+		string typ_duzy=nazwa_duza(nazwa);
 		relation rel;
 		rel.modify=1;
 		rel.tags["network"]="ZTM Warszawa";
@@ -350,7 +366,11 @@ struct galk
 				return algorytmy[1];
 		return algorytmy[0];
 	}
-	void generujLinie(string nazwa, int linia_licznik, ostream& plik5)
+
+	set <long long> changeNodes;
+	set <long long> changeWays;
+
+	bool generujLinie(string nazwa, int linia_licznik, ostream& plik5)
 	{
 		cout<<"GENEROWANIE "<<nazwa<<endl;
 		vector <long long> stareRelacje=relacje_linia(bazaOsm, 3651336, nazwa).second;
@@ -358,8 +378,13 @@ struct galk
 		vector <long long> noweRelacje;
 		for(int i=0; i<warianty[nazwa].size(); i++)
 		{
+			if(warianty[nazwa][i].blad)
+				return false;
+		}
+		for(int i=0; i<warianty[nazwa].size(); i++)
+		{
 			warianty[nazwa][i].generateGPX(plik5);
-			relation nowa=warianty[nazwa][i].generateRelationWithoutIdVersion();
+			relation nowa=warianty[nazwa][i].generateRelationWithoutIdVersion(changeNodes, changeWays);
 			//GENERUJ ID I WERSJĘ
 			if(i<stareRelacje.size())
 			{
@@ -379,9 +404,8 @@ struct galk
 			bazaOsm->relations[stareRelacje[i]].todelete=true;
 		}
 		cout<<"GENEROWANIE2 "<<nazwa<<endl;
-		//TODO
-		string typ_maly="bus";
-		string typ_duzy="Bus";
+		string typ_maly=nazwa_mala(nazwa);
+		string typ_duzy=nazwa_duza(nazwa);
 		relation rel;
 		rel.modify=1;
 		rel.id=(-50)-linia_licznik*100;
@@ -405,6 +429,7 @@ struct galk
 		if(rel.id>0)
 			rel.version=bazaOsm->relations[rel.id].version;
 		bazaOsm->relations[rel.id]=rel;
+		return true;
 	}
 	galk(char** argv)
 	{
@@ -427,20 +452,40 @@ struct galk
 		string gpxPath = outPath+".gpx";
 		fstream plik5(gpxPath.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
-		int licznik=0;
+		int licznik=1000;
 		plik5<<"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx>"<<endl;
 		while(it2!=warianty.end())
 		{
-			generujLinie(it2->first, licznik, plik5);
+			if(!generujLinie(it2->first, licznik, plik5))
+			{
+				warianty.erase(it2);
+			}
 			it2++;
 			licznik++;
 		}
 		plik5<<"</gpx>"<<endl;
 		plik5.close();
-		osm_base bazuka3=bazaOsm->wybrane(wyb_n, wyb_w, wyb_r);
+		set <long long> pusty;
+		pusty.insert(3651331);
+		pusty.insert(3651332);
+		pusty.insert(3651333);
+		pusty.insert(3651328);
+		pusty.insert(3651327);
+		pusty.insert(3651329);
+		pusty.insert(3651326);
+		pusty.insert(3651335);
+		pusty.insert(3651336);
+		osm_base bazuka3=bazaOsm->wybrane(changeNodes, changeWays, pusty);
 		osm_base bazuka4=bazaOsm->modified();
 		osm_base bazuka2=osm_base(bazuka4, bazuka3);
 		bazuka2.wypisz(outPath);
+		it2=warianty.begin();
+		cout<<"WYGENEROWANO LINIE: "<<endl;
+		while(it2!=warianty.end())
+		{
+			cout<<it2->first<<endl;
+			it2++;
+		}
 	}
 	~galk()
 	{
