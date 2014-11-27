@@ -179,7 +179,7 @@ struct WariantTrasy
 		}
 
 	}
-	relation generateRelationWithoutIdVersion()
+	relation generateRelationWithoutIdVersion(set& <long long> changeNodes, set& <long long> & changeWays)
 	{
 		//TODO BUS
 		string typ_maly="bus";
@@ -201,11 +201,14 @@ struct WariantTrasy
 		dij_data d1(stopPositions, dij);
 		vector <long long> wszystkieDrogi=d1.all_ways;
 		vector <long long> wszystkieWierzcholki=d1.all_nodes;
+		for(int i=0; i<wszystkieWierzcholki.size(); i++)
+			changeNodes.insert(wszystkieWierzcholki[i]);
 		for(int i=0; i<wszystkieDrogi.size(); i++)
 		{
 			relation_member foo;
 			foo.member_type=WAY;
 			foo.member_id=wszystkieDrogi[i];
+			changeWays.insert(wszystkieDrogi[i]);
 			foo.role="";
 			rel.members.push_back(foo);
 		}
