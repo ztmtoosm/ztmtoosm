@@ -248,7 +248,8 @@ struct WariantTrasy
 		dij_data d1(stopPositions, dij);
 		vector <long long> wszystkieWierzcholki=d1.all_nodes;
 		plik5<<"<trk>"<<endl;
-		plik5<<"<name>"<<nazwa<<" wariant "<<wariantId<<"</name>"<<endl;
+		map <string, vector< vector<przystanek_big> > >::iterator it1=bazaZtm->dane_linia.find(nazwa);
+		plik5<<"<name>"<<nazwa<<" "<<nazwa_skrocona((it1->second)[wariantId][0].name_osm)+" => "+nazwa_skrocona((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm)<<"</name>";
 		plik5<<"<trkseg>"<<endl;
 		for(int i=0; i<wszystkieWierzcholki.size(); i++)
 		{
@@ -370,7 +371,7 @@ struct galk
 	set <long long> changeNodes;
 	set <long long> changeWays;
 
-	bool generujLinie(string nazwa, int linia_licznik, ostream& plik5)
+	bool generujLinie(string nazwa, int linia_licznik)
 	{
 		cout<<"GENEROWANIE "<<nazwa<<endl;
 		vector <long long> stareRelacje=relacje_linia(bazaOsm, 3651336, nazwa).second;
@@ -381,6 +382,10 @@ struct galk
 			if(warianty[nazwa][i].blad)
 				return false;
 		}
+		string nazwaGPX="/home/marcin/www/"+nazwa+".gpx";
+		fstream plik5(nazwaGPX.c_str(), ios::out | ios::trunc);
+		plik5<<"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx>"<<endl;
+		plik5.precision(9);
 		for(int i=0; i<warianty[nazwa].size(); i++)
 		{
 			warianty[nazwa][i].generateGPX(plik5);
@@ -403,7 +408,6 @@ struct galk
 		{
 			bazaOsm->relations[stareRelacje[i]].todelete=true;
 		}
-		cout<<"GENEROWANIE2 "<<nazwa<<endl;
 		string typ_maly=nazwa_mala(nazwa);
 		string typ_duzy=nazwa_duza(nazwa);
 		relation rel;
@@ -429,6 +433,8 @@ struct galk
 		if(rel.id>0)
 			rel.version=bazaOsm->relations[rel.id].version;
 		bazaOsm->relations[rel.id]=rel;
+		plik5<<"</gpx>"<<endl;
+		plik5.close();
 		return true;
 	}
 	galk(char** argv)
@@ -449,21 +455,38 @@ struct galk
 			it1++;
 		}
 		map <string, vector<WariantTrasy> >::iterator it2=warianty.begin();
-		string gpxPath = outPath+".gpx";
-		fstream plik5(gpxPath.c_str(), ios::out | ios::trunc);
-		plik5.precision(9);
 		int licznik=1000;
+		string n2="/home/marcin/www/openlayers.html";
+		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		plik5<<"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx>"<<endl;
+		plik5<<"<!doctype html>"<<endl;
+		plik5<<"<html lang=\"pl\">"<<endl;
+		plik5<<"<head>"<<endl;
+		plik5<<"<link rel=\"stylesheet\" href=\"http://openlayers.org/en/v3.0.0/css/ol.css\" type=\"text/css\">"<<endl;
+		plik5<<"<link rel=\"stylesheet\" href=\"ter.css\" type=\"text/css\">"<<endl;
+		plik5<<"<script src=\"http://openlayers.org/en/v3.0.0/build/ol.js\" type=\"text/javascript\"></script>"<<endl;
+		plik5<<"</head>"<<endl;
+		plik5<<"<body>"<<endl;
+		plik5<<"<div id=\"map\" class=\"map\"></div>"<<endl;
+		plik5<<"<div id=\"hdd\">"<<endl;
+		plik5.precision(9);
 		while(it2!=warianty.end())
 		{
-			if(!generujLinie(it2->first, licznik, plik5))
+			if(!generujLinie(it2->first, licznik))
 			{
 				warianty.erase(it2);
+			}
+			else
+			{
+				plik5<<"<div class=\"lel\">"<<it2->first<<".gpx</div>"<<endl;
 			}
 			it2++;
 			licznik++;
 		}
-		plik5<<"</gpx>"<<endl;
+		plik5<<"</div>"<<endl;
+		plik5<<"<script src=\"nasz.js\" type=\"text/javascript\"></script>"<<endl;
+		plik5<<"</body>"<<endl;
+		plik5<<"</html>"<<endl;
 		plik5.close();
 		set <long long> pusty;
 		pusty.insert(3651331);

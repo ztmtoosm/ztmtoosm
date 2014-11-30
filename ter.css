@@ -1,0 +1,14 @@
+      .hdd {
+	position: fixed;
+	top: 0px;
+	right: 700px;
+        height: 100%;
+        width: 50%;
+      }
+      .map {
+	position: fixed;
+	top: 0px;
+	right: 0px;
+        height: 100%;
+        width: 50%;
+      }
