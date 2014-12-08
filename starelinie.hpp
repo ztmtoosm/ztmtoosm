@@ -150,7 +150,23 @@ class PrzegladanieCzyPrawidloweStareLinie
 		cout<<"okbeta"<<endl;
 		return wynik;
 	}
-	void printRoznice(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm)
+	string infoLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm)
+	{
+		vector <long long> rels=relacje_linia(bazaOsm, 3651336, linia).second;
+		long long rel_head=relacje_linia(bazaOsm, 3651336, linia).first;
+		string link_href="http://openstreetmap.org/relation/"+tostring(rel_head);
+		string tmp1;
+		tmp1+=htmlgen::div("linia_head", "", htmlgen::link("http://www.ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+linia, linia));
+		tmp1+=htmlgen::div("relglowna", "", "route_master: "+htmlgen::link(link_href, tostring(rel_head)));
+		for(int i=0; i<rels.size(); i++)
+		{
+			link_href="http://openstreetmap.org/relation/"+tostring(rels[i]);
+			string nazwa=bazaOsm->relations[rels[i]].tags["name"];
+			tmp1+=htmlgen::div("relboczna", "", "route: "+htmlgen::link(link_href, tostring(rels[i])+" "+nazwa));
+		}
+		return htmlgen::div("infolinie", "", tmp1);
+	}
+	void printRoznice(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm, map<string, string>* infoHTML)
 	{
 		set <string> osm_list=oldRelationStops(linia, bazaOsm);
 		set <string> ztm_list=newRelationStops(linia, bazaZtm);
@@ -176,6 +192,7 @@ class PrzegladanieCzyPrawidloweStareLinie
 			}
 			it2++;
 		}
+		(*infoHTML)[linia]=infoLinie(linia, bazaOsm, bazaZtm);
 		if(prawi)
 		{
 			prawidlowe.insert(linia);
@@ -183,23 +200,22 @@ class PrzegladanieCzyPrawidloweStareLinie
 		else
 		{
 			wynik=htmlgen::div("bledy1", "", "Wykryto następujące błędy")+wynik;
+		
+			(*infoHTML)[linia]+=htmlgen::div("roznice", "", wynik);
 			nieprawidlowe.insert(linia);
 		}
-		cout<<"LINIA="<<linia<<" "<<wynik<<endl;
-		bledy[linia]=htmlgen::div("roznice", "", wynik);
 	}
 	set <string> doPrzerobienia;
 	public:
 	set <string> prawidlowe;
 	set <string> nieprawidlowe;
-	map <string, string> bledy;
-	PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW)
+	PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW, map<string, string>* infoHTML)
 	{
 		doPrzerobienia=doPrzerobieniaW;
 		set <string>::iterator it1=doPrzerobienia.begin();
 		while(it1!=doPrzerobienia.end())
 		{
-			printRoznice(*it1, bazaOsm, bazaZtm);
+			printRoznice(*it1, bazaOsm, bazaZtm, infoHTML);
 			it1++;
 		}
 	}

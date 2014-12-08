@@ -38,21 +38,7 @@ set <long long> merge(vector <dijkstra* > dij)
 	return wynik;
 }
 
-string infoLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm)
-{
-	vector <long long> rels=relacje_linia(bazaOsm, 3651336, linia).second;
-	long long rel_head=relacje_linia(bazaOsm, 3651336, linia).first;
-	string link_href="http://openstreetmap.org/relation/"+tostring(rel_head);
-	string tmp1;
-	tmp1+=htmlgen::div("relglowna", "", "route_master: "+htmlgen::link(link_href, tostring(rel_head)));
-	for(int i=0; i<rels.size(); i++)
-	{
-		link_href="http://openstreetmap.org/relation/"+tostring(rels[i]);
-		string nazwa=bazaOsm->relations[rels[i]].tags["name"];
-		tmp1+=htmlgen::div("relboczna", "", "route: "+htmlgen::link(link_href, tostring(rels[i])+" "+nazwa));
-	}
-	return htmlgen::div("infolinie", "", tmp1);
-}
+
 
 struct WariantTrasy
 {
@@ -184,8 +170,9 @@ struct WariantTrasy
 class PrzegladanieCzyPrawidloweNoweLinie
 {
 	set <string> doPrzerobienia;
-	bool sprawdzLinie(string linia, vector <vector <przystanek_big> > drugi)
+	bool sprawdzLinie(string linia, vector <vector <przystanek_big> > drugi, map<string, string>* infoHTML)
 	{
+		string bledy;
 		if(doPrzerobienia.find(linia)==doPrzerobienia.end())
 			return false;
 		int s9=drugi.size();
@@ -200,14 +187,14 @@ class PrzegladanieCzyPrawidloweNoweLinie
 				przystanek_big& data=(drugi)[i][j];
 				if(data.stop_position==0)
 				{
-					bledy[linia]+=htmlgen::div("stop_pos_non", "", data.name+" "+data.id+" brak STOP_POSITION");
+					bledy+=htmlgen::div("stop_pos_non", "", data.name+" "+data.id+" brak STOP_POSITION");
 					ok=0;
 				}
 				else
 				{
 					if(data.pos_error)
 					{
-						bledy[linia]+=htmlgen::div("stop_pos_way", "", data.name+" "+data.id+" STOP_POSITION nie leży na drodze");
+						bledy+=htmlgen::div("stop_pos_way", "", data.name+" "+data.id+" STOP_POSITION nie leży na drodze");
 						ok=0;
 					}
 				}
@@ -215,29 +202,33 @@ class PrzegladanieCzyPrawidloweNoweLinie
 		}
 		if(!ok)
 		{
-			bledy[linia]=htmlgen::div("bledy2", "", "Nie można wygenerować nowej trasy, ponieważ: "+bledy[linia]);
+			bledy=htmlgen::div("bledy2", "", "Nie można wygenerować nowej trasy, ponieważ: "+bledy);
+			(*infoHTML)[linia]+=bledy;
 			return false;
 		}
 		return true;
 	}
 	public:
 	set <string> prawidlowe;
-	map <string, string> bledy;
-	PrzegladanieCzyPrawidloweNoweLinie(ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW)
+	set <string> nieprawidlowe;
+	PrzegladanieCzyPrawidloweNoweLinie(ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW, map <string, string>* infoHTML)
 	{
 		doPrzerobienia=doPrzerobieniaW;
 		set <string>::iterator it1=doPrzerobienia.begin();
 		while(it1!=doPrzerobienia.end())
 		{
-			if(sprawdzLinie(*it1, bazaZtm->dane_linia[*it1]))
+			if(sprawdzLinie(*it1, bazaZtm->dane_linia[*it1], infoHTML))
 			{
 				prawidlowe.insert(*it1);
+			}
+			else
+			{
+				nieprawidlowe.insert(*it1);
 			}
 			it1++;
 		}
 	}
 };
-
 set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
 {
 	set <string> wynik;
@@ -250,7 +241,6 @@ set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
 		if(kand[0]!='L')
 		if(kand[0]!='W')
 		{
-			cout<<"KAND="<<kand<<endl;
 			wynik.insert(kand);
 		}
 		it1++;
@@ -394,6 +384,11 @@ struct galk
 		plik5.close();
 		return true;
 	}
+	map <string, string> infoHTML;
+	string ok_route(string cos)
+	{
+		return htmlgen::div("ok_route", cos, htmlgen::link("javascript:changesource("+cos+");", "Trasa "+cos+" wygenerowana, pokaż..."));
+	}
 	galk(char** argv)
 	{
 		readArg(argv);
@@ -403,12 +398,11 @@ struct galk
 		bazaZtm = new ztmread_for_html (osmBasePath, ztmBasePath, merge(algorytmy));
 		if(czyWszystkie)
 			linieDoPrzerobienia=wszystkieLinie(bazaZtm);
-		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia);
+		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, &infoHTML);
 		set <string> etap=przegl0.nieprawidlowe;
 		if(!czyWszystkie)
 			etap=linieDoPrzerobienia;
-		PrzegladanieCzyPrawidloweNoweLinie przegl(bazaZtm, etap);
-		cout<<"nie-tutej1"<<endl;
+		PrzegladanieCzyPrawidloweNoweLinie przegl(bazaZtm, etap, &infoHTML);
 		linieDoPrzerobienia=przegl.prawidlowe;
 		set <string>::iterator it1=linieDoPrzerobienia.begin();
 		while(it1!=linieDoPrzerobienia.end())
@@ -425,7 +419,6 @@ struct galk
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
 		htmlHead(plik5);
-		cout<<"tutej"<<endl;
 		while(it2!=warianty.end())
 		{
 			if(!generujLinie(it2->first, licznik))
@@ -434,16 +427,26 @@ struct galk
 			}
 			else
 			{
-				plik5<<htmlgen::div("linia_ok", "", htmlgen::div("linia_ok_header", "", it2->first)+infoLinie(it2->first, bazaOsm, bazaZtm)+przegl0.bledy[it2->first])<<endl;
+				infoHTML[it2->first]+=ok_route(it2->first);
+				plik5<<htmlgen::div("linia_green", "", infoHTML[it2->first])<<endl;
 			}
 			it2++;
 			licznik++;
 		}
-		auto it3=przegl.bledy.begin();
-		while(it3!=przegl.bledy.end())
+		auto it3=przegl.nieprawidlowe.begin();
+		while(it3!=przegl.nieprawidlowe.end())
 		{
-			plik5<<htmlgen::div("linia_bad", "", htmlgen::div("linia_num", "", it3->first)+infoLinie(it3->first, bazaOsm, bazaZtm)+it3->second+przegl0.bledy[it3->first])<<endl;
+			plik5<<htmlgen::div("linia_red", "", infoHTML[*it3])<<endl;
 			it3++;
+		}
+		if(czyWszystkie)
+		{
+			auto it4=przegl0.prawidlowe.begin();
+			while(it4!=przegl0.prawidlowe.end())
+			{
+				plik5<<htmlgen::div("linia_blue", "", infoHTML[*it4])<<endl;
+				it4++;
+			}
 		}
 		htmlTile(plik5);
 		plik5.close();

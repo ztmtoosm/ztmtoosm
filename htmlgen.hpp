@@ -11,6 +11,7 @@ void htmlHead(fstream& plik5)
 {
 	plik5<<"<!doctype html>"<<endl;
 	plik5<<"<html lang=\"pl\">"<<endl;
+	plik5<<"<meta charset=\"utf-8\">"<<endl;
 	plik5<<"<head>"<<endl;
 	plik5<<"<link rel=\"stylesheet\" href=\"http://openlayers.org/en/v3.0.0/css/ol.css\" type=\"text/css\">"<<endl;
 	plik5<<"<link rel=\"stylesheet\" href=\"ter.css\" type=\"text/css\">"<<endl;
