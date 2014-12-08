@@ -168,23 +168,23 @@ struct dijkstra
 			if(akt_tags["highway"]=="trunk_link")
 				przelicznik=1;
 			if(akt_tags["highway"]=="primary")
-				przelicznik=1;
+				przelicznik=0.98;
 			if(akt_tags["highway"]=="primary_link")
-				przelicznik=1;
+				przelicznik=0.98;
 			if(akt_tags["highway"]=="secondary")
-				przelicznik=1;
+				przelicznik=0.98;
 			if(akt_tags["highway"]=="secondary_link")
-				przelicznik=1;
+				przelicznik=0.98;
 			if(akt_tags["highway"]=="tertiary")
 				przelicznik=1;
 			if(akt_tags["highway"]=="tertiary_link")
 				przelicznik=1;
 			if(akt_tags["highway"]=="residential")
-				przelicznik=1.2;
+				przelicznik=1.3;
 			if(akt_tags["highway"]=="unclassified")
-				przelicznik=1.2;
+				przelicznik=1.3;
 			if(akt_tags["highway"]=="service")
-				przelicznik=1.15;
+				przelicznik=1.3;
 			if(akt_tags["highway"]=="living_street")
 				przelicznik=1.3;
 			if(akt_tags["routing:ztm"]=="yes")

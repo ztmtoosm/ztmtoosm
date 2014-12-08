@@ -30,6 +30,7 @@ template <typename T1> T1 fromstring(string alfa)
 	foo>>foo2;
 	return foo2;
 }
+string substituteWhiteCharsBySpace(string nazwa);
 struct dat
 {
 	vector <string> dd;

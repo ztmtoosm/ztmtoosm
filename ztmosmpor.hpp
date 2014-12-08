@@ -96,6 +96,10 @@ class ztmread_for_html : public ztmread
 					foo->bus_stop=1;
 				if(tags["railway"]=="tram_stop")
 					foo->bus_stop=1;
+				if(tags["highway"]=="platform")
+					foo->bus_stop=1;
+				if(tags["railway"]=="platform")
+					foo->bus_stop=1;
 				if(tags["public_transport"]=="stop_position")
 					foo->position=1;
 				if(tags["ref"]!="")

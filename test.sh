@@ -1,7 +1,7 @@
 #!/bin/bash
 readarray -t a < ../lista9.ooo
 pol="wget http://overpass-api.de/api/map?bbox=20.5225,51.9561,21.5250,52.4953 -O latest0.osm"
-$pol
+# $pol
 for i in "${a[@]}"
 do
 	wget http://api.openstreetmap.org/api/0.6/relation/"${i}" -O test"${i}".osm
@@ -17,6 +17,6 @@ for i in "${a[@]}"
 do
 	rm "test"${i}".osm"
 done
-c=RA141124.TXT
+c=RA141208.TXT
 d=$(date +"%Y/%m/%d")
-./htmlgenerator $c latest.osm wyj.html wyj1.csv wyj2.csv wyj3.csv | ./dijkstra $c latest.osm wyj4.osm $d
+./dijkstra $c latest.osm wyj4.osm "-all"

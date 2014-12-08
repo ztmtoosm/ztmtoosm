@@ -1,4 +1,24 @@
 #include "stringspecial.hpp"
+string substituteWhiteCharsBySpace(string nazwa)
+{
+	if(nazwa=="")
+		return nazwa;
+	string wynik;
+	stringstream plt;
+	plt<<nazwa;
+	string tmp1;
+	vector <string> tmp;
+	while(plt>>tmp1)
+		tmp.push_back(tmp1);
+	for(int i=0; i<tmp.size()-1; i++)
+	{
+		wynik+=tmp[i];
+		if(i<tmp.size()-2)
+			wynik+=" ";
+	}
+	return wynik;
+}
+
 int toint(string dat)
 {
 	stringstream dd;

@@ -7,130 +7,25 @@
 #include "ztmosmpor.hpp"
 #include "osm_base.hpp"
 #include "dijkstra.hpp"
+#include "dij_data.hpp"
+#include "htmlgen.hpp"
+#include "starelinie.hpp"
 using namespace std;
 using namespace rapidxml;
-struct way_part_data
+
+set <long long> pustyGen()
 {
-	long long way_id;
-	long long from;
-	long long to;
-};
-string nazwa_mala(string lineName)
-{
-	if(lineName.length()<3)
-		return "tram";
-	return "bus";
-}
-string nazwa_duza(string lineName)
-{
-	if(lineName.length()<3)
-		return "Tram";
-	return "Bus";
-}
-struct dij_data
-{
-	bool ok;
-	vector <long long> all_nodes;
-	vector <long long> all_ways;
-	map<long long, set<long long> > split_data;
-	dij_data(vector <long long> stop_nodes, dijkstra* dij)
-	{
-		ok=1;
-		vector <way_part_data> dtt;
-		int s5=stop_nodes.size();
-		for(int i=0; i<s5-1; i++)
-		{
-			if(ok)
-			{
-			dij->oblicz(stop_nodes[i], stop_nodes[i+1]);
-			punkt* from = dij->punkty[stop_nodes[i]];
-			punkt* destination = dij->punkty[stop_nodes[i+1]];
-			if(from==NULL || destination==NULL)
-			{
-				ok=0;
-			}
-			else
-			{
-				vector <long long> partial_nodes;
-				vector <long long> partial_ways;
-				vector <way_part_data> dtt2;
-				long long destination_id=destination->osm_id;
-				partial_nodes.push_back(destination_id);
-				while(destination!=from && destination!=NULL && destination->from!=NULL)
-				{
-					way_part_data foo;
-					foo.to=destination->osm_id;
-					foo.way_id=destination->from->osm_id;
-					partial_ways.push_back(destination->from->osm_id);
-					destination=destination->from->start;
-					foo.from=destination->osm_id;
-					destination_id=destination->osm_id;
-					partial_nodes.push_back(destination_id);
-					dtt2.push_back(foo);
-				}
-				for(int j=partial_nodes.size()-1; j>=0; j--)
-				{
-					if(all_nodes.size()==0 || all_nodes[all_nodes.size()-1]!=partial_nodes[j])
-					{
-						all_nodes.push_back(partial_nodes[j]);
-					}
-				}
-				for(int j=partial_ways.size()-1; j>=0; j--)
-				{
-					if(all_ways.size()==0 || all_ways[all_ways.size()-1]!=partial_ways[j])
-					{
-						all_ways.push_back(partial_ways[j]);
-					}
-				}
-				for(int j=dtt2.size()-1; j>=0; j--)
-				{
-					dtt.push_back(dtt2[j]);
-				}
-			}
-			}
-		}
-		long long akt_way=-1;
-		long long akt_from=-1;
-		long long akt_to=-1;
-		for(int i=0; i<dtt.size(); i++)
-		{
-			if(akt_way!=-1 && dtt[i].way_id!=akt_way)
-			{
-				split_data[akt_way].insert(akt_from);
-				split_data[akt_way].insert(akt_to);
-			}
-			if(dtt[i].way_id!=akt_way)
-			{
-				akt_way=dtt[i].way_id;
-				akt_from=dtt[i].from;
-			}
-			akt_to=dtt[i].to;
-		}
-		if(akt_way!=-1)
-		{
-			split_data[akt_way].insert(akt_from);
-			split_data[akt_way].insert(akt_to);
-		}
-	}
-};
-string nazwa_skrocona(string nazwa)
-{
-	if(nazwa=="")
-		return nazwa;
-	string wynik;
-	stringstream plt;
-	plt<<nazwa;
-	string tmp1;
-	vector <string> tmp;
-	while(plt>>tmp1)
-		tmp.push_back(tmp1);
-	for(int i=0; i<tmp.size()-1; i++)
-	{
-		wynik+=tmp[i];
-		if(i<tmp.size()-2)
-			wynik+=" ";
-	}
-	return wynik;
+	set <long long> pusty;
+	pusty.insert(3651331);
+	pusty.insert(3651332);
+	pusty.insert(3651333);
+	pusty.insert(3651328);
+	pusty.insert(3651327);
+	pusty.insert(3651329);
+	pusty.insert(3651326);
+	pusty.insert(3651335);
+	pusty.insert(3651336);
+	return pusty;
 }
 
 set <long long> merge(vector <dijkstra* > dij)
@@ -141,6 +36,22 @@ set <long long> merge(vector <dijkstra* > dij)
 		wynik.insert(dij[i]->eee3.begin(), dij[i]->eee3.end());
 	}
 	return wynik;
+}
+
+string infoLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm)
+{
+	vector <long long> rels=relacje_linia(bazaOsm, 3651336, linia).second;
+	long long rel_head=relacje_linia(bazaOsm, 3651336, linia).first;
+	string link_href="http://openstreetmap.org/relation/"+tostring(rel_head);
+	string tmp1;
+	tmp1+=htmlgen::div("relglowna", "", "route_master: "+htmlgen::link(link_href, tostring(rel_head)));
+	for(int i=0; i<rels.size(); i++)
+	{
+		link_href="http://openstreetmap.org/relation/"+tostring(rels[i]);
+		string nazwa=bazaOsm->relations[rels[i]].tags["name"];
+		tmp1+=htmlgen::div("relboczna", "", "route: "+htmlgen::link(link_href, tostring(rels[i])+" "+nazwa));
+	}
+	return htmlgen::div("infolinie", "", tmp1);
 }
 
 struct WariantTrasy
@@ -207,9 +118,9 @@ struct WariantTrasy
 		rel.tags["route"]=typ_maly;
 		rel.tags["ref"]=nazwa;
 		map <string, vector< vector<przystanek_big> > >::iterator it1=bazaZtm->dane_linia.find(nazwa);
-		rel.tags["name"]=typ_duzy+" "+nazwa+": "+nazwa_skrocona((it1->second)[wariantId][0].name_osm)+" => "+nazwa_skrocona((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm);
-		rel.tags["from"]=nazwa_skrocona((it1->second)[wariantId][0].name_osm);
-		rel.tags["to"]=nazwa_skrocona((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm);
+		rel.tags["name"]=typ_duzy+" "+nazwa+": "+substituteWhiteCharsBySpace((it1->second)[wariantId][0].name_osm)+" => "+substituteWhiteCharsBySpace((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm);
+		rel.tags["from"]=substituteWhiteCharsBySpace((it1->second)[wariantId][0].name_osm);
+		rel.tags["to"]=substituteWhiteCharsBySpace((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm);
 		/*
 		rel.tags["note"]="stan na "+today;
 		*/
@@ -249,7 +160,8 @@ struct WariantTrasy
 		vector <long long> wszystkieWierzcholki=d1.all_nodes;
 		plik5<<"<trk>"<<endl;
 		map <string, vector< vector<przystanek_big> > >::iterator it1=bazaZtm->dane_linia.find(nazwa);
-		plik5<<"<name>"<<nazwa<<" "<<nazwa_skrocona((it1->second)[wariantId][0].name_osm)+" => "+nazwa_skrocona((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm)<<"</name>";
+		
+		plik5<<"<name>"<<nazwa<<" "<<substituteWhiteCharsBySpace((it1->second)[wariantId][0].name_osm)+" => "+substituteWhiteCharsBySpace((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm)<<"</name>";
 		plik5<<"<trkseg>"<<endl;
 		for(int i=0; i<wszystkieWierzcholki.size(); i++)
 		{
@@ -269,7 +181,7 @@ struct WariantTrasy
 		init2();	
 	}
 };
-class PrzegladanieCzyPrawidloweLinie
+class PrzegladanieCzyPrawidloweNoweLinie
 {
 	set <string> doPrzerobienia;
 	bool sprawdzLinie(string linia, vector <vector <przystanek_big> > drugi)
@@ -277,6 +189,7 @@ class PrzegladanieCzyPrawidloweLinie
 		if(doPrzerobienia.find(linia)==doPrzerobienia.end())
 			return false;
 		int s9=drugi.size();
+		bool ok=1;
 		for(int i=0; i<s9; i++)
 		{
 			int s8=(drugi)[i].size();
@@ -287,24 +200,30 @@ class PrzegladanieCzyPrawidloweLinie
 				przystanek_big& data=(drugi)[i][j];
 				if(data.stop_position==0)
 				{
-					cout<<"error: "<<data.name<<"-"<<data.id<<": "<<"BRAK STOP_POSITION"<<endl;
-					return false;
+					bledy[linia]+=htmlgen::div("stop_pos_non", "", data.name+" "+data.id+" brak STOP_POSITION");
+					ok=0;
 				}
 				else
 				{
 					if(data.pos_error)
 					{
-						cout<<"error: "<<data.name<<"-"<<data.id<<": "<<"STOP_POSITION nie leży na drodze"<<endl;
-						return false;
+						bledy[linia]+=htmlgen::div("stop_pos_way", "", data.name+" "+data.id+" STOP_POSITION nie leży na drodze");
+						ok=0;
 					}
 				}
 			}
+		}
+		if(!ok)
+		{
+			bledy[linia]=htmlgen::div("bledy2", "", "Nie można wygenerować nowej trasy, ponieważ: "+bledy[linia]);
+			return false;
 		}
 		return true;
 	}
 	public:
 	set <string> prawidlowe;
-	PrzegladanieCzyPrawidloweLinie(ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW)
+	map <string, string> bledy;
+	PrzegladanieCzyPrawidloweNoweLinie(ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW)
 	{
 		doPrzerobienia=doPrzerobieniaW;
 		set <string>::iterator it1=doPrzerobienia.begin();
@@ -318,6 +237,26 @@ class PrzegladanieCzyPrawidloweLinie
 		}
 	}
 };
+
+set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
+{
+	set <string> wynik;
+	auto it1=bazaZtm->dane_linia.begin();
+	while(it1!=bazaZtm->dane_linia.end())
+	{
+		string kand=it1->first;
+		if(kand[0]!='K')
+		if(kand[0]!='S')
+		if(kand[0]!='L')
+		if(kand[0]!='W')
+		{
+			cout<<"KAND="<<kand<<endl;
+			wynik.insert(kand);
+		}
+		it1++;
+	}
+	return wynik;
+}
 struct galk
 {
 	osm_base* bazaOsm;
@@ -329,12 +268,29 @@ struct galk
 	set <string> linieDoPrzerobienia;
 	vector <dijkstra*> algorytmy;
 	map <string, vector <WariantTrasy> > warianty;
-	void readInput(char** argv)
+	bool czyWszystkie;
+	void readArg(char** argv)
 	{
 		ztmBasePath=argv[1];
 		osmBasePath=argv[2];
 		outPath=argv[3];
-		ztmBaseFreshTime=argv[4];
+		string czyW=argv[4];
+		if(czyW=="-all")
+		{
+			czyWszystkie=1;
+		}
+		else
+		{
+			czyWszystkie=0;
+		}
+	}
+	void readInput()
+	{
+		if(czyWszystkie)
+		{
+			return;
+		}
+		cout<<"PODAJ LINIE"<<endl;
 		char data[10000];
 		cin.getline(data, 10000);
 		stringstream linki1;
@@ -344,6 +300,7 @@ struct galk
 		{
 			linieDoPrzerobienia.insert(linki2);
 		}
+
 	}
 	void loadAlgorithms()
 	{
@@ -439,11 +396,19 @@ struct galk
 	}
 	galk(char** argv)
 	{
-		readInput(argv);
+		readArg(argv);
+		readInput();
 		bazaOsm = new osm_base(osmBasePath);
 		loadAlgorithms();
 		bazaZtm = new ztmread_for_html (osmBasePath, ztmBasePath, merge(algorytmy));
-		PrzegladanieCzyPrawidloweLinie przegl(bazaZtm, linieDoPrzerobienia);
+		if(czyWszystkie)
+			linieDoPrzerobienia=wszystkieLinie(bazaZtm);
+		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia);
+		set <string> etap=przegl0.nieprawidlowe;
+		if(!czyWszystkie)
+			etap=linieDoPrzerobienia;
+		PrzegladanieCzyPrawidloweNoweLinie przegl(bazaZtm, etap);
+		cout<<"nie-tutej1"<<endl;
 		linieDoPrzerobienia=przegl.prawidlowe;
 		set <string>::iterator it1=linieDoPrzerobienia.begin();
 		while(it1!=linieDoPrzerobienia.end())
@@ -458,18 +423,9 @@ struct galk
 		int licznik=1000;
 		string n2="/home/marcin/www/openlayers.html";
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
-		plik5<<"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx>"<<endl;
-		plik5<<"<!doctype html>"<<endl;
-		plik5<<"<html lang=\"pl\">"<<endl;
-		plik5<<"<head>"<<endl;
-		plik5<<"<link rel=\"stylesheet\" href=\"http://openlayers.org/en/v3.0.0/css/ol.css\" type=\"text/css\">"<<endl;
-		plik5<<"<link rel=\"stylesheet\" href=\"ter.css\" type=\"text/css\">"<<endl;
-		plik5<<"<script src=\"http://openlayers.org/en/v3.0.0/build/ol.js\" type=\"text/javascript\"></script>"<<endl;
-		plik5<<"</head>"<<endl;
-		plik5<<"<body>"<<endl;
-		plik5<<"<div id=\"map\" class=\"map\"></div>"<<endl;
-		plik5<<"<div id=\"hdd\">"<<endl;
 		plik5.precision(9);
+		htmlHead(plik5);
+		cout<<"tutej"<<endl;
 		while(it2!=warianty.end())
 		{
 			if(!generujLinie(it2->first, licznik))
@@ -478,37 +434,24 @@ struct galk
 			}
 			else
 			{
-				plik5<<"<div class=\"lel\">"<<it2->first<<".gpx</div>"<<endl;
+				plik5<<htmlgen::div("linia_ok", "", htmlgen::div("linia_ok_header", "", it2->first)+infoLinie(it2->first, bazaOsm, bazaZtm)+przegl0.bledy[it2->first])<<endl;
 			}
 			it2++;
 			licznik++;
 		}
-		plik5<<"</div>"<<endl;
-		plik5<<"<script src=\"nasz.js\" type=\"text/javascript\"></script>"<<endl;
-		plik5<<"</body>"<<endl;
-		plik5<<"</html>"<<endl;
+		auto it3=przegl.bledy.begin();
+		while(it3!=przegl.bledy.end())
+		{
+			plik5<<htmlgen::div("linia_bad", "", htmlgen::div("linia_num", "", it3->first)+infoLinie(it3->first, bazaOsm, bazaZtm)+it3->second+przegl0.bledy[it3->first])<<endl;
+			it3++;
+		}
+		htmlTile(plik5);
 		plik5.close();
-		set <long long> pusty;
-		pusty.insert(3651331);
-		pusty.insert(3651332);
-		pusty.insert(3651333);
-		pusty.insert(3651328);
-		pusty.insert(3651327);
-		pusty.insert(3651329);
-		pusty.insert(3651326);
-		pusty.insert(3651335);
-		pusty.insert(3651336);
+		set <long long> pusty=pustyGen();
 		osm_base bazuka3=bazaOsm->wybrane(changeNodes, changeWays, pusty);
 		osm_base bazuka4=bazaOsm->modified();
 		osm_base bazuka2=osm_base(bazuka4, bazuka3);
 		bazuka2.wypisz(outPath);
-		it2=warianty.begin();
-		cout<<"WYGENEROWANO LINIE: "<<endl;
-		while(it2!=warianty.end())
-		{
-			cout<<it2->first<<endl;
-			it2++;
-		}
 	}
 	~galk()
 	{
@@ -519,236 +462,4 @@ struct galk
 int main(int argc, char** argv)
 {
 	galk foo(argv);
-	/*set<long long> wyb_w;
-	set<long long> wyb_n;
-	set<long long> wyb_r;
-	int s9=ztm.dane.size();
-	map <string, vector< vector<przystanek_big> > >::iterator it1=ztm.dane_linia.begin();
-	bool przerabiaj=1;
-	int linia_licznik=0;
-	// map<string, vector <vector <long long> > > ids;
-	// map<string, vector <vector <long long> > > high_stops;
-	while(it1!=ztm.dane_linia.end())
-	{
-		string akt_linia=it1->first;
-		dijkstra* dij = &dijBus;
-		if(akt_linia=="WKD" || akt_linia[0]=='K' || akt_linia[0]=='S')
-			dij=&dijRail;
-		else
-			if(akt_linia.length()<3)
-				dij=&dijTram;
-		przerabiaj=1;
-		if(linki.find(akt_linia)==linki.end())
-			przerabiaj=0;
-		if(przerabiaj)
-		{
-		cout<<"#"<<akt_linia<<endl;
-		bool ok=1;
-		bool ok2=1;
-		int s9=it1->second.size();
-		for(int i=0; i<s9; i++)
-		{
-			int s8=(it1->second)[i].size();
-			vector <long long> ids1;
-			vector <long long> hig1;
-			for(int j=0; j<s8; j++)
-			{
-				przystanek_big& data=(it1->second)[i][j];
-				if(data.stop_position==0)
-				{
-					cout<<"error: "<<data.name<<"-"<<data.id<<": "<<"BRAK STOP_POSITION"<<endl;
-					ok=0;
-				}
-				else
-				{
-					if(data.pos_error)
-					{
-						cout<<"error: "<<data.name<<"-"<<data.id<<": "<<"STOP_POSITION nie leży na drodze"<<endl;
-						ok=0;
-					}
-				}
-				ids1.push_back(data.stop_position);
-				if(data.bus_stop!=0)
-				{
-					hig1.push_back(data.bus_stop);
-				}
-				else
-				{
-					hig1.push_back(data.stop_position);
-				}
-			}
-			if(ok)
-			{
-				ids[akt_linia].push_back(ids1);
-				high_stops[akt_linia].push_back(hig1);
-			}
-		}
-		if(ok && ok2)
-		{
-			for(int g=0; g<ids[akt_linia].size(); g++)
-			{
-				dij_data d0(ids[akt_linia][g], dij);
-				if(!d0.ok)
-					ok=0;
-				if(ok && ok2)
-				{
-					
-				}
-			}
-		}
-		if(!ok || !ok2)
-		{
-			if(ids.find(akt_linia)!=ids.end())
-				ids.erase(ids.find(akt_linia));
-			if(high_stops.find(akt_linia)!=high_stops.end())
-				high_stops.erase(high_stops.find(akt_linia));
-	
-		}
-		}
-		it1++;
-	}
-
-
-	map<string, vector <vector <long long> > >::iterator it7=ids.begin();
-	plik5<<"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx>"<<endl;
-	while(it7!=ids.end())
-	{
-		string akt_linia=it7->first;
-		dijkstra* dij = &dijBus;
-		string typ_maly="bus";
-		string typ_duzy="Bus";
-		if(akt_linia=="WKD" || akt_linia[0]=='K' || akt_linia[0]=='S')
-		{
-			typ_maly="train";
-			if(akt_linia[0]=='S')
-				typ_duzy="SKM";
-			else
-				typ_duzy="Koleje Mazowieckie";
-			dij=&dijRail;
-		}
-		else
-		{
-			if(akt_linia.length()<3)
-			{
-				dij=&dijTram;
-				typ_maly="tram";
-				typ_duzy="Tram";
-			}
-		}
-		string arglin=akt_linia+".gpx";
-		plik5.precision(9);
-		linia_licznik++;
-		vector <long long> relation_ids;
-		vector <long long> prop_id=relacje_linia(bazuka, 3651336,akt_linia).second;
-		it1=ztm.dane_linia.find(akt_linia);
-		for(int g=0; g<ids[akt_linia].size(); g++)
-		{
-			long long aktoo=-1;
-			long long aktoo2=-1;
-			relation rel;
-			rel.modify=1;
-			rel.tags["network"]="ZTM Warszawa";
-			rel.tags["type"]="route";
-			rel.tags["route"]=typ_maly;
-			rel.tags["ref"]=akt_linia;
-			rel.tags["name"]=typ_duzy+" "+akt_linia+": "+nazwa_skrocona((it1->second)[g][0].name_osm)+" => "+nazwa_skrocona((it1->second)[g][(it1->second)[g].size()-1].name_osm);
-			rel.tags["from"]=nazwa_skrocona((it1->second)[g][0].name_osm);
-			rel.tags["to"]=nazwa_skrocona((it1->second)[g][(it1->second)[g].size()-1].name_osm);
-			rel.tags["note"]="stan na "+today;
-			rel.tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
-			long long kand_id=(g*-1)-linia_licznik*100;
-			if(prop_id.size()>0)
-			{
-				cout<<"WYBIERZ RELACJĘ DLA "<<rel.tags["name"]<<endl;
-				for(int i=0; i<prop_id.size(); i++)
-				{
-					cout<<i+1<<" "<<bazuka.relations[prop_id[i]].tags["name"]<<" "<<prop_id[i]<<endl;
-				}
-				int kand2=0;
-				if(czy_rel)
-					cin>>kand2;
-				if(kand2>0)
-				{
-					kand_id=prop_id[kand2-1];
-				}
-			}
-			relation_ids.push_back(kand_id);
-			rel.id=relation_ids[relation_ids.size()-1];
-			plik5<<"<trk>"<<endl;
-			plik5<<"<name>"<<rel.tags["name"]<<"</name>"<<endl;
-			plik5<<"<trkseg>"<<endl;
-			dij_data d1(ids[akt_linia][g], dij);
-			vector <long long> way_id2=d1.all_ways;
-			vector <long long> terids=d1.all_nodes;
-			for(int i=0; i<terids.size(); i++)
-			{
-				plik5<<"<trkpt lat=\""<<bazuka.nodes[terids[i]].lat<<"\" lon=\""<<bazuka.nodes[terids[i]].lon<<"\"></trkpt>"<<endl;
-			}
-			for(int i=0; i<way_id2.size(); i++)
-			{
-				wyb_w.insert(way_id2[i]);
-				relation_member foo;
-				foo.member_type=WAY;
-				foo.member_id=way_id2[i];
-				foo.role="";
-				rel.members.push_back(foo);
-			}
-			for(int i=0; i<high_stops[akt_linia][g].size(); i++)
-			{
-				string role="stop";
-				if(i==0)
-					role="stop_entry_only";
-				if(i==high_stops[akt_linia][g].size()-1)
-					role="stop_exit_only";
-				wyb_n.insert(high_stops[akt_linia][g][i]);
-				relation_member foo;
-				foo.member_type=NODE;
-				foo.member_id=high_stops[akt_linia][g][i];
-				foo.role=role;
-				rel.members.push_back(foo);
-			}
-			if(rel.id>0)
-				rel.version=bazuka.relations[rel.id].version;
-			bazuka.relations[rel.id]=rel;
-			plik5<<"</trkseg></trk>"<<endl;
-		}
-		relation rel;
-		rel.modify=1;
-		rel.id=(-50)-linia_licznik*100;
-		long long prop_ids=relacje_linia(bazuka, 3651336,akt_linia).first;
-		if(prop_ids!=0)
-			rel.id=prop_ids;
-		rel.tags["network"]="ZTM Warszawa";
-		rel.tags["type"]="route_master";
-		rel.tags["route_master"]=typ_maly;
-		rel.tags["ref"]=akt_linia;
-		rel.tags["url"]="http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+akt_linia;
-		rel.tags["note"]="stan na "+today;
-		rel.tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
-		rel.tags["name"]=typ_duzy+" "+akt_linia;
-		for(int g=0; g<relation_ids.size(); g++)
-		{
-				relation_member foo;
-				foo.member_type=RELATION;
-				foo.member_id=relation_ids[g];
-				foo.role="";
-				rel.members.push_back(foo);
-		}
-		if(rel.id>0)
-			rel.version=bazuka.relations[rel.id].version;
-		bazuka.relations[rel.id]=rel;
-		it7++;
-	}
-	plik5<<"</gpx>"<<endl;
-	plik5.close();
-	osm_base bazuka3=bazuka.wybrane(wyb_n, wyb_w, wyb_r);
-	osm_base bazuka4=bazuka.modified();
-	osm_base bazuka2=osm_base(bazuka4, bazuka3);
-	bazuka2.wypisz(sciezka);
-	it7=ids.begin();
-	while(it7!=ids.end())
-	{
-		cout<<it7->first<<endl;
-		it7++;
-	}*/
 }
