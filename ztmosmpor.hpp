@@ -20,6 +20,7 @@ struct data1
 {
 	bool position;
 	bool bus_stop;
+	bool platform;
 	string ref;
 	string name;
 	long long id;
@@ -27,8 +28,10 @@ struct data1
 	double lon;
 	data1()
 	{
+		id=0;
 		position=0;
 		bus_stop=0;
+		platform=0;
 	}
 };
 
@@ -38,6 +41,7 @@ struct przystanek_big : public przystanek
 	string name_osm;
 	long long stop_position;
 	long long bus_stop;
+	long long platform;
 	double to_stop_position;
 	bool pos_error;
 	double to_bus_stop;
@@ -56,6 +60,8 @@ struct przystanek_big : public przystanek
 		lat=foo.lat;
 		stop_position=0;
 		bus_stop=0;
+		platform=0;
+		miejscowosc=foo.miejscowosc;
 	}
 };
 
@@ -65,7 +71,7 @@ class ztmread_for_html : public ztmread
 {
 	map<string, data1*> bus_stop_lista;
 	map<string, data1*> position_lista;
-	vector <data1*> listka;
+	map<string, data1*> platform_lista;
 	void laduj_listke(string plik)
 	{
 		file <> xmlFile(plik.c_str());
@@ -96,10 +102,6 @@ class ztmread_for_html : public ztmread
 					foo->bus_stop=1;
 				if(tags["railway"]=="tram_stop")
 					foo->bus_stop=1;
-				if(tags["highway"]=="platform")
-					foo->bus_stop=1;
-				if(tags["railway"]=="platform")
-					foo->bus_stop=1;
 				if(tags["public_transport"]=="stop_position")
 					foo->position=1;
 				if(tags["ref"]!="")
@@ -110,11 +112,32 @@ class ztmread_for_html : public ztmread
 					if(foo->bus_stop)
 						bus_stop_lista[foo->ref]=foo;
 				}
-				listka.push_back(foo);
 				if(foo->position)
 					position_lista[foo->ref]=foo;
 				if(foo->bus_stop)
 					bus_stop_lista[foo->ref]=foo;
+			}
+		}
+		for(xml_node <> *tag=root->first_node("way"); tag; tag=tag->next_sibling("way"))
+		{
+			map <string, string> tags;
+			for(xml_node <> *tap=tag->first_node("tag"); tap; tap=tap->next_sibling("tag"))
+			{
+				xml_attribute<>*k=tap->first_attribute("k");
+				xml_attribute<>*v=tap->first_attribute("v");
+				tags[k->value()]=v->value();
+			}
+			if(tags["public_transport"]=="platform" || tags["highway"]=="platform" || tags["railway"]=="platform")
+			{
+				xml_attribute<>*id=tag->first_attribute("id");
+				data1* foo = new data1;
+				foo->id=fromstring<long long>(id->value());
+				if(tags["ref"]!="")
+				{
+					foo->ref=tags["ref"];
+					foo->platform=1;
+					platform_lista[foo->ref]=foo;
+				}
 			}
 		}
 	}
@@ -155,6 +178,10 @@ class ztmread_for_html : public ztmread
 			double dist=distance(tlon, tlat, nowy.lon, nowy.lat);
 			nowy_big.stop_position=idt;
 			nowy_big.to_stop_position=dist;
+		}
+		if(platform_lista.find(nowy.id)!=platform_lista.end())
+		{
+			nowy_big.platform=platform_lista[nowy.id]->id;
 		}
 		dane0[nowy.id]=nowy_big;
 		dane.push_back(nowy_big);

@@ -11,10 +11,6 @@ enum typ_postoju
 {
 	ZWYKLY, ZJAZDOWY, KONCOWY
 };
-enum dni_kursowania
-{
-	POWSZEDNI, INNY
-};
 struct postoj
 {
 	string stop_id;
@@ -25,12 +21,13 @@ struct kurs
 {
 	string linia;
 	vector <postoj> postoje;
-	dni_kursowania dni;
+	string dni;
 };
 struct przystanek
 {
 	string name;
 	string id;
+	string miejscowosc;
 	double lon;
 	double lat;
 };
@@ -70,7 +67,9 @@ class ztmread
 				roftl+=lll[i];
 			}
 			if(roftl=="ZP")
+			{
 				readzp(roftl, plik);
+			}
 			else
 			{
 				if(roftl=="LL")
@@ -79,6 +78,7 @@ class ztmread
 					readobszar(roftl, plik);
 			}
 		}
+		plik.close();
 	}
 	private:
 	string doprzecinka(stringstream& ttt)
@@ -101,6 +101,74 @@ class ztmread
 		for(int i=0; i<(wynik.length()-1); i++)
 			wynik2+=wynik[i];
 		return wynik2;
+	}
+	bool porpolskie(string tekst, int i, string znak)
+	{
+		if(i>tekst.length()-1)
+			return false;
+		string tmp;
+		tmp+=tekst[i];
+		tmp+=tekst[i+1];
+		if(tmp==znak)
+			return true;
+		return false;
+	}
+	bool polskiznak(string tekst, int i)
+	{
+		if(porpolskie(tekst, i, "Ą")) return true;
+		if(porpolskie(tekst, i, "Ć")) return true;
+		if(porpolskie(tekst, i, "Ę")) return true;
+		if(porpolskie(tekst, i, "Ł")) return true;
+		if(porpolskie(tekst, i, "Ń")) return true;
+		if(porpolskie(tekst, i, "Ó")) return true;
+		if(porpolskie(tekst, i, "Ś")) return true;
+		if(porpolskie(tekst, i, "Ź")) return true;
+		if(porpolskie(tekst, i, "Ż")) return true;
+		return false;
+	}
+	string znakmale(string tekst, int i)
+	{
+		if(porpolskie(tekst, i, "Ą")) return "ą";
+		if(porpolskie(tekst, i, "Ć")) return "ć";
+		if(porpolskie(tekst, i, "Ę")) return "ę";
+		if(porpolskie(tekst, i, "Ł")) return "ł";
+		if(porpolskie(tekst, i, "Ń")) return "ń";
+		if(porpolskie(tekst, i, "Ó")) return "ó";
+		if(porpolskie(tekst, i, "Ś")) return "ś";
+		if(porpolskie(tekst, i, "Ź")) return "ź";
+		if(porpolskie(tekst, i, "Ż")) return "ż";
+		return "";
+	}
+	string duzemale(string skrot)
+	{
+		string wynik;
+		if(skrot.size()==0)
+			return "";
+		wynik+=skrot[0];
+		for(int i=1; i<skrot.length(); i++)
+		{
+			if(polskiznak(skrot, i))
+			{
+				wynik+=znakmale(skrot, i);
+				i++;
+			}
+			else
+			{
+				wynik+=tolower(skrot[i]);
+			}
+		}
+		return wynik;
+	}
+	string zaprzecinek(stringstream& ttt)
+	{
+		string skrot;
+		ttt>>skrot;
+		string wynik;
+		while(ttt>>skrot)
+		{
+			wynik+=duzemale(skrot)+" ";
+		}
+		return wynik.substr(0, max(0, (int)wynik.length()-1));
 	}
 	void readobszar(string nazwa, fstream& plik)
 	{
@@ -160,12 +228,7 @@ class ztmread
 						foo.typ=KONCOWY;
 						kurs nowy;
 						nowy.postoje=postoje;
-						if(type=="DP")
-							nowy.dni=POWSZEDNI;
-						else
-						{
-							nowy.dni=INNY;
-						}
+						nowy.dni=type;
 						nowy.linia=nazwa2;
 						nowy_kurs(nowy);
 						postoje.clear();
@@ -280,7 +343,7 @@ class ztmread
 		}
 		return lista_przystankow;
 	}
-	void readpr(string nazwa, fstream& plik, string akt)
+	void readpr(string nazwa, fstream& plik, string akt, string aktmiasto)
 	{
 		nazwa="#"+nazwa;
 		char data[100000];
@@ -325,6 +388,8 @@ class ztmread
 					}
 				}
 				przystanek foo;
+				cout<<aktmiasto<<"#"<<endl;
+				foo.miejscowosc=aktmiasto;
 				foo.name=akt;
 				foo.id=lll;
 				foo.lon=x1;
@@ -341,6 +406,7 @@ class ztmread
 		char data[100000];
 		bool ok=1;
 		string aktnazwa;
+		string aktmiasto;
 		while(ok && plik.getline(data, 100000))
 		{
 			stringstream plt;
@@ -353,11 +419,12 @@ class ztmread
 			{
 				if(lll=="*PR")
 				{
-					readpr("PR", plik, aktnazwa);
+					readpr("PR", plik, aktnazwa, aktmiasto);
 				}
 				else
 				{
 					aktnazwa=doprzecinka(plt);
+					aktmiasto=zaprzecinek(plt);
 				}
 			}
 		}

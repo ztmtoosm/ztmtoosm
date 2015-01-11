@@ -51,6 +51,31 @@ pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long roo
 	return wynik;
 }
 
+set <long long> wszystkie_route (osm_base* roo, long long root)
+{
+	set <long long> wynik;
+	relation akt=roo->relations[root];
+	int s1=akt.members.size();
+	if(akt.tags["type"]=="route")
+	{
+		wynik.insert(akt.id);
+	}
+	for(int i=0; i<s1; i++)
+	{
+		if(akt.members[i].member_type==RELATION)
+		{
+			long long teraz_id=akt.members[i].member_id;
+			if(roo->relations.find(teraz_id)!=roo->relations.end())
+			{
+				relation teraz=roo->relations[teraz_id];
+				set <long long> tmp=wszystkie_route(roo, teraz_id);
+				wynik.insert(tmp.begin(), tmp.end());
+			}
+		}
+	}
+	return wynik;
+}
+
 set <string> extract_ref(osm_base* baza, long long rel)
 {
 	set<string> wynik;

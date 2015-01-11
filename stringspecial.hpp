@@ -10,6 +10,7 @@
 #include <cstring>
 #include <vector>
 using namespace std;
+string avoid_cudzyslow(string slowo);
 int toint(string dat);
 string tostring(int alfa);
 double distance(double long1, double lat1, double long2, double lat2);

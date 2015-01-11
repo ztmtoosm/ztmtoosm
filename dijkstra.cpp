@@ -47,6 +47,7 @@ struct WariantTrasy
 	int wariantId;
 	vector <long long> stopPositions;
 	vector <long long> stopSigns;
+	vector <long long> stopPlatforms;
 	osm_base* bazaOsm;
 	ztmread_for_html* bazaZtm;
 	bool blad;
@@ -56,6 +57,7 @@ struct WariantTrasy
 		vector <przystanek_big> przystanki=bazaZtm->dane_linia[nazwa][wariantId];
 		for(int i=0; i<przystanki.size(); i++)
 		{
+			stopPlatforms.push_back(przystanki[i].platform);
 			stopPositions.push_back(przystanki[i].stop_position);
 			if(przystanki[i].bus_stop!=0)
 			{
@@ -93,6 +95,20 @@ struct WariantTrasy
 			cout<<"BŁĄD - LINIA "<<nazwa<<endl;
 		}
 	}
+	vector <string> miejscowosci(vector <przystanek_big> xyz)
+	{
+		vector <string> wynik;
+		string akt;
+		for(int i=0; i<xyz.size(); i++)
+		{
+			if(xyz[i].miejscowosc!=akt)
+			{
+				wynik.push_back(xyz[i].miejscowosc);
+				akt=xyz[i].miejscowosc;
+			}
+		}
+		return wynik;
+	}
 	relation generateRelationWithoutIdVersion(set <long long>& changeNodes, set <long long>& changeWays)
 	{
 		string typ_maly=nazwa_mala(nazwa);
@@ -104,9 +120,35 @@ struct WariantTrasy
 		rel.tags["route"]=typ_maly;
 		rel.tags["ref"]=nazwa;
 		map <string, vector< vector<przystanek_big> > >::iterator it1=bazaZtm->dane_linia.find(nazwa);
-		rel.tags["name"]=typ_duzy+" "+nazwa+": "+substituteWhiteCharsBySpace((it1->second)[wariantId][0].name_osm)+" => "+substituteWhiteCharsBySpace((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm);
-		rel.tags["from"]=substituteWhiteCharsBySpace((it1->second)[wariantId][0].name_osm);
-		rel.tags["to"]=substituteWhiteCharsBySpace((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm);
+		vector <string> miasta = miejscowosci((it1->second)[wariantId]);
+		for(int i=0; i<miasta.size(); i++)
+		{
+			cout<<miasta[i]<<" ";
+		}
+		cout<<endl;
+		string from = substituteWhiteCharsBySpace((it1->second)[wariantId][0].name_osm);
+		string to = substituteWhiteCharsBySpace((it1->second)[wariantId][(it1->second)[wariantId].size()-1].name_osm);
+		if(miasta.size()>1)
+		{
+			if(miasta[0]!="Warszawa")
+				from += ", "+miasta[0];
+			if(miasta[miasta.size()-1]!="Warszawa")
+				to += ", "+miasta[miasta.size()-1];
+		}
+		string via;
+		for(int i=1; i<(miasta.size()-1); i++)
+		{
+			via+=miasta[i];
+			if(i<(miasta.size()-2))
+				via+=", ";
+		}
+		rel.tags["name"]=typ_duzy+" "+nazwa+": "+from+" => "+to;
+		rel.tags["from"] = from;
+		rel.tags["to"] = to;
+		if(via!="")
+		{
+			rel.tags["via"] = via;
+		}
 		/*
 		rel.tags["note"]="stan na "+today;
 		*/
@@ -132,11 +174,25 @@ struct WariantTrasy
 				role="stop_entry_only";
 			if(i==stopSigns.size()-1)
 				role="stop_exit_only";
+			string rolep="platform";
+			if(i==0)
+				rolep="platform_entry_only";
+			if(i==stopSigns.size()-1)
+				rolep="platform_exit_only";
 			relation_member foo;
 			foo.member_type=NODE;
 			foo.member_id=stopSigns[i];
 			foo.role=role;
 			rel.members.push_back(foo);
+			if(stopPlatforms[i]>0)
+			{
+				changeWays.insert(stopPlatforms[i]);
+				relation_member foop;
+				foop.member_type=WAY;
+				foop.member_id=stopPlatforms[i];
+				foop.role=rolep;
+				rel.members.push_back(foop);
+			}
 		}
 		return rel;
 	}
@@ -333,6 +389,7 @@ struct galk
 		fstream plik5(nazwaGPX.c_str(), ios::out | ios::trunc);
 		plik5<<"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx>"<<endl;
 		plik5.precision(9);
+		cout<<warianty[nazwa].size()<<" "<<stareRelacje.size()<<endl;
 		for(int i=0; i<warianty[nazwa].size(); i++)
 		{
 			warianty[nazwa][i].generateGPX(plik5);
@@ -419,6 +476,7 @@ struct galk
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
 		htmlHead(plik5);
+		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		while(it2!=warianty.end())
 		{
 			if(!generujLinie(it2->first, licznik))
@@ -433,6 +491,7 @@ struct galk
 			it2++;
 			licznik++;
 		}
+		plik5<<htmlgen::div("partx", "", "Trasy niewygenerowane...")<<endl;
 		auto it3=przegl.nieprawidlowe.begin();
 		while(it3!=przegl.nieprawidlowe.end())
 		{
@@ -441,6 +500,7 @@ struct galk
 		}
 		if(czyWszystkie)
 		{
+			plik5<<htmlgen::div("partx", "", "Trasy bez zmian...")<<endl;
 			auto it4=przegl0.prawidlowe.begin();
 			while(it4!=przegl0.prawidlowe.end())
 			{

@@ -182,14 +182,14 @@ struct osm_base
 		map<long long, node>::iterator it1=nodes.begin();
 		while(it1!=nodes.end())
 		{
-			if(it1->second.modify)
+			if(it1->second.modify || it1->second.todelete)
 				nowa.nodes[it1->first]=it1->second;
 			it1++;
 		}
 		map<long long, way>::iterator it2=ways.begin();
 		while(it2!=ways.end())
 		{
-			if(it2->second.modify)
+			if(it2->second.modify || it2->second.todelete)
 			{
 				nowa.ways[it2->first]=it2->second;
 				int s1=it2->second.nodes.size();
@@ -203,7 +203,7 @@ struct osm_base
 		map<long long, relation>::iterator it3=relations.begin();
 		while(it3!=relations.end())
 		{
-			if(it3->second.modify)
+			if(it3->second.modify || it3->second.todelete)
 				nowa.relations[it3->first]=it3->second;
 			it3++;
 		}
@@ -268,33 +268,7 @@ struct osm_base
 	}
 	
 	private:
-	string avoid_cudzyslow(string slowo)
-	{
-		string wynik;
-		int s1=slowo.length();
-		for(int i=0; i<s1; i++)
-		{
-			if(slowo[i]!='"' && slowo[i]!='&' && slowo[i]!='<' && slowo[i]!='>' && slowo[i]!='\'')
-			{
-				wynik+=slowo[i];
-			}
-			else
-			{
-				if(slowo[i]=='"')
-					wynik+="&quot;";
-				if(slowo[i]=='&')
-					wynik+="&amp;";
-				if(slowo[i]=='<')
-					wynik+="&lt;";
-				if(slowo[i]=='>')
-					wynik+="&gt;";
-				if(slowo[i]=='\'')
-					wynik+="&apos;";
-		
-			}
-		}
-		return wynik;
-	}
+	
 	void wypisz_tags(every_member& teraz, ostream& plik)
 	{
 		map<string, string>::iterator it1=teraz.tags.begin();
@@ -307,9 +281,17 @@ struct osm_base
 	void wypisz_id(every_member& teraz, ostream& plik)
 	{
 		plik<<" id=\""<<teraz.id<<"\"";
-		if(teraz.modify)
+		if(teraz.todelete==true)
 		{
-			plik<<" action=\"modify\"";
+			cout<<"TODELETE TODELETE TODELETE"<<" "<<teraz.id<<endl;
+				plik<<" action=\"delete\"";
+		}
+		else
+		{
+			if(teraz.modify)
+			{
+				plik<<" action=\"modify\"";
+			}
 		}
 		if(teraz.id>=0)
 		{

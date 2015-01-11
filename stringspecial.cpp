@@ -1,4 +1,31 @@
 #include "stringspecial.hpp"
+string avoid_cudzyslow(string slowo)
+	{
+		string wynik;
+		int s1=slowo.length();
+		for(int i=0; i<s1; i++)
+		{
+			if(slowo[i]!='"' && slowo[i]!='&' && slowo[i]!='<' && slowo[i]!='>' && slowo[i]!='\'')
+			{
+				wynik+=slowo[i];
+			}
+			else
+			{
+				if(slowo[i]=='"')
+					wynik+="&quot;";
+				if(slowo[i]=='&')
+					wynik+="&amp;";
+				if(slowo[i]=='<')
+					wynik+="&lt;";
+				if(slowo[i]=='>')
+					wynik+="&gt;";
+				if(slowo[i]=='\'')
+					wynik+="&apos;";
+		
+			}
+		}
+		return wynik;
+	}
 string substituteWhiteCharsBySpace(string nazwa)
 {
 	if(nazwa=="")
