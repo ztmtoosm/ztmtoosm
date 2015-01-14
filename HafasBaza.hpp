@@ -1,24 +1,16 @@
 #include "readztm.hpp"
 #include "osm_base.hpp"
 #include "starelinie.hpp"
+
 struct wspolrzedne
 {
 	double lon;
 	double lat;
 };
 
-struct OneStopRecord
-{
-	int time;
-	string linia;
-	int kurs;
-	int poz;
-};
 
-bool srt(OneStopRecord& alfa, OneStopRecord& beta)
-{
-	return alfa.time>beta.time;
-}
+struct HafasPrzejazd;
+struct HafasLinia;
 
 struct HafasStop
 {
@@ -26,28 +18,35 @@ struct HafasStop
 	string name;
 	wspolrzedne wspol;
 	string miejscowosc;
-	vector <OneStopRecord> recordy;
+	map <HafasStop*, vector <HafasPrzejazd*> > wychodzace;
+	map <HafasStop*, vector <HafasPrzejazd*> > wchodzace;
 };
 
-struct HafasKurs
+struct HafasPrzejazd
 {
-	vector <pair <string, int> > postoje;
+	HafasLinia* linia;
+	HafasPrzejazd* poprzedni;
+	HafasPrzejazd* nastepny;
+	int timestart;
+	int timestop;
+	HafasStop* pierwszy;
+	HafasStop* drugi;
 };
 
-struct DijPoprzednik
+struct HafasLinia
 {
-	string poprz;
-	OneStopRecord record;
-	int endpoint;
+	string id;
+	vector <HafasPrzejazd*> kursy;
+	vector <vector <string> > trasy;
 };
 
 struct DijData
 {
-	set <string> odwiedzone;
-	set <pair<int, string> > kandydaci1;
-	map <string, int> kandydaci2;
-	map <string, DijPoprzednik> poprzednik;
-	void update(string node, DijPoprzednik pop, int time)
+	set <HafasStop*> odwiedzone;
+	set <pair<int, HafasStop*> > kandydaci1;
+	map <HafasStop*, int> kandydaci2;
+	map <HafasStop*, HafasPrzejazd*> poprzednik;
+	void update(HafasStop* node, HafasPrzejazd* pop, int time)
 	{
 		if(odwiedzone.find(node)!=odwiedzone.end())
 			return;
@@ -56,56 +55,50 @@ struct DijData
 			int oldtime=kandydaci2[node];
 			if(oldtime>time)
 			{
-				kandydaci1.erase(kandydaci1.find(pair<int, string>(oldtime, node)));
+				kandydaci1.erase(kandydaci1.find(pair<int, HafasStop*>(oldtime, node)));
 				kandydaci2[node]=time;
 				poprzednik[node]=pop;
-				kandydaci1.insert(pair<int, string>(time, node));
+				kandydaci1.insert(pair<int, HafasStop*>(time, node));
 			}
 		}
 		else
 		{
 				kandydaci2[node]=time;
 				poprzednik[node]=pop;
-				kandydaci1.insert(pair<int, string>(time, node));
+				kandydaci1.insert(pair<int, HafasStop*>(time, node));
 		}
 	}
-	int wstaw(string node, int time)
+	int wstaw(HafasStop* node, int time)
 	{
-		kandydaci1.insert(pair<int, string>(time, node));
+		kandydaci1.insert(pair<int, HafasStop*>(time, node));
 		kandydaci2[node]=time;
 	}
-	int odwiedz(string node, int ewstart)
+	int odwiedz(HafasStop* node, int ewstart)
 	{
 		int oldtime=ewstart;
 		if(kandydaci2.find(node)!=kandydaci2.end())
 		{
 			oldtime=kandydaci2[node];
-			if(kandydaci1.find(pair<int, string>(oldtime, node))!=kandydaci1.end())
-				kandydaci1.erase(kandydaci1.find(pair<int, string>(oldtime, node)));
+			if(kandydaci1.find(pair<int, HafasStop*>(oldtime, node))!=kandydaci1.end())
+				kandydaci1.erase(kandydaci1.find(pair<int, HafasStop*>(oldtime, node)));
 			kandydaci2.erase(node);
 		}
 		odwiedzone.insert(node);
 		return oldtime;
 	}
-	vector <DijPoprzednik> poprzednicy(string start)
+	vector <HafasPrzejazd*> poprzednicy(HafasStop* start)
 	{
-		vector <DijPoprzednik> wynik;
+		vector <HafasPrzejazd*> wynik;
 		while(poprzednik.find(start)!=poprzednik.end())
 		{
 			wynik.push_back(poprzednik[start]);
-			start=poprzednik[start].poprz;
+			start=poprzednik[start]->pierwszy;
 		}
 		reverse(wynik.begin(), wynik.end());
 		return wynik;
 	}
 };
 
-struct HafasLinia
-{
-	string id;
-	vector <HafasKurs> kursy;
-	vector <vector <string> > trasy;
-};
 
 class HafasBazaLoader;
 
@@ -114,11 +107,87 @@ class HafasBaza
 	friend class HafasBazaLoader;
 	public:
 	HafasBaza() {};
-	//private:
-	map <string, HafasLinia> linie;
-	map <string, HafasStop> przystanki;
-	map <pair<string, string>, vector <wspolrzedne> > laczniki;
-	void sortRecordy()
+	map <string, HafasLinia*> linie;
+	map <string, HafasStop*> przystanki;
+	map <pair <string, string>, vector <wspolrzedne> > laczniki;
+	bool podobneid(string alfa, string beta)
+	{
+		if(alfa.substr(0, 4)==beta.substr(0, 4))
+		{
+			return true;
+		}
+		return false;
+	}
+	void wypelnij_sciezki(map<string, HafasStop*>::iterator it1)
+	{
+		map<string, HafasStop*>::iterator it2=it1;
+		bool okminus=1;
+		bool okplus=1;
+		if(it2==przystanki.begin())
+			okminus=0;
+		it2--;
+		while(okminus)
+		{
+			if(podobneid(it1->second->id, it2->second->id))
+			{
+				HafasPrzejazd* nowy = new HafasPrzejazd;
+				nowy->linia=NULL;
+				nowy->poprzedni=NULL;
+				nowy->nastepny=NULL;
+				nowy->timestart=0;
+				nowy->timestop=120;
+				nowy->pierwszy=it1->second;
+				nowy->drugi=it2->second;
+				it1->second->wychodzace[it2->second].push_back(nowy);
+				it2->second->wchodzace[it1->second].push_back(nowy);
+			}
+			else
+			{
+				okminus=0;
+			}
+			if(it2==przystanki.begin())
+				okminus=0;
+			it2--;
+		}
+		it2=it1;
+		it2++;
+		while(okplus)
+		{
+			if(it2==przystanki.end())
+				okplus=0;
+			if(okplus)
+			{
+				if(podobneid(it1->second->id, it2->second->id))
+				{
+					HafasPrzejazd* nowy = new HafasPrzejazd;
+					nowy->linia=NULL;
+					nowy->poprzedni=NULL;
+					nowy->nastepny=NULL;
+					nowy->timestart=0;
+					nowy->timestop=120;
+					nowy->pierwszy=it1->second;
+					nowy->drugi=it2->second;
+					it1->second->wychodzace[it2->second].push_back(nowy);
+					it2->second->wchodzace[it1->second].push_back(nowy);
+				}
+				else
+				{
+					okplus=0;
+				}
+				it2++;
+			}
+		}
+	}
+	void wypelnij_sciezki()
+	{
+		auto it1=przystanki.begin();
+		while(it1!=przystanki.end())
+		{
+			wypelnij_sciezki(it1);
+			it1++;
+		}
+	}
+	/*void sortRecordy()
 	{
 		auto it1=przystanki.begin();
 		while(it1!=przystanki.end())
@@ -143,53 +212,73 @@ class HafasBaza
 			}
 		}
 		return left;
-	}
-	vector <DijPoprzednik> dijkstra(int time, string start, string stop)
+	}*/
+	vector <HafasPrzejazd*> dijkstra (int time, HafasStop* start, HafasStop* stop)
 	{
 		DijData dix;
 		dix.wstaw(start, time);
 		while(!dix.kandydaci1.empty() && dix.odwiedzone.find(stop)==dix.odwiedzone.end())
 		{
-			string akt=dix.kandydaci1.begin()->second;
-			cout<<"dijk "<<akt<<endl;
+			HafasStop* akt=dix.kandydaci1.begin()->second;
 			int akttime=dix.odwiedz(akt, time);
-			vector <OneStopRecord> recordy=przystanki[akt].recordy;
-			bool ok=1;
-			for(int i=binsearch(recordy, akttime); i<recordy.size() && ok; i++)
+			map <HafasStop*, vector <HafasPrzejazd*> > recordy = akt->wychodzace;
+			HafasPrzejazd* poprzednik=NULL;
+			if(dix.poprzednik.find(akt)!=dix.poprzednik.end())
 			{
-				if(recordy[i].time>akttime)
+				poprzednik=dix.poprzednik[akt];
+			}
+			auto it1=recordy.begin();
+			while(it1!=recordy.end())
+			{
+				vector <HafasPrzejazd*> rec2 = it1->second;
+				for(int i=0; i<rec2.size(); i++)
 				{
-					string linia=recordy[i].linia;
-					int time=recordy[i].time;
-					int kurs=recordy[i].kurs;
-					int poz=recordy[i].poz;
-					auto postoje=linie[linia].kursy[kurs].postoje;
-					for(int j=poz+1; j<postoje.size(); j++)
+					if(rec2[i]->linia==NULL)
 					{
-						DijPoprzednik pop;
-						pop.poprz=akt;
-						pop.endpoint=j;
-						pop.record=recordy[i];
-						dix.update(postoje[j].first, pop, postoje[j].second+1);
+						dix.update(rec2[i]->drugi, rec2[i], akttime+rec2[i]->timestop);
 					}
-					if(recordy[i].time>akttime*4*60*60)
-						ok=0;
+					else if(rec2[i]->timestart>=akttime)
+					{
+						if(poprzednik==NULL || (poprzednik->linia==rec2[i]->linia) || poprzednik->linia==NULL)
+						{
+							dix.update(rec2[i]->drugi, rec2[i], rec2[i]->timestop);
+						}
+						else
+						{
+							if(rec2[i]->timestart>akttime)
+							{
+								dix.update(rec2[i]->drugi, rec2[i], rec2[i]->timestop);
+							}
+						}
+					}
 				}
+				it1++;
 			}
 		}
 		return dix.poprzednicy(stop);
 	}
 	void dijkstra(string start, string stop, int time, ostream& strim)
 	{
-		vector <DijPoprzednik> dll=dijkstra(time, start, stop);
-		vector <pair<string, int> > kurr;
-		vector <pair<int, int> > zakresy;
+		vector <HafasPrzejazd*> dll=dijkstra(time, przystanki[start], przystanki[stop]);
+		pair <HafasPrzejazd*, HafasPrzejazd*> akt = pair<HafasPrzejazd*, HafasPrzejazd*>(NULL, NULL);
+		vector <pair<HafasPrzejazd*, HafasPrzejazd*> > kursy;
 		for(int i=0; i<dll.size(); i++)
 		{
-			kurr.push_back(pair<string, int>(dll[i].record.linia, dll[i].record.kurs));
-			zakresy.push_back(pair<int, int>(dll[i].record.poz, dll[i].endpoint));
+			if(dll[i]->linia!=NULL)
+			{
+				if(akt.first==NULL || dll[i]->linia!=akt.second->linia)
+				{
+					if(akt.first!=NULL)
+					{
+						kursy.push_back(akt);
+					}
+					akt.first=dll[i];
+				}
+				akt.second=dll[i];
+			}
 		}
-		wypiszKurs(kurr, zakresy, strim);
+		kursy.push_back(akt);
+		wypiszKurs(kursy, strim);
 	}
 	void wypiszPartRoute(int starttime, int stoptime, string start, string stop, ostream& strim, bool ostatni)
 	{
@@ -200,30 +289,34 @@ class HafasBaza
 		}
 		else
 		{
-			obrobka.push_back(przystanki[start].wspol);
-			obrobka.push_back(przystanki[stop].wspol);
+			obrobka.push_back(przystanki[start]->wspol);
+			obrobka.push_back(przystanki[stop]->wspol);
 		}
 		for(int i=0; i<obrobka.size(); i++)
 		{
 			if(ostatni || i<obrobka.size()-1)
 			{
+				string type="point";
 				strim<<"{";
 				strim<<"\"lat\":"<<obrobka[i].lat;
 				strim<<", "<<"\"lon\":"<<obrobka[i].lon;
 				if(i==0)
 				{
-					strim<<", "<<"\"name\":\""<<avoid_cudzyslow(przystanki[start].name)<<"\"";
-					strim<<", "<<"\"id\":\""<<przystanki[start].id<<"\"";
+					type="stop";
+					strim<<", "<<"\"name\":\""<<avoid_cudzyslow(przystanki[start]->name)<<"\"";
+					strim<<", "<<"\"id\":\""<<przystanki[start]->id<<"\"";
 					if(starttime>0)
 						strim<<", "<<"\"time\":"<<starttime;
 				}
 				if(i==obrobka.size()-1)
 				{
-					strim<<", "<<"\"name\":\""<<avoid_cudzyslow(przystanki[stop].name)<<"\"";
-					strim<<", "<<"\"id\":\""<<przystanki[stop].id<<"\"";
+					type="stop";
+					strim<<", "<<"\"name\":\""<<avoid_cudzyslow(przystanki[stop]->name)<<"\"";
+					strim<<", "<<"\"id\":\""<<przystanki[stop]->id<<"\"";
 					if(stoptime>0)
 						strim<<", "<<"\"time\":"<<stoptime;
 				}
+				strim<<", "<<"\"type\":\""<<type<<"\"";
 				strim<<"}";
 				if(i<obrobka.size()-1)
 					strim<<",";
@@ -233,38 +326,46 @@ class HafasBaza
 	void wypiszRoute(string id, ostream& strim)
 	{
 		strim<<"[";
-		for(int i=0; i<linie[id].trasy.size(); i++)
+		for(int i=0; i<linie[id]->trasy.size(); i++)
 		{
 			strim<<"[";
-			for(int j=0; j<linie[id].trasy[i].size()-1; j++)
+			for(int j=0; j<linie[id]->trasy[i].size()-1; j++)
 			{
-				bool ostatni=(j==linie[id].trasy[i].size()-2);
-				wypiszPartRoute(-1, -1, linie[id].trasy[i][j], linie[id].trasy[i][j+1], strim, ostatni);
+				bool ostatni=(j==linie[id]->trasy[i].size()-2);
+				wypiszPartRoute(-1, -1, linie[id]->trasy[i][j], linie[id]->trasy[i][j+1], strim, ostatni);
 			}
 			strim<<"]";
-			if(i<linie[id].trasy.size()-1)
+			if(i<linie[id]->trasy.size()-1)
 				strim<<",";
 		}
 		strim<<"]";
 	}
-	void wypiszKurs(vector <pair<string, int> >kursy, vector<pair<int, int> >zakresy, ostream& strim)
+	void wypiszKurs (vector <pair<HafasPrzejazd*, HafasPrzejazd*> >kursy, ostream& strim)
 	{
 		strim<<"[";
 		for(int i=0; i<kursy.size(); i++)
 		{
+			strim<<"{";
+			strim<<"\"line\": \""<<kursy[i].first->linia->id<<"\",";
+			strim<<"\"route\": ";
 			strim<<"[";
-			vector <pair<string, int> > postoje = linie[kursy[i].first].kursy[kursy[i].second].postoje;
-			for(int j=zakresy[i].first; j<zakresy[i].second; j++)
+			bool ostatni=0;
+			HafasPrzejazd* akt=kursy[i].first;
+			while(!ostatni && akt!=NULL)
 			{
-				bool ostatni=(j==zakresy[i].second-1);
-				wypiszPartRoute(postoje[j].second, postoje[j+1].second, postoje[j].first, postoje[j+1].first, strim, ostatni);
+				if(akt==kursy[i].second)
+					ostatni=1;
+				wypiszPartRoute(akt->timestart, akt->timestop, akt->pierwszy->id, akt->drugi->id, strim, ostatni);
+				akt=akt->nastepny;
 			}
 			strim<<"]";
+			strim<<"}";
 			if(i<kursy.size()-1)
 				strim<<",";
 		}
 		strim<<"]";
 	}
+	/*
 	void wypiszRoute(vector <string> id, ostream& strim)
 	{
 		strim<<"[";
@@ -284,7 +385,7 @@ class HafasBaza
 			}
 		}
 		strim<<"]";
-	}
+	}*/
 };
 
 class HafasBazaLoader : ztmread
@@ -293,39 +394,51 @@ class HafasBazaLoader : ztmread
 	private:
 	void nowy_kurs(kurs nowy)
 	{
-		HafasKurs nowy2;
-		for(int i=0; i<nowy.postoje.size(); i++)
+		vector <HafasPrzejazd*> dodane;
+		for(int i=0; i<nowy.postoje.size()-1; i++)
 		{
-			OneStopRecord recr;
-			recr.time=nowy.postoje[i].time;
-			recr.linia=nowy.linia;
-			recr.kurs=baza->linie[nowy.linia].kursy.size();
-			recr.poz=i;
-			baza->przystanki[nowy.postoje[i].stop_id].recordy.push_back(recr);
-			nowy2.postoje.push_back(pair<string, int>(nowy.postoje[i].stop_id,nowy.postoje[i].time));
+			HafasPrzejazd* nowy2 = new HafasPrzejazd;
+			nowy2->linia=baza->linie[nowy.linia];
+			nowy2->poprzedni=NULL;
+			if(dodane.size()>0)
+			{
+				nowy2->poprzedni=dodane[dodane.size()-1];
+				dodane[dodane.size()-1]->nastepny=nowy2;
+			}
+			nowy2->nastepny=NULL;
+			nowy2->timestart=nowy.postoje[i].time;
+			nowy2->timestop=nowy.postoje[i+1].time;
+			nowy2->pierwszy=baza->przystanki[nowy.postoje[i].stop_id];
+			nowy2->drugi=baza->przystanki[nowy.postoje[i+1].stop_id];
+			baza->przystanki[nowy.postoje[i].stop_id]->wychodzace[baza->przystanki[nowy.postoje[i+1].stop_id]].push_back(nowy2);
+			baza->przystanki[nowy.postoje[i+1].stop_id]->wchodzace[baza->przystanki[nowy.postoje[i].stop_id]].push_back(nowy2);
+			dodane.push_back(nowy2);
 		}
-		baza->linie[nowy.linia].kursy.push_back(nowy2);
+		if(dodane.size()>0)
+		{
+			baza->linie[nowy.linia]->kursy.push_back(dodane[0]);
+		}
 	}
 	void nowy_przystanek(przystanek nowy)
 	{
-		HafasStop nowy2;
-		nowy2.name=nowy.name;
-		nowy2.id=nowy.id;
-		nowy2.miejscowosc=nowy.miejscowosc;
-		nowy2.wspol.lon=nowy.lon;
-		nowy2.wspol.lat=nowy.lat;
-		baza->przystanki[nowy.id]=nowy2;
+		HafasStop* nowy2 = new HafasStop;
+		nowy2->name = nowy.name;
+		nowy2->id = nowy.id;
+		nowy2->miejscowosc = nowy.miejscowosc;
+		nowy2->wspol.lon = nowy.lon;
+		nowy2->wspol.lat = nowy.lat;
+		baza->przystanki[nowy.id] = nowy2;
 	}
 	void nowa_linia(string nazwa, vector <vector <string> > trasy)
 	{
-		baza->linie[nazwa].id=nazwa;
-		baza->linie[nazwa].trasy=trasy;
+		baza->linie[nazwa]=new HafasLinia;
+		baza->linie[nazwa]->id=nazwa;
+		baza->linie[nazwa]->trasy=trasy;
 	}
 	public:
 	HafasBazaLoader (HafasBaza* baz, string sciezka) : baza(baz), ztmread(sciezka)
 	{
 		run();
-		baza->sortRecordy();
 	}
 };
 class OsmBazaLoader
@@ -430,7 +543,6 @@ class OsmBazaLoader
 			}
 			base2->laczniki[pair<string, string>(ref1[i], ref1[i+1])]=wynik;
 		}
-		cout<<"KOLEJNY KURS "<<rel<<endl;
 	}
 	void easyNodes(string linia, osm_base* base, HafasBaza *base2)
 	{
@@ -457,8 +569,8 @@ class OsmBazaLoader
 					wspolrzedne wsp;
 					wsp.lat=(it1->second).lat;
 					wsp.lon=(it1->second).lon;
-					baz->przystanki[ref].wspol=wsp;
-					baz->przystanki[ref].name=(it1->second).tags["name"];
+					baz->przystanki[ref]->wspol=wsp;
+					baz->przystanki[ref]->name=(it1->second).tags["name"];
 				}
 			}
 			it1++;
@@ -470,5 +582,12 @@ class OsmBazaLoader
 			easyNodes(it2->first, &bazaOsm, baz);
 			it2++;
 		}
+		baz->wypelnij_sciezki();
 	}
 };
+
+
+
+
+
+
