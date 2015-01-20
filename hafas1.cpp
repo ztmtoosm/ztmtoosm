@@ -56,15 +56,15 @@ int main()
 		{
 			if(env["from"]=="")
 			{
-				env["from"]="219002";
+				env["from"]="701301";
 			}
 			if(env["to"]=="")
 			{
-				env["to"]="614102";
+				env["to"]="122201";
 			}
 			if(env["time"]=="")
 			{
-				env["time"]="36000";
+				env["time"]="38520";
 			}
 			baza->dijkstra(env["from"], env["to"], stringtoint(env["time"]), wyp);
 		}

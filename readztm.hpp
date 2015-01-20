@@ -46,6 +46,9 @@ class ztmread
 	virtual void nowa_linia(string nazwa, vector <vector <string> > trasy)
 	{
 	}
+	virtual void newkalendar(string date, vector<string>caltypes)
+	{
+	}
 	ztmread (string sciezka) : sciez(sciezka)
 	{
 	}
@@ -65,6 +68,10 @@ class ztmread
 			for(int i=1; i<s9; i++)
 			{
 				roftl+=lll[i];
+			}
+			if(roftl=="KA")
+			{
+				readka(roftl, plik);
 			}
 			if(roftl=="ZP")
 			{
@@ -183,6 +190,31 @@ class ztmread
 			plt>>lll;
 			if(lll==nazwa)
 				ok=0;
+		}
+	}
+	void readka(string nazwa, fstream& plik)
+	{
+		nazwa="#"+nazwa;
+		char data[100000];
+		bool ok=1;
+		while(ok && plik.getline(data, 100000))
+		{
+			stringstream plt;
+			plt<<data;
+			string lll;
+			plt>>lll;
+			if(lll==nazwa)
+				ok=0;
+			else
+			{
+				string linianum;
+				plt>>linianum;
+				vector <string> nowe2;
+				string nowe;
+				while(plt>>nowe)
+					nowe2.push_back(nowe);
+				newkalendar(lll, nowe2);
+			}
 		}
 	}
 	void readwk(string nazwa, fstream& plik, string nazwa2)
@@ -388,7 +420,6 @@ class ztmread
 					}
 				}
 				przystanek foo;
-				cout<<aktmiasto<<"#"<<endl;
 				foo.miejscowosc=aktmiasto;
 				foo.name=akt;
 				foo.id=lll;

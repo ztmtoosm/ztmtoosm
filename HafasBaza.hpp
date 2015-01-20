@@ -46,14 +46,14 @@ struct DijData
 	set <pair<int, HafasStop*> > kandydaci1;
 	map <HafasStop*, int> kandydaci2;
 	map <HafasStop*, HafasPrzejazd*> poprzednik;
-	void update(HafasStop* node, HafasPrzejazd* pop, int time)
+	void update(HafasStop* node, HafasPrzejazd* pop, int time, bool reverse)
 	{
 		if(odwiedzone.find(node)!=odwiedzone.end())
 			return;
 		if(kandydaci2.find(node)!=kandydaci2.end())
 		{
 			int oldtime=kandydaci2[node];
-			if(oldtime>time)
+			if((oldtime>time && !reverse) || (oldtime<time && reverse))
 			{
 				kandydaci1.erase(kandydaci1.find(pair<int, HafasStop*>(oldtime, node)));
 				kandydaci2[node]=time;
@@ -67,6 +67,10 @@ struct DijData
 				poprzednik[node]=pop;
 				kandydaci1.insert(pair<int, HafasStop*>(time, node));
 		}
+	}
+	void update(HafasStop* node, HafasPrzejazd* pop, int time)
+	{
+		update(node,pop,time, false);
 	}
 	int wstaw(HafasStop* node, int time)
 	{
@@ -92,7 +96,10 @@ struct DijData
 		while(poprzednik.find(start)!=poprzednik.end())
 		{
 			wynik.push_back(poprzednik[start]);
-			start=poprzednik[start]->pierwszy;
+			if(poprzednik[start]->pierwszy!=start)
+				start=poprzednik[start]->pierwszy;
+			else
+				start=poprzednik[start]->drugi;
 		}
 		reverse(wynik.begin(), wynik.end());
 		return wynik;
@@ -257,9 +264,57 @@ class HafasBaza
 		}
 		return dix.poprzednicy(stop);
 	}
+	vector <HafasPrzejazd*> dijkstraReverse (int time, HafasStop* start, HafasStop* stop)
+	{
+		DijData dix;
+		dix.wstaw(stop, time);
+		while(!dix.kandydaci1.empty() && dix.odwiedzone.find(start)==dix.odwiedzone.end())
+		{
+			auto it_pom=dix.kandydaci1.end();
+			it_pom--;
+			HafasStop* akt=(it_pom)->second;
+			int akttime=dix.odwiedz(akt, time);
+			map <HafasStop*, vector <HafasPrzejazd*> > recordy = akt->wchodzace;
+			HafasPrzejazd* poprzednik=NULL;
+			if(dix.poprzednik.find(akt)!=dix.poprzednik.end())
+			{
+				poprzednik=dix.poprzednik[akt];
+			}
+			auto it1=recordy.begin();
+			while(it1!=recordy.end())
+			{
+				vector <HafasPrzejazd*> rec2 = it1->second;
+				for(int i=0; i<rec2.size(); i++)
+				{
+					if(rec2[i]->linia==NULL)
+					{
+						dix.update(rec2[i]->pierwszy, rec2[i], akttime-rec2[i]->timestop, true);
+					}
+					else if(rec2[i]->timestop<=akttime)
+					{
+						if(poprzednik==NULL || (poprzednik->linia==rec2[i]->linia) || poprzednik->linia==NULL)
+						{
+							dix.update(rec2[i]->pierwszy, rec2[i], rec2[i]->timestart, true);
+						}
+						else
+						{
+							if(rec2[i]->timestop<akttime)
+							{
+								dix.update(rec2[i]->pierwszy, rec2[i], rec2[i]->timestart, true);
+							}
+						}
+					}
+				}
+				it1++;
+			}
+		}
+		auto wynik = dix.poprzednicy(start);
+		reverse(wynik.begin(), wynik.end());
+		return wynik;
+	}
 	void dijkstra(string start, string stop, int time, ostream& strim)
 	{
-		vector <HafasPrzejazd*> dll=dijkstra(time, przystanki[start], przystanki[stop]);
+		vector <HafasPrzejazd*> dll=dijkstraReverse(time, przystanki[start], przystanki[stop]);
 		pair <HafasPrzejazd*, HafasPrzejazd*> akt = pair<HafasPrzejazd*, HafasPrzejazd*>(NULL, NULL);
 		vector <pair<HafasPrzejazd*, HafasPrzejazd*> > kursy;
 		for(int i=0; i<dll.size(); i++)
@@ -477,7 +532,6 @@ class OsmBazaLoader
 		}
 		wynik.push_back(start);
 		reverse(wynik.begin(), wynik.end());
-		cout<<"KOLEJNY BFS "<<start<<" "<<stop<<endl;
 		return wynik;
 	}
 	void easyNodes(long long rel, osm_base* base, HafasBaza *base2)
@@ -552,7 +606,6 @@ class OsmBazaLoader
 		{
 			easyNodes(relacje[i], base, base2);
 		}
-		cout<<"KOLEJNA LINIA "<<linia<<endl;
 	}
 	public:
 	OsmBazaLoader(HafasBaza* baz, string sciezka)
@@ -575,7 +628,6 @@ class OsmBazaLoader
 			}
 			it1++;
 		}
-		cout<<"BFS ANALIZA START"<<endl;
 		auto it2=baz->linie.begin();
 		while(it2!=baz->linie.end())
 		{
@@ -585,9 +637,3 @@ class OsmBazaLoader
 		baz->wypelnij_sciezki();
 	}
 };
-
-
-
-
-
-
