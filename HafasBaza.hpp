@@ -268,11 +268,15 @@ class HafasBaza
 	{
 		DijData dix;
 		dix.wstaw(stop, time);
+		cout<<"aaa"<<endl;
 		while(!dix.kandydaci1.empty() && dix.odwiedzone.find(start)==dix.odwiedzone.end())
 		{
+			cout<<"bbb"<<endl;
 			auto it_pom=dix.kandydaci1.end();
 			it_pom--;
 			HafasStop* akt=(it_pom)->second;
+			cout<<akt<<endl;
+			cout<<"aktid "<<akt->id<<endl;
 			int akttime=dix.odwiedz(akt, time);
 			map <HafasStop*, vector <HafasPrzejazd*> > recordy = akt->wchodzace;
 			HafasPrzejazd* poprzednik=NULL;
@@ -309,12 +313,15 @@ class HafasBaza
 			}
 		}
 		auto wynik = dix.poprzednicy(start);
+		cout<<wynik.size()<<endl;
 		reverse(wynik.begin(), wynik.end());
 		return wynik;
 	}
 	void dijkstra(string start, string stop, int time, ostream& strim)
 	{
+		cout<<"dupa0"<<endl;
 		vector <HafasPrzejazd*> dll=dijkstraReverse(time, przystanki[start], przystanki[stop]);
+		cout<<"dupa1"<<endl;
 		pair <HafasPrzejazd*, HafasPrzejazd*> akt = pair<HafasPrzejazd*, HafasPrzejazd*>(NULL, NULL);
 		vector <pair<HafasPrzejazd*, HafasPrzejazd*> > kursy;
 		for(int i=0; i<dll.size(); i++)

@@ -73,16 +73,19 @@ class ztmread
 			{
 				readka(roftl, plik);
 			}
-			if(roftl=="ZP")
+			else 
 			{
-				readzp(roftl, plik);
-			}
-			else
-			{
-				if(roftl=="LL")
-					readll(roftl, plik);
+				if(roftl=="ZP")
+				{
+					readzp(roftl, plik);
+				}
 				else
-					readobszar(roftl, plik);
+				{
+					if(roftl=="LL")
+						readll(roftl, plik);
+					else
+						readobszar(roftl, plik);
+				}
 			}
 		}
 		plik.close();
@@ -201,6 +204,7 @@ class ztmread
 		{
 			stringstream plt;
 			plt<<data;
+			cout<<plt.str()<<endl;
 			string lll;
 			plt>>lll;
 			if(lll==nazwa)
@@ -216,6 +220,7 @@ class ztmread
 				newkalendar(lll, nowe2);
 			}
 		}
+		cout<<"arritvederci"<<endl;
 	}
 	void readwk(string nazwa, fstream& plik, string nazwa2)
 	{

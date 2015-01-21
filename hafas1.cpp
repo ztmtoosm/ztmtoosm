@@ -41,6 +41,7 @@ int main()
 	OsmBazaLoader loader2(baza, sciezka2);
 	while(FCGI_Accept() >= 0)
 	{
+		cout<<"elo"<<endl;
 		stringstream wyp;
 		wyp.precision(9);
 		wyp<<"Content-type: application/json\n\n";
