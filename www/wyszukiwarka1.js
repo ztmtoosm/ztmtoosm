@@ -33,7 +33,7 @@ function loadJSON(url)
 }
 function podrozSciezka (from, to, time)
 {
-	var sciezka="http://127.0.0.1/hafas";
+	var sciezka="http://192.168.1.110/hafas";
 	sciezka+='\?from\='+from;
 	sciezka+='\&to\='+to;
 	sciezka+='\&time\='+time;
@@ -142,13 +142,19 @@ var WizualizacjaPodrozy = function (from, to, time)
 	for(var i=0; i < this.bazaJSON.length; i++)
 	{
 		var nowalinia=document.createElement("DIV");
+		var nowalinia_kolorek=document.createElement("DIV");
 		var nowaliniaid=document.createElement("DIV");
 		nowaliniaid.innerHTML=podstawa[i].line;
 		nowaliniaid.className="hafasliniaid";
 		nowalinia.appendChild(nowaliniaid);
 		nowalinia.className="hafaslinia";
+		nowalinia_kolorek.className="kolorek";
+		var col=getpalette(i, this.bazaJSON.length);
+		console.log(col);
+		nowalinia_kolorek.style.backgroundColor=col;
 		nowalinia.setAttribute("paletteid", getpaletteid(i, podstawa.length));
 		heart.appendChild(nowalinia);
+		nowalinia.appendChild(nowalinia_kolorek);
 		var tablica1 = [];
 		for(var j=0; j < this.bazaJSON[i].route.length; j++)
 		{
@@ -164,7 +170,9 @@ var WizualizacjaPodrozy = function (from, to, time)
 				this.przystanki[podstawa[i].route[j].id].addLine(tim, podstawa[i].line, getpalette(i, podstawa.length));
 				var nowystop=document.createElement("DIV");
 				var nowystopname=document.createElement("DIV");
+				nowystopname.className="nowystopname";
 				var nowystoptime=document.createElement("DIV");
+				nowystoptime.className="nowystoptime";
 				nowystopname.innerHTML=podstawa[i].route[j].name;
 				tim/=60;
 				var mins=tim%60;
@@ -176,7 +184,7 @@ var WizualizacjaPodrozy = function (from, to, time)
 				nowalinia.appendChild(nowystop);
 			}
 		}
-		addLineToSource(tablica1, getpalette(i, this.bazaJSON.length), 'dupa', this.warstwaVector1, this.warstwaVector2);
+		addLineToSource(tablica1, getpalette(i, this.bazaJSON.length), podstawa[i].line, this.warstwaVector1, this.warstwaVector2);
 		for (var item in this.przystanki)
 		{
 			this.przystanki[item].setBasicStyle();
@@ -291,11 +299,11 @@ var layerLines2 = new ol.layer.Vector({
         target: 'map',
         layers: [
           new ol.layer.Tile({
-            source: new ol.source.OSM({url: "http://a.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png", crossOrigin: null})
+            source: new ol.source.OSM({url: " http://a.tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", crossOrigin: null})
           }), layerLines, layerLines2],
         view: new ol.View({
-          center: ol.proj.transform([37.41, 8.82], 'EPSG:4326', 'EPSG:3857'),
-          zoom: 4
+          center: ol.proj.transform([21.05, 52.23], 'EPSG:4326', 'EPSG:3857'),
+          zoom: 12
         })});
 
     	document.getElementById("from").value="701301";
@@ -353,3 +361,12 @@ function changesource()
  	map.addLayer(layerLines);
         map.addLayer(layerLines2);
 }
+
+function zrownaj()
+{
+    	var heart = document.getElementById("heart");
+    	var map0 = document.getElementById("map0");
+	heart.style.maxHeight=(window.innerHeight-110)+"px";
+}
+zrownaj();
+window.addEventListener("resize", zrownaj, false);
