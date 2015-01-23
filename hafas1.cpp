@@ -67,7 +67,7 @@ int main()
 			{
 				env["time"]="38520";
 			}
-			baza->dijkstra(env["from"], env["to"], stringtoint(env["time"]), wyp);
+			baza->dijkstra_print(env["from"], env["to"], stringtoint(env["time"]), wyp);
 		}
 		wypisz(wyp);
 	}

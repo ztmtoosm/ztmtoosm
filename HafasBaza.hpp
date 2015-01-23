@@ -218,16 +218,73 @@ class HafasBaza
 				right=(left+right)/2;
 			}
 		}
+	
 		return left;
+	
+
+	LatLon.distHaversine = function(lat1, lon1, lat2, lon2) {
+		   var R = 6371; // earth's mean radius in km
+		      var dLat = (lat2-lat1).toRad();
+		         var dLon = (lon2-lon1).toRad();
+			    lat1 = lat1.toRad(), lat2 = lat2.toRad();
+			       var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+			          Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2) * Math.sin(dLon/2);
+				     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+				        var d = R * c;
+
+					   return d;
+	}
+
+
 	}*/
-	vector <HafasPrzejazd*> dijkstra (int time, HafasStop* start, HafasStop* stop)
+	double toRad (double x)
+	{
+		return x*M_PI/180.0;
+	}
+	double calcDistanceInMeters (double lat1, double lon1, double lat2, double lon2)
+	{
+		double R = 3671;
+		double dLat = toRad(lat2-lat1);
+		double dLon = toRad(lon2-lon1);
+		lat1 = toRad(lat1);
+		lat2 = toRad(lat2);
+		double a = sin(dLat/2)*sin(dLat/2)+cos(lat1)*cos(lat2)*sin(dLon/2)*sin(dLon/2);
+		double c = 2 * atan2(sqrt(a), sqrt(1-a));
+		return R*c;
+	}
+/*
+	map <HafasStop*, int> znajdzNajblizsze (double x, double y)
+	{
+		for (auto& i : przystanki)
+		{
+			double distance = distanceCalc(i.first->wspol.lat, i.first->wspol.lon, x, y);
+			cout << distance << endl;
+		}
+	}
+	*/
+	vector <HafasPrzejazd*> dijkstra (int time, map <HafasStop*, int> start, map <HafasStop*, int> stop)
 	{
 		DijData dix;
-		dix.wstaw(start, time);
-		while(!dix.kandydaci1.empty() && dix.odwiedzone.find(stop)==dix.odwiedzone.end())
+		for (auto& i : start)
+		{
+			dix.wstaw(i.first, time+i.second);
+		}
+		int bestResult=1000000;
+		HafasStop* bestStop;
+		int resultsCounter = stop.size();
+		while(!dix.kandydaci1.empty() && resultsCounter>0)
 		{
 			HafasStop* akt=dix.kandydaci1.begin()->second;
 			int akttime=dix.odwiedz(akt, time);
+			if(stop.find(akt)!=stop.end())
+			{
+				if(bestResult>(akttime+stop.find(akt)->second))
+				{
+					bestResult = akttime+stop.find(akt)->second;
+					bestStop = akt;
+					resultsCounter--;
+				}
+			}
 			map <HafasStop*, vector <HafasPrzejazd*> > recordy = akt->wychodzace;
 			HafasPrzejazd* poprzednik=NULL;
 			if(dix.poprzednik.find(akt)!=dix.poprzednik.end())
@@ -262,12 +319,25 @@ class HafasBaza
 				it1++;
 			}
 		}
-		return dix.poprzednicy(stop);
+		return dix.poprzednicy(bestStop);
 	}
-	vector <HafasPrzejazd*> dijkstraReverse (int time, HafasStop* start, HafasStop* stop)
+
+	vector <HafasPrzejazd*> dijkstra (int time, HafasStop* start, HafasStop* stop)
+	{
+		map <HafasStop*, int> tmp_start;
+		map <HafasStop*, int> tmp_stop;
+		tmp_start[start]=0;
+		tmp_stop[stop]=0;
+		return dijkstra(time, tmp_start, tmp_stop);
+	}
+
+	vector <HafasPrzejazd*> dijkstraReverse (int time, HafasStop* start, map <HafasStop*, int> stop)
 	{
 		DijData dix;
-		dix.wstaw(stop, time);
+		for (auto& i : stop)
+		{
+			dix.wstaw(i.first, time-i.second);
+		}
 		cout<<"aaa"<<endl;
 		while(!dix.kandydaci1.empty() && dix.odwiedzone.find(start)==dix.odwiedzone.end())
 		{
@@ -317,10 +387,18 @@ class HafasBaza
 		reverse(wynik.begin(), wynik.end());
 		return wynik;
 	}
-	void dijkstra(string start, string stop, int time, ostream& strim)
+
+	vector <HafasPrzejazd*> dijkstraReverse (int time, HafasStop* start, HafasStop* stop)
+	{
+		map <HafasStop*, int> tmp_stop;
+		tmp_stop[stop]=0;
+		return dijkstraReverse(time, start, tmp_stop);
+	}
+
+	void dijkstra_print(string start, string stop, int time, ostream& strim)
 	{
 		cout<<"dupa0"<<endl;
-		vector <HafasPrzejazd*> dll=dijkstraReverse(time, przystanki[start], przystanki[stop]);
+		vector <HafasPrzejazd*> dll=dijkstra(time, przystanki[start], przystanki[stop]);
 		cout<<"dupa1"<<endl;
 		pair <HafasPrzejazd*, HafasPrzejazd*> akt = pair<HafasPrzejazd*, HafasPrzejazd*>(NULL, NULL);
 		vector <pair<HafasPrzejazd*, HafasPrzejazd*> > kursy;
