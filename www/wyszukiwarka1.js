@@ -144,9 +144,37 @@ var WizualizacjaPodrozy = function (from, to, time)
 		var nowalinia=document.createElement("DIV");
 		var nowalinia_kolorek=document.createElement("DIV");
 		var nowaliniaid=document.createElement("DIV");
-		nowaliniaid.innerHTML=podstawa[i].line;
+		var nowalinia_srodkowe=document.createElement("DIV");
+		var nowaliniaid_number=document.createElement("DIV");
+		var nowaliniaid_more=document.createElement("DIV");
+		var nowaliniaid_morea=document.createElement("A");
+
+		nowaliniaid_number.innerHTML=podstawa[i].line;
+		nowaliniaid_morea.href="javascript:void(0)";
+		nowaliniaid_morea.innerHTML=">>>";
 		nowaliniaid.className="hafasliniaid";
+		nowaliniaid_number.className="hafasliniaid_number";
+		nowaliniaid_more.className="hafasliniaid_more";
+		nowalinia_srodkowe.className="hafaslinia_srodek";
+		nowaliniaid_morea.powiazany=nowalinia_srodkowe;;
+		nowalinia_srodkowe.style.display="none";
+		nowaliniaid_morea.onclick=function(e)
+		{
+			console.log(this.powiazany);
+			if(this.powiazany.style.display=="block")
+			{
+				this.innerHTML=">>> przystanki: "+this.powiazany.childNodes.length+1;
+				this.powiazany.style.display="none";
+			}
+			else
+			{
+				this.innerHTML="^^^";
+				this.powiazany.style.display="block";
+			}
+		};
 		nowalinia.appendChild(nowaliniaid);
+		nowaliniaid.appendChild(nowaliniaid_number);
+		nowaliniaid_more.appendChild(nowaliniaid_morea);
 		nowalinia.className="hafaslinia";
 		nowalinia_kolorek.className="kolorek";
 		var col=getpalette(i, this.bazaJSON.length);
@@ -156,7 +184,8 @@ var WizualizacjaPodrozy = function (from, to, time)
 		heart.appendChild(nowalinia);
 		nowalinia.appendChild(nowalinia_kolorek);
 		var tablica1 = [];
-		for(var j=0; j < this.bazaJSON[i].route.length; j++)
+		var n = this.bazaJSON[i].route.length;
+		for(var j=0; j < n; j++)
 		{
 			var tmp=ol.proj.transform([podstawa[i].route[j].lon, podstawa[i].route[j].lat], 'EPSG:4326', 'EPSG:3857');
 			tablica1[tablica1.length] = tmp;
@@ -178,10 +207,27 @@ var WizualizacjaPodrozy = function (from, to, time)
 				var mins=tim%60;
 				var hours=Math.floor(tim/60);
 				nowystoptime.innerHTML=hours+":"+mins;
+				nowystop.friend=this.przystanki[podstawa[i].route[j].id];
+				nowystop.onmouseover=function(e)
+				{
+					this.friend.setExtraStyle();
+				};
+				nowystop.onmouseout=function(e)
+				{
+					this.friend.setBasicStyle();
+				};
 				nowystop.appendChild(nowystopname);
 				nowystop.appendChild(nowystoptime);
 				nowystop.className="hafasstop";
-				nowalinia.appendChild(nowystop);
+				if(j==0 || j==n-1)
+					nowalinia.appendChild(nowystop);
+				else
+					nowalinia_srodkowe.appendChild(nowystop);
+				if(j==0) //TODO STOP_COUNT
+				{
+					nowalinia.appendChild(nowaliniaid_more);
+					nowalinia.appendChild(nowalinia_srodkowe);
+				}
 			}
 		}
 		addLineToSource(tablica1, getpalette(i, this.bazaJSON.length), podstawa[i].line, this.warstwaVector1, this.warstwaVector2);

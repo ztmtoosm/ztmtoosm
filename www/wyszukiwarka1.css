@@ -10,6 +10,14 @@
         height: 100%;
         width: 100%;
       }
+      .hafasliniaid_number
+      {
+	      display: inline-block;
+      }
+	.hafasliniaid_more
+      {
+	      font-size: 10px;
+      }
 	.map {
 	      overflow: hidden;
 	position: absolute;
@@ -21,6 +29,10 @@
 	right: 0px;
         height: 100%;
         width: 100%;
+      }
+      .hafaslinia_srodek .hafasstop
+      {
+	      font-size: 10px;
       }
 	 #heart {
 		 padding-left: 20px;
