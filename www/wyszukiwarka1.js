@@ -1,3 +1,4 @@
+var tribe = 0;
 var palette = ['#ab0d15'
 ,'#F7931D'
 /*,'#FFF200'*/
@@ -385,6 +386,7 @@ mapcnt.onmousemove = function(e)
 
 function changesource()
 {
+	tribe=0;
     	var from = document.getElementById("from").value;
     	var to = document.getElementById("to").value;
     	var time = document.getElementById("time").value;
@@ -415,4 +417,24 @@ function zrownaj()
 	heart.style.maxHeight=(window.innerHeight-110)+"px";
 }
 zrownaj();
+map.on('singleclick', function(evt){
+	var extraCoord=ol.proj.transform(evt.coordinate, 'EPSG:3857', 'EPSG:4326');
+	    console.log(evt);
+	    console.log(evt.coordinate[0]);
+	    console.log(evt.coordinate[1]);
+	if(tribe==0)
+	{
+    		document.getElementById("from").value=extraCoord[0].toString()+"x"+extraCoord[1].toString();
+	}
+	if(tribe==1)
+	{
+    		document.getElementById("to").value=extraCoord[0].toString()+"x"+extraCoord[1].toString();
+	}
+	tribe+=1;
+	if(tribe==2)
+	{
+		changesource();
+		tribe=0;
+	}
+})
 window.addEventListener("resize", zrownaj, false);

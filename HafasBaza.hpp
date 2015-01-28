@@ -243,25 +243,42 @@ class HafasBaza
 	}
 	double calcDistanceInMeters (double lat1, double lon1, double lat2, double lon2)
 	{
-		double R = 3671;
+		double R = 6371;
 		double dLat = toRad(lat2-lat1);
 		double dLon = toRad(lon2-lon1);
 		lat1 = toRad(lat1);
 		lat2 = toRad(lat2);
 		double a = sin(dLat/2)*sin(dLat/2)+cos(lat1)*cos(lat2)*sin(dLon/2)*sin(dLon/2);
 		double c = 2 * atan2(sqrt(a), sqrt(1-a));
-		return R*c;
+		return R*c*1000.0;
 	}
-/*
+	
 	map <HafasStop*, int> znajdzNajblizsze (double x, double y)
 	{
-		for (auto& i : przystanki)
+		double ok_distance=300;
+		while(ok_distance<3000)
 		{
-			double distance = distanceCalc(i.first->wspol.lat, i.first->wspol.lon, x, y);
-			cout << distance << endl;
+			map <HafasStop*, int> wynik;
+			for (auto& i : przystanki)
+			{
+				double distance = calcDistanceInMeters(i.second->wspol.lat, i.second->wspol.lon, x, y);
+				if(distance<ok_distance)
+				{
+					wynik[i.second]=distance/100+2;
+				}
+			}
+			if(wynik.size()>0)
+				return wynik;
+			else
+				ok_distance*=1.5;
 		}
 	}
-	*/
+	map <HafasStop*, int> singleton (string nazwa)
+	{
+		map <HafasStop*, int> wynik;
+		wynik[przystanki[nazwa]]=0;
+		return wynik;
+	}
 	vector <HafasPrzejazd*> dijkstra (int time, map <HafasStop*, int> start, map <HafasStop*, int> stop)
 	{
 		DijData dix;
@@ -338,15 +355,11 @@ class HafasBaza
 		{
 			dix.wstaw(i.first, time-i.second);
 		}
-		cout<<"aaa"<<endl;
 		while(!dix.kandydaci1.empty() && dix.odwiedzone.find(start)==dix.odwiedzone.end())
 		{
-			cout<<"bbb"<<endl;
 			auto it_pom=dix.kandydaci1.end();
 			it_pom--;
 			HafasStop* akt=(it_pom)->second;
-			cout<<akt<<endl;
-			cout<<"aktid "<<akt->id<<endl;
 			int akttime=dix.odwiedz(akt, time);
 			map <HafasStop*, vector <HafasPrzejazd*> > recordy = akt->wchodzace;
 			HafasPrzejazd* poprzednik=NULL;
@@ -395,11 +408,38 @@ class HafasBaza
 		return dijkstraReverse(time, start, tmp_stop);
 	}
 
+	bool podmien(map <HafasStop*, int>& mapa, string nazwa)
+	{
+		bool ok=0;
+		for(int i=0; i<nazwa.length(); i++)
+		{
+			if(nazwa[i]=='x')
+				ok=1;
+		}
+		if(!ok)
+			return false;
+		stringstream foo;
+		foo<<nazwa;
+		double pierwsza, druga;
+		char znak;
+		foo>>druga;
+		foo>>znak;
+		foo>>pierwsza;
+		mapa = znajdzNajblizsze(pierwsza, druga);
+		return true;
+	}
+
 	void dijkstra_print(string start, string stop, int time, ostream& strim)
 	{
 		cout<<"dupa0"<<endl;
-		vector <HafasPrzejazd*> dll=dijkstra(time, przystanki[start], przystanki[stop]);
-		cout<<"dupa1"<<endl;
+		map <HafasStop*, int> start1;
+		map <HafasStop*, int> stop1;
+		if(!podmien(start1, start))
+			start1 = singleton(start);
+		if(!podmien(stop1, stop))
+			stop1 = singleton(stop);
+		vector <HafasPrzejazd*> dll=dijkstra(time, start1, stop1);
+		cout<<"dupa1 "<<dll.size()<<endl;
 		pair <HafasPrzejazd*, HafasPrzejazd*> akt = pair<HafasPrzejazd*, HafasPrzejazd*>(NULL, NULL);
 		vector <pair<HafasPrzejazd*, HafasPrzejazd*> > kursy;
 		for(int i=0; i<dll.size(); i++)
@@ -432,9 +472,15 @@ class HafasBaza
 			obrobka.push_back(przystanki[start]->wspol);
 			obrobka.push_back(przystanki[stop]->wspol);
 		}
+		if(obrobka.size()<2)
+		{
+			obrobka.clear();
+			obrobka.push_back(przystanki[start]->wspol);
+			obrobka.push_back(przystanki[stop]->wspol);
+		}
 		for(int i=0; i<obrobka.size(); i++)
 		{
-			if(ostatni || i<obrobka.size()-1)
+			if(ostatni || i<(obrobka.size()-1))
 			{
 				string type="point";
 				strim<<"{";
@@ -463,6 +509,7 @@ class HafasBaza
 			}
 		}
 	}
+	/*
 	void wypiszRoute(string id, ostream& strim)
 	{
 		strim<<"[";
@@ -480,6 +527,7 @@ class HafasBaza
 		}
 		strim<<"]";
 	}
+	*/
 	void wypiszKurs (vector <pair<HafasPrzejazd*, HafasPrzejazd*> >kursy, ostream& strim)
 	{
 		strim<<"[";
@@ -493,7 +541,7 @@ class HafasBaza
 			HafasPrzejazd* akt=kursy[i].first;
 			while(!ostatni && akt!=NULL)
 			{
-				if(akt==kursy[i].second)
+				if(akt==kursy[i].second || akt->nastepny==NULL)
 					ostatni=1;
 				wypiszPartRoute(akt->timestart, akt->timestop, akt->pierwszy->id, akt->drugi->id, strim, ostatni);
 				akt=akt->nastepny;

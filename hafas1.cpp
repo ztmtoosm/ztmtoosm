@@ -29,7 +29,7 @@ map <string, string> mapaenv()
 	}
 	return wynik;
 }
-int main()
+int main(int argc, char** argv)
 {
 	string sciezka, sciezka2;
 	sciezka="/home/marcin/programowanie/ztmtoosm/ztmtoosm/RA141229.TXT";
@@ -39,6 +39,8 @@ int main()
 	HafasBazaLoader loader(baza, sciezka);
 	cout<<"ok2"<<endl;
 	OsmBazaLoader loader2(baza, sciezka2);
+	//baza->dijkstra_print(argv[1], argv[2], 36000, cout);
+	//return 0;
 	while(FCGI_Accept() >= 0)
 	{
 		cout<<"elo"<<endl;
@@ -51,7 +53,7 @@ int main()
 			tryb=1;
 		if(tryb==1)
 		{
-			baza->wypiszRoute(env["line"], wyp);
+		//	baza->wypiszRoute(env["line"], wyp);
 		}
 		if(tryb==0)
 		{
