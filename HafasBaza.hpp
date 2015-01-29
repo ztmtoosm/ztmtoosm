@@ -1,7 +1,7 @@
 #include "readztm.hpp"
 #include "osm_base.hpp"
 #include "starelinie.hpp"
-
+#include "sql1.hpp"
 struct wspolrzedne
 {
 	double lon;
@@ -112,9 +112,10 @@ class HafasBazaLoader;
 
 class HafasBaza
 {
+	sql_routes routes;
 	friend class HafasBazaLoader;
 	public:
-	HafasBaza() {};
+	HafasBaza() : routes() {};
 	map <string, HafasLinia*> linie;
 	map <string, HafasStop*> przystanki;
 	map <pair <string, string>, vector <wspolrzedne> > laczniki;
@@ -460,12 +461,17 @@ class HafasBaza
 	}
 	void wypiszPartRoute(int starttime, int stoptime, string start, string stop, ostream& strim, bool ostatni)
 	{
+		vector <pair <double, double> > obrobka1;
+		obrobka1 = routes.get_route(start,stop);
 		vector <wspolrzedne> obrobka;
-		if(laczniki.find(pair<string, string>(start, stop))!=laczniki.end())
+		for(int i=0; i<obrobka1.size(); i++)
 		{
-			obrobka=laczniki[pair<string, string>(start, stop)];
+			wspolrzedne tmp;
+			tmp.lat=obrobka1[i].first;
+			tmp.lon=obrobka1[i].second;
+			obrobka.push_back(tmp);
 		}
-		else
+		if(obrobka.size()==0)
 		{
 			obrobka.push_back(przystanki[start]->wspol);
 			obrobka.push_back(przystanki[stop]->wspol);

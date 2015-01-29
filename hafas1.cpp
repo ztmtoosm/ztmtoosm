@@ -39,6 +39,7 @@ int main(int argc, char** argv)
 	HafasBazaLoader loader(baza, sciezka);
 	cout<<"ok2"<<endl;
 	//OsmBazaLoader loader2(baza, sciezka2);
+	baza->wypelnij_sciezki();
 	//baza->dijkstra_print(argv[1], argv[2], 36000, cout);
 	//return 0;
 	while(FCGI_Accept() >= 0)
