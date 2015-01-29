@@ -26,6 +26,7 @@ struct HafasPrzejazd
 {
 	HafasLinia* linia;
 	HafasPrzejazd* poprzedni;
+	HafasPrzejazd* root;
 	HafasPrzejazd* nastepny;
 	int timestart;
 	int timestop;
@@ -396,7 +397,6 @@ class HafasBaza
 			}
 		}
 		auto wynik = dix.poprzednicy(start);
-		cout<<wynik.size()<<endl;
 		reverse(wynik.begin(), wynik.end());
 		return wynik;
 	}
@@ -431,7 +431,6 @@ class HafasBaza
 
 	void dijkstra_print(string start, string stop, int time, ostream& strim)
 	{
-		cout<<"dupa0"<<endl;
 		map <HafasStop*, int> start1;
 		map <HafasStop*, int> stop1;
 		if(!podmien(start1, start))
@@ -439,14 +438,13 @@ class HafasBaza
 		if(!podmien(stop1, stop))
 			stop1 = singleton(stop);
 		vector <HafasPrzejazd*> dll=dijkstra(time, start1, stop1);
-		cout<<"dupa1 "<<dll.size()<<endl;
 		pair <HafasPrzejazd*, HafasPrzejazd*> akt = pair<HafasPrzejazd*, HafasPrzejazd*>(NULL, NULL);
 		vector <pair<HafasPrzejazd*, HafasPrzejazd*> > kursy;
 		for(int i=0; i<dll.size(); i++)
 		{
 			if(dll[i]->linia!=NULL)
 			{
-				if(akt.first==NULL || dll[i]->linia!=akt.second->linia)
+				if(akt.first==NULL || dll[i]->root!=akt.second->root)
 				{
 					if(akt.first!=NULL)
 					{
@@ -538,7 +536,8 @@ class HafasBaza
 			strim<<"\"route\": ";
 			strim<<"[";
 			bool ostatni=0;
-			HafasPrzejazd* akt=kursy[i].first;
+			HafasPrzejazd* akt=kursy[i].second;
+			akt=kursy[i].first;
 			while(!ostatni && akt!=NULL)
 			{
 				if(akt==kursy[i].second || akt->nastepny==NULL)
@@ -587,6 +586,9 @@ class HafasBazaLoader : ztmread
 		{
 			HafasPrzejazd* nowy2 = new HafasPrzejazd;
 			nowy2->linia=baza->linie[nowy.linia];
+			nowy2->root=nowy2;
+			if(i>0)
+				nowy2->root=dodane[0];
 			nowy2->poprzedni=NULL;
 			if(dodane.size()>0)
 			{
@@ -770,3 +772,138 @@ class OsmBazaLoader
 		baz->wypelnij_sciezki();
 	}
 };
+
+class OsmBazaLoaderBis
+{
+	set <pair<string, string> >dodane;
+	vector <long long> bfs(long long start, long long stop, map <long long, vector <long long> >& prepareBfs)
+	{
+		vector <long long> wynik;
+		vector <long long> kolejka;
+		int poz=0;
+		kolejka.push_back(start);
+		set <long long> odwiedzone;
+		odwiedzone.insert(start);
+		map <long long, long long> ojc;
+		bool ok=1;
+		while(poz!=kolejka.size() && ok)
+		{
+			vector <long long> nachte=prepareBfs[kolejka[poz]];
+			for(int i=0; i<nachte.size(); i++)
+			{
+				if(odwiedzone.find(nachte[i])==odwiedzone.end())
+				{
+					kolejka.push_back(nachte[i]);
+					ojc[nachte[i]]=kolejka[poz];
+					odwiedzone.insert(nachte[i]);
+					if(nachte[i]==stop)
+						ok=0;
+				}
+			}
+			poz++;
+		}
+		long long akt=stop;
+		while(ojc.find(akt)!=ojc.end())
+		{
+			wynik.push_back(akt);
+			akt=ojc[akt];
+		}
+		wynik.push_back(start);
+		reverse(wynik.begin(), wynik.end());
+		return wynik;
+	}
+
+	void easyNodes(long long rel, osm_base* base, HafasBaza *base2, fstream& plikOut)
+	{
+		relation akt_rel = base->relations[rel];
+		map <long long, vector <long long> > prepareBfs;
+		map <string, long long> refs;
+		for(int i=0; i<akt_rel.members.size(); i++)
+		{
+			if(akt_rel.members[i].member_type==WAY)
+			{
+				long long way_id=akt_rel.members[i].member_id;
+				if(akt_rel.members[i].role!="platform")
+				if(akt_rel.members[i].role!="platform_entry_only")
+				if(akt_rel.members[i].role!="platform_exit_only")
+				{
+					vector <long long> nods=base->ways[way_id].nodes;
+					for(int j=0; j<nods.size()-1; j++)
+					{
+						prepareBfs[nods[j]].push_back(nods[j+1]);
+						prepareBfs[nods[j+1]].push_back(nods[j]);
+					}
+					for(int j=0; j<nods.size(); j++)
+					{
+						if(base->nodes[nods[j]].tags["public_transport"]=="stop_position")
+						{
+							refs[base->nodes[nods[j]].tags["ref"]]=nods[j];
+						}
+					}
+				}
+			}
+		}
+		vector <string> ref1;
+		for(int i=0; i<akt_rel.members.size(); i++)
+		{
+			if(akt_rel.members[i].member_type==NODE)
+			{
+				bool ok=0;
+				long long node_id=akt_rel.members[i].member_id;
+				if(akt_rel.members[i].role=="stop")
+					ok=1;
+				if(akt_rel.members[i].role=="stop_entry_only")
+					ok=1;
+				if(akt_rel.members[i].role=="stop_exit_only")
+					ok=1;
+				if(ok && base->nodes[node_id].tags["ref"]!="")
+				{
+					string ref=base->nodes[node_id].tags["ref"];
+					ref1.push_back(ref);
+				}
+			}
+		}
+		for(int i=0; i<ref1.size()-1; i++)
+		{
+			vector <long long> bfstmp=bfs(refs[ref1[i]], refs[ref1[i+1]], prepareBfs);
+			vector <wspolrzedne> wynik;
+			if(dodane.find(pair<string, string> (ref1[i], ref1[i+1]))==dodane.end())
+			{
+				dodane.insert(pair<string,string>(ref1[i], ref1[i+1]));
+				for(int j=0; j<bfstmp.size(); j++)
+				{
+					wspolrzedne foo;
+					foo.lat=base->nodes[bfstmp[j]].lat;
+					foo.lon=base->nodes[bfstmp[j]].lon;
+					plikOut<<ref1[i]<<"	"<<ref1[i+1]<<"	"<<j+1<<"	"<<foo.lat<<"	"<<foo.lon<<endl;
+				}
+
+			}
+		}
+	}
+	void easyNodes(string linia, osm_base* base, HafasBaza *base2, fstream& plikOut)
+	{
+		vector <long long> relacje=relacje_linia(base, 3651336, linia).second;
+		vector <vector <long long> > wynik;
+		for(int i=0; i<relacje.size(); i++)
+		{
+			easyNodes(relacje[i], base, base2, plikOut);
+		}
+	}
+	public:
+	OsmBazaLoaderBis(HafasBaza* baz, string sciezka, string sciezka_out)
+	{
+		fstream plik_out(sciezka_out.c_str(), ios::trunc | ios::out);
+		plik_out.precision(9);
+		osm_base bazaOsm(sciezka);
+		auto it2=baz->linie.begin();
+		while(it2!=baz->linie.end())
+		{
+			easyNodes(it2->first, &bazaOsm, baz, plik_out);
+			it2++;
+		}
+		plik_out.close();
+	}
+};
+
+
