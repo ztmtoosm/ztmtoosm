@@ -288,7 +288,7 @@ class HafasBaza
 		{
 			dix.wstaw(i.first, time+i.second);
 		}
-		int bestResult=1000000;
+		int bestResult=2000000000;
 		HafasStop* bestStop;
 		int resultsCounter = stop.size();
 		while(!dix.kandydaci1.empty() && resultsCounter>0)
@@ -583,36 +583,87 @@ class HafasBaza
 
 class HafasBazaLoader : ztmread
 {
+	map <string, vector <string> > kalendarz;
 	HafasBaza* baza;
 	private:
+	void newkalendar(string date, vector<string>caltypes)
+	{
+		kalendarz[date]=caltypes;
+	}
+	string datetostring(time_t data)
+	{
+		tm* tim = localtime(&data);
+		stringstream foo;
+		foo<<(tim->tm_year+1900);
+		foo<<"-";
+		if((tim->tm_mon)<9)
+			foo<<"0";
+		foo<<(tim->tm_mon+1)<<"-";
+		if((tim->tm_mday)<10)
+			foo<<"0";
+		foo<<(tim->tm_mday);
+		return foo.str();
+	}
+	time_t midnight(time_t data)
+	{
+		tm* tim = localtime(&data);
+		tim->tm_sec=0;
+		tim->tm_min=0;
+		tim->tm_hour=0;
+		return mktime(tim);
+	}
+	vector <int> diffs(string type)
+	{
+		vector <int> wynik;
+		int today=midnight(time(NULL));
+		for(int i=-1; i<=2; i++)
+		{
+			string data=datetostring(today+i*24*3600);
+			bool ok=0;
+			for(int j=0; j<kalendarz[data].size(); j++)
+			{
+				if(kalendarz[data][j]==type)
+					ok=1;
+			}
+			if(ok)
+			{
+				wynik.push_back(today+i*24*3600);
+			}
+		}
+		return wynik;
+	}
 	void nowy_kurs(kurs nowy)
 	{
-		vector <HafasPrzejazd*> dodane;
-		for(int i=0; i<nowy.postoje.size()-1; i++)
+		vector <int> dify = diffs(nowy.dni);
+		for(int g=0; g<dify.size(); g++)
 		{
-			HafasPrzejazd* nowy2 = new HafasPrzejazd;
-			nowy2->linia=baza->linie[nowy.linia];
-			nowy2->root=nowy2;
-			if(i>0)
-				nowy2->root=dodane[0];
-			nowy2->poprzedni=NULL;
+			vector <HafasPrzejazd*> dodane;
+			for(int i=0; i<nowy.postoje.size()-1; i++)
+			{
+				HafasPrzejazd* nowy2 = new HafasPrzejazd;
+				nowy2->linia=baza->linie[nowy.linia];
+				nowy2->root=nowy2;
+				if(i>0)
+					nowy2->root=dodane[0];
+				nowy2->poprzedni=NULL;
+				if(dodane.size()>0)
+				{
+					nowy2->poprzedni=dodane[dodane.size()-1];
+					dodane[dodane.size()-1]->nastepny=nowy2;
+				}
+				nowy2->nastepny=NULL;
+				nowy2->timestart=nowy.postoje[i].time+dify[g];
+				nowy2->timestop=nowy.postoje[i+1].time+dify[g];
+				nowy2->pierwszy=baza->przystanki[nowy.postoje[i].stop_id];
+				nowy2->drugi=baza->przystanki[nowy.postoje[i+1].stop_id];
+				baza->przystanki[nowy.postoje[i].stop_id]->wychodzace[baza->przystanki[nowy.postoje[i+1].stop_id]].push_back(nowy2);
+				baza->przystanki[nowy.postoje[i+1].stop_id]->wchodzace[baza->przystanki[nowy.postoje[i].stop_id]].push_back(nowy2);
+				dodane.push_back(nowy2);
+			}
 			if(dodane.size()>0)
 			{
-				nowy2->poprzedni=dodane[dodane.size()-1];
-				dodane[dodane.size()-1]->nastepny=nowy2;
+				baza->linie[nowy.linia]->kursy.push_back(dodane[0]);
 			}
-			nowy2->nastepny=NULL;
-			nowy2->timestart=nowy.postoje[i].time;
-			nowy2->timestop=nowy.postoje[i+1].time;
-			nowy2->pierwszy=baza->przystanki[nowy.postoje[i].stop_id];
-			nowy2->drugi=baza->przystanki[nowy.postoje[i+1].stop_id];
-			baza->przystanki[nowy.postoje[i].stop_id]->wychodzace[baza->przystanki[nowy.postoje[i+1].stop_id]].push_back(nowy2);
-			baza->przystanki[nowy.postoje[i+1].stop_id]->wchodzace[baza->przystanki[nowy.postoje[i].stop_id]].push_back(nowy2);
-			dodane.push_back(nowy2);
-		}
-		if(dodane.size()>0)
-		{
-			baza->linie[nowy.linia]->kursy.push_back(dodane[0]);
 		}
 	}
 	void nowy_przystanek(przystanek nowy)

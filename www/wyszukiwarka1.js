@@ -9,12 +9,11 @@ var palette = ['#ab0d15'
 ,'#EE609D'];
 function getpalette(poz, n)
 {
-	console.log(Math.floor(poz*7/n));
-	return palette[Math.floor(poz*7/n)];
+	return palette[Math.floor(poz%7)];
 }
 function getpaletteid(poz, n)
 {
-	return Math.floor(poz*7/n);
+	return Math.floor(poz%7);
 }
 
 function loadJSON(url) 
@@ -34,7 +33,7 @@ function loadJSON(url)
 }
 function podrozSciezka (from, to, time)
 {
-	var sciezka="http://192.168.1.110/hafas";
+	var sciezka="/hafas";
 	sciezka+='\?from\='+from;
 	sciezka+='\&to\='+to;
 	sciezka+='\&time\='+time;
@@ -196,18 +195,25 @@ var WizualizacjaPodrozy = function (from, to, time)
 				{
 					this.przystanki[podstawa[i].route[j].id] = new PrzystanekNaMapie (podstawa[i].route[j].name, podstawa[i].route[j].id, tmp, this.warstwaVector1);
 				}
-				var tim=podstawa[i].route[j].time;
-				this.przystanki[podstawa[i].route[j].id].addLine(tim, podstawa[i].line, getpalette(i, podstawa.length));
+				var tim=new Date(podstawa[i].route[j].time*1000);
+				var tim0=podstawa[i].route[j].time;
+				this.przystanki[podstawa[i].route[j].id].addLine(tim0, podstawa[i].line, getpalette(i, podstawa.length));
 				var nowystop=document.createElement("DIV");
 				var nowystopname=document.createElement("DIV");
 				nowystopname.className="nowystopname";
 				var nowystoptime=document.createElement("DIV");
 				nowystoptime.className="nowystoptime";
 				nowystopname.innerHTML=podstawa[i].route[j].name;
-				tim/=60;
-				var mins=tim%60;
-				var hours=Math.floor(tim/60);
-				nowystoptime.innerHTML=hours+":"+mins;
+				var mins=tim.getMinutes();
+				var hours=tim.getHours();
+				var timString="";
+				if(hours<10)
+					timString+="0";
+				timString+=hours+":";
+				if(mins<10)
+					timString+="0";
+				timString+=mins;
+				nowystoptime.innerHTML=timString;
 				nowystop.friend=this.przystanki[podstawa[i].route[j].id];
 				nowystop.onmouseover=function(e)
 				{
@@ -355,7 +361,8 @@ var layerLines2 = new ol.layer.Vector({
 
     	document.getElementById("from").value="701301";
     	document.getElementById("to").value="122201";
-    	document.getElementById("time").value="36000";
+	var today = new Date();
+    	document.getElementById("time").value=parseInt((today.getTime()/1000), 10).toString();
 	var aktfeature = null;
     	var mapcnt=document.getElementById("map");
 	
