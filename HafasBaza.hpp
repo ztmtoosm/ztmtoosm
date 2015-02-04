@@ -110,7 +110,7 @@ struct DijData
 
 class HafasBazaLoader;
 
-class HafasBaza
+class HafasBaza : public sql_polaczenia
 {
 	sql_routes routes;
 	friend class HafasBazaLoader;
@@ -119,6 +119,10 @@ class HafasBaza
 	map <string, HafasLinia*> linie;
 	map <string, HafasStop*> przystanki;
 	map <pair <string, string>, vector <wspolrzedne> > laczniki;
+	string getNameP(string id)
+	{
+		return przystanki[id]->name;
+	}
 	bool podobneid(string alfa, string beta)
 	{
 		if(alfa.substr(0, 4)==beta.substr(0, 4))
@@ -669,7 +673,7 @@ class HafasBazaLoader : ztmread
 	void nowy_przystanek(przystanek nowy)
 	{
 		HafasStop* nowy2 = new HafasStop;
-		nowy2->name = nowy.name;
+		nowy2->name = nowy.name+" "+nowy.id[4]+nowy.id[5];
 		nowy2->id = nowy.id;
 		nowy2->miejscowosc = nowy.miejscowosc;
 		nowy2->wspol.lon = nowy.lon;

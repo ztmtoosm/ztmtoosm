@@ -46,6 +46,9 @@
 	overflow-y: auto;
 	overflow-x: hidden;
       }
+	 .subb {
+		 padding-left: 20px;
+	}
       .datak {
 	position: absolute;
 	top: 10px;
@@ -66,6 +69,12 @@
       {
 	      position: relative;
       }
+      div.nowy_postoj
+      {
+	      overflow: hidden;
+	      font-size: 16px;
+	      position: relative;
+      }
       div.kolorek
       {
 	      top:0;
@@ -74,12 +83,16 @@
 	      width:12px;
 	      height:100%;
       }
+      div.malelitery
+      {
+	      font-size: 10px;
+      }
       div.nowystoptime
       {
 	      position: absolute;
 	      left:0;
-      	top:0;
-	width:50px;
+      		top:0;
+		width:50px;
       }
 	div.nowystopname
       {

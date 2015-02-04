@@ -1,4 +1,5 @@
 #include "HafasBaza.hpp"
+#include "sciezka1.hpp"
 #include "fcgi_stdio.h"
 void wypisz(stringstream& lol)
 {
@@ -32,15 +33,16 @@ map <string, string> mapaenv()
 int main(int argc, char** argv)
 {
 	string sciezka, sciezka2;
-	sciezka="/home/marcin/programowanie/ztmtoosm/ztmtoosm/RA141229.TXT";
-	sciezka2="/home/marcin/programowanie/ztmtoosm/ztmtoosm/latest.osm";
-	cout<<"ok1"<<endl;
+	sciezka=SCIEZKA1;
+	sciezka+="/ztm_download1.txt";
+	sciezka2=sciezka;
+	sciezka2+="/latest.osm";
 	HafasBaza* baza=new HafasBaza();
 	HafasBazaLoader loader(baza, sciezka);
-	cout<<"ok2"<<endl;
 	//OsmBazaLoader loader2(baza, sciezka2);
 	baza->wypelnij_sciezki();
 	//baza->dijkstra_print(argv[1], argv[2], time(NULL), cout);
+	//polaczenia.wypisz_polaczenia(argv[1], time(NULL), ">", cout, wyp);
 	//return 0;
 	while(FCGI_Accept() >= 0)
 	{
@@ -50,11 +52,23 @@ int main(int argc, char** argv)
 		wyp<<"Content-type: application/json\n\n";
 		map<string, string>env=mapaenv();
 		int tryb=0;
-		if(env["line"]!="")
+		if(env["delim"]!="")
 			tryb=1;
+		if(env["line"]!="")
+			tryb=2;
 		if(tryb==1)
 		{
+			string delim_type=">";
+			if(env["delim"]=="1")
+				delim_type="<";
+			if(env["delim"]=="2")
+				delim_type="=";
+			baza->wypisz_polaczenia(env["from"], stringtoint(env["time"]), delim_type, false, wyp);
 		//	baza->wypiszRoute(env["line"], wyp);
+		}
+		if(tryb==2)
+		{
+			baza->wypisz_kurs(env["from"], stringtoint(env["time"]), env["line"], wyp);
 		}
 		if(tryb==0)
 		{

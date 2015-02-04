@@ -39,7 +39,22 @@ function podrozSciezka (from, to, time)
 	sciezka+='\&time\='+time;
 	return sciezka;
 }	
-
+function polaczeniaSciezka (from, delim, time)
+{
+	var sciezka="/hafas";
+	sciezka+='\?from\='+from;
+	sciezka+='\&delim\='+delim;
+	sciezka+='\&time\='+time;
+	return sciezka;
+}
+function kursSciezka (from, line, time)
+{
+	var sciezka="/hafas";
+	sciezka+='\?from\='+from;
+	sciezka+='\&line\='+line;
+	sciezka+='\&time\='+time;
+	return sciezka;
+}
 function addLineToSource (coordinates, colorLine, name, vectorSource1, vectorSource2)
 {
 	var warstwa1 = new ol.Feature({geometry: new ol.geom.LineString(coordinates)});
@@ -74,16 +89,17 @@ var PrzystanekNaMapie = function (name, id, coordinates, vectorSource)
 
 PrzystanekNaMapie.prototype.addLine = function (time, line, color)
 {
+	console.log(time);
 	if(this.propsedColor == null)
 		this.propsedColor = color;
 	else
 		this.propsedColor = '#000';
-	if(this.minTime = null || time < this.mintime)
+	if(this.minTime == null || time < this.mintime)
 	{
 		this.minTime = time;
 		this.minTimeLine = line;
 	}
-	if(this.maxTime = null || time < this.maxtime)
+	if(this.maxTime == null || time < this.maxtime)
 	{
 		this.maxTime = time;
 		this.maxTimeLine = line;
@@ -130,13 +146,45 @@ PrzystanekNaMapie.prototype.setExtraStyle = function ()
 
 };
 
+function stringTime(time)
+{
+				var tim=new Date(time*1000);
+var mins=tim.getMinutes();
+				var hours=tim.getHours();
+				var timString="";
+				if(hours<10)
+					timString+="0";
+				timString+=hours+":";
+				if(mins<10)
+					timString+="0";
+				timString+=mins;
+				return timString;
+}
 var WizualizacjaPodrozy = function (from, to, time)
 {
+	map.removeLayer(layerLines2);
+	map.removeLayer(layerLines);
+	this.warstwaVector1 = new ol.source.Vector({});
+	this.warstwaVector2 = new ol.source.Vector({});
+	
+	layerLines = new ol.layer.Vector({
+	source: this.warstwaVector2,
+	style: function(feature, resolution)
+	{
+		return style[feature.getGeometry().getType()];
+	}
+	});
+	layerLines2 = new ol.layer.Vector({
+	source: this.warstwaVector1,
+	style: function(feature, resolution) {
+	return style2[feature.getGeometry().getType()];
+	}
+	});
+ 	map.addLayer(layerLines);
+        map.addLayer(layerLines2);
 	this.bazaJSON = loadJSON(podrozSciezka(from, to, time));
 	this.heart=document.getElementById("heart");
 	heart.innerHTML="";
-	this.warstwaVector1 = new ol.source.Vector({});
-	this.warstwaVector2 = new ol.source.Vector({});
 	var podstawa=loadJSON(podrozSciezka(from, to, time));
 	this.przystanki = [];
 	for(var i=0; i < this.bazaJSON.length; i++)
@@ -195,7 +243,6 @@ var WizualizacjaPodrozy = function (from, to, time)
 				{
 					this.przystanki[podstawa[i].route[j].id] = new PrzystanekNaMapie (podstawa[i].route[j].name, podstawa[i].route[j].id, tmp, this.warstwaVector1);
 				}
-				var tim=new Date(podstawa[i].route[j].time*1000);
 				var tim0=podstawa[i].route[j].time;
 				this.przystanki[podstawa[i].route[j].id].addLine(tim0, podstawa[i].line, getpalette(i, podstawa.length));
 				var nowystop=document.createElement("DIV");
@@ -203,21 +250,17 @@ var WizualizacjaPodrozy = function (from, to, time)
 				nowystopname.className="nowystopname";
 				var nowystoptime=document.createElement("DIV");
 				nowystoptime.className="nowystoptime";
+				nowystoptime.innerHTML=stringTime(tim0);
 				nowystopname.innerHTML=podstawa[i].route[j].name;
-				var mins=tim.getMinutes();
-				var hours=tim.getHours();
-				var timString="";
-				if(hours<10)
-					timString+="0";
-				timString+=hours+":";
-				if(mins<10)
-					timString+="0";
-				timString+=mins;
-				nowystoptime.innerHTML=timString;
 				nowystop.friend=this.przystanki[podstawa[i].route[j].id];
+				nowystop.friend2=this;
 				nowystop.onmouseover=function(e)
 				{
 					this.friend.setExtraStyle();
+				};
+				nowystop.onclick=function(e)
+				{
+					changesource2(this.friend.id, this.friend.minTime);
 				};
 				nowystop.onmouseout=function(e)
 				{
@@ -262,6 +305,132 @@ var WizualizacjaPodrozy = function (from, to, time)
 	}
 };
 
+var WizualizacjaDrzewa = function (from, time, linia, div, type)
+{
+	this.type=type;
+	div.innerHTML="";
+	this.from = from;
+	this.time = time;
+	this.linia = linia;
+	this.div = div;
+	if(type==1)
+		this.tabela = loadJSON(kursSciezka(from, linia, time));
+	else
+		this.tabela = loadJSON(polaczeniaSciezka(from, 2, time));
+	this.tabelaDIV = [];
+	this.ladujDIV(0, this.tabela.length);
+	if(type==0)
+	{
+		this.more1 = document.createElement("DIV");
+		this.more1.implicit = this;
+		this.more1.innerHTML="MORE...";
+		this.div.appendChild(this.more1);
+		this.more1.onclick=function(e)
+		{
+			this.implicit.rozszerzUp();
+		};
+	}
+	for(var i=0; i<this.tabelaDIV.length; i++)
+	{
+		this.div.appendChild(this.tabelaDIV[i]);
+	}
+	if(type==0)
+	{
+		this.more2 = document.createElement("DIV");
+		this.more2.implicit = this;
+		this.more2.innerHTML="MORE...";
+		this.div.appendChild(this.more2);
+		this.more2.onclick=function(e)
+		{
+			this.implicit.rozszerzDown();
+		};
+	}
+}
+WizualizacjaDrzewa.prototype.rozszerzUp = function ()
+{
+	var tabela2 = loadJSON(polaczeniaSciezka(this.from, 1, this.tabela[0].time));
+	var s1 = tabela2.length;
+	var tabela3 = [];
+	for(var i=0; i<tabela2.length; i++)
+	{
+		tabela3[i]=null;
+	}
+	for(var i=0; i<this.tabela.length; i++)
+	{
+		tabela2[tabela2.length]=this.tabela[i];
+		tabela3[tabela3.length]=this.tabelaDIV[i];
+	}
+	this.tabela=tabela2;
+	this.tabelaDIV=tabela3;
+	this.ladujDIV(0, s1);
+	this.div.innerHTML="";
+	this.div.appendChild(this.more1);
+	for(var i=0; i<this.tabelaDIV.length; i++)
+	{
+		this.div.appendChild(this.tabelaDIV[i]);
+	}
+	this.div.appendChild(this.more2);
+}
+WizualizacjaDrzewa.prototype.rozszerzDown = function ()
+{
+	var tabela2 = loadJSON(polaczeniaSciezka(this.from, 0, this.tabela[this.tabela.length-1].time));
+	for(var i=0; i<tabela2.length; i++)
+	{
+		this.tabela[this.tabela.length]=tabela2[i];
+	}
+	this.ladujDIV(this.tabela.length-tabela2.length, this.tabela.length);
+	this.div.innerHTML="";
+	this.div.appendChild(this.more1);
+	for(var i=0; i<this.tabelaDIV.length; i++)
+	{
+		this.div.appendChild(this.tabelaDIV[i]);
+	}
+	this.div.appendChild(this.more2);
+}
+WizualizacjaDrzewa.prototype.ladujDIV = function (from, to)
+{
+	for(var i=from; i<to; i++)
+	{
+		var nowy_postoj = document.createElement("DIV");
+		var nowy_postoj_linia = document.createElement("div");
+		var nowy_postoj_godzina = document.createElement("div");
+		var nowy_postoj_link = document.createElement("a");
+		nowy_postoj.className="nowy_postoj";
+		if(i<this.center)
+		{
+			nowy_postoj.className="nowy_postoj malelitery";
+		}
+		nowy_postoj_linia.className="nowystopname";
+		nowy_postoj_godzina.className="nowystoptime";
+		nowy_postoj_link.className="nowy_postoj_link";
+		nowy_postoj.appendChild(nowy_postoj_linia);
+		nowy_postoj.appendChild(nowy_postoj_godzina);
+		nowy_postoj_linia.appendChild(nowy_postoj_link);
+		nowy_postoj.index=i;
+		this.tabelaDIV[i]=nowy_postoj;
+		nowy_postoj.implicit=this;
+		nowy_postoj_link.implicit=nowy_postoj;
+		var wpisz=nowy_postoj_link;
+		if(this.type==0)
+			wpisz.innerHTML=this.tabela[i].linia+" ("+this.tabela[i].idname+")";
+		else
+			wpisz.innerHTML=this.tabela[i].name;
+		nowy_postoj_godzina.innerHTML=stringTime(this.tabela[i].time);
+		nowy_postoj_link.onclick=function(e)
+		{
+			this.implicit.rozwin();
+		}
+		nowy_postoj.rozwin=function()
+		{
+			var id=this.implicit.from;
+			var teraz=this.implicit.tabela[this.index];
+			if(this.implicit.type==0)
+				var extra = new WizualizacjaDrzewa(teraz.id, teraz.time, teraz.linia, this.implicit.div, 1);
+			else
+				var extra = new WizualizacjaDrzewa(teraz.id, teraz.time, null, this.implicit.div, 0);
+		}
+	}
+}
 
 /*
 var style = {
@@ -397,24 +566,13 @@ function changesource()
     	var from = document.getElementById("from").value;
     	var to = document.getElementById("to").value;
     	var time = document.getElementById("time").value;
-	map.removeLayer(layerLines2);
-	map.removeLayer(layerLines);
 	tabsource = new WizualizacjaPodrozy(from, to, time);
-	layerLines = new ol.layer.Vector({
-	source: tabsource.warstwaVector2,
-	style: function(feature, resolution)
-	{
-		return style[feature.getGeometry().getType()];
-	}
-	});
-	layerLines2 = new ol.layer.Vector({
-	source: tabsource.warstwaVector1,
-	style: function(feature, resolution) {
-	return style2[feature.getGeometry().getType()];
-	}
-	});
- 	map.addLayer(layerLines);
-        map.addLayer(layerLines2);
+}
+
+function changesource2(from, time)
+{
+    	var heart = document.getElementById("heart");
+	var visu = new WizualizacjaDrzewa(from, time, null, heart, 0);
 }
 
 function zrownaj()
@@ -444,4 +602,12 @@ map.on('singleclick', function(evt){
 		tribe=0;
 	}
 })
+function showPosition(position) {
+	 document.getElementById("from").value = position.coords.longitude + "x" + position.coords.latitude;
+	 tribe=1;
+}
+
+if (navigator.geolocation) {
+	        navigator.geolocation.getCurrentPosition(showPosition);
+		    }
 window.addEventListener("resize", zrownaj, false);
