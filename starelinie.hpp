@@ -15,14 +15,14 @@ pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long roo
 {
 	pair<long long, vector <long long> > wynik;
 	wynik.first=0;
-	relation akt=roo->relations[root];
-	if(akt.tags["ref"]==linia)
+	relation akt=roo->getRelation(root);
+	if(roo->getTag(akt.id, 'R', "ref")==linia)
 	{
-		if(akt.tags["type"]=="route")
+		if(roo->getTag(akt.id, 'R', "type")=="route")
 		{
 			wynik.second.push_back(akt.id);
 		}
-		if(akt.tags["type"]=="route_master")
+		if(roo->getTag(akt.id, 'R', "type")=="route_master")
 		{
 			wynik.first=akt.id;
 		}
@@ -33,9 +33,9 @@ pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long roo
 		if(akt.members[i].member_type==RELATION)
 		{
 			long long teraz_id=akt.members[i].member_id;
-			if(roo->relations.find(teraz_id)!=roo->relations.end())
+			if(roo->existRelation(teraz_id))
 			{
-				relation teraz=roo->relations[teraz_id];
+				relation teraz=roo->getRelation(teraz_id);
 				pair<long long, vector <long long> > tmp=relacje_linia(roo, teraz_id, linia);
 				if(tmp.first!=0)
 				{
@@ -54,9 +54,9 @@ pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long roo
 set <long long> wszystkie_route (osm_base* roo, long long root)
 {
 	set <long long> wynik;
-	relation akt=roo->relations[root];
+	relation akt=roo->getRelation(root);
 	int s1=akt.members.size();
-	if(akt.tags["type"]=="route")
+	if(roo->getTag(akt.id, 'R', "type")=="route")
 	{
 		wynik.insert(akt.id);
 	}
@@ -65,9 +65,9 @@ set <long long> wszystkie_route (osm_base* roo, long long root)
 		if(akt.members[i].member_type==RELATION)
 		{
 			long long teraz_id=akt.members[i].member_id;
-			if(roo->relations.find(teraz_id)!=roo->relations.end())
+			if(roo->existRelation(teraz_id))
 			{
-				relation teraz=roo->relations[teraz_id];
+				relation teraz=roo->getRelation(teraz_id);
 				set <long long> tmp=wszystkie_route(roo, teraz_id);
 				wynik.insert(tmp.begin(), tmp.end());
 			}
@@ -79,21 +79,22 @@ set <long long> wszystkie_route (osm_base* roo, long long root)
 set <string> extract_ref(osm_base* baza, long long rel)
 {
 	set<string> wynik;
-	relation akt=baza->relations[rel];
+	relation akt=baza->getRelation(rel);
 	int s1=akt.members.size();
 	for(int i=0; i<s1; i++)
 	{
 		if(akt.members[i].member_type==NODE)
 		{
 			long long teraz_id=akt.members[i].member_id;
-			if(baza->nodes.find(teraz_id)!=baza->nodes.end())
+			if(baza->existNode(teraz_id))
 			{
-				node teraz=baza->nodes[teraz_id];
-				if(teraz.tags["highway"]=="bus_stop" || teraz.tags["railway"]=="tram_stop" || teraz.tags["public_transport"]=="stop_position")
+				node teraz=baza->getNode(teraz_id);
+				map <string, string> tags=baza->getAllTags(teraz.id, 'N');
+				if(tags["highway"]=="bus_stop" || tags["railway"]=="tram_stop" || tags["public_transport"]=="stop_position")
 				{
-					if(teraz.tags.find("ref")!=teraz.tags.end())
+					if(tags.find("ref")!=tags.end())
 					{
-						wynik.insert(teraz.tags["ref"]);
+						wynik.insert(tags["ref"]);
 					}
 				}
 			}
@@ -101,14 +102,15 @@ set <string> extract_ref(osm_base* baza, long long rel)
 		if(akt.members[i].member_type==WAY)
 		{
 			long long teraz_id=akt.members[i].member_id;
-			if(baza->ways.find(teraz_id)!=baza->ways.end())
+			if(baza->existWay(teraz_id))
 			{
-				way teraz=baza->ways[teraz_id];
-				if(teraz.tags["highway"]=="platform" || teraz.tags["railway"]=="platform")
+				way teraz=baza->getWay(teraz_id);
+				map <string, string> tags=baza->getAllTags(teraz.id, 'W');
+				if(tags["highway"]=="platform" || tags["railway"]=="platform")
 				{
-					if(teraz.tags.find("ref")!=teraz.tags.end())
+					if(tags.find("ref")!=tags.end())
 					{
-						wynik.insert(teraz.tags["ref"]);
+						wynik.insert(tags["ref"]);
 					}
 				}
 			}
@@ -120,16 +122,16 @@ set <string> extract_ref(osm_base* baza, long long rel)
 
 map <long long, string> szukaj_na_drogach(osm_base& baza, long long rel, map<long long, string> nodes_to_be)
 {
-	relation akt=baza.relations[rel];
+	relation akt=baza.getRelation(rel);
 	int s1=akt.members.size();
 	for(int i=0; i<s1; i++)
 	{
 		if(akt.members[i].member_type==WAY)
 		{
 			long long teraz_id=akt.members[i].member_id;
-			if(baza.ways.find(teraz_id)!=baza.ways.end())
+			if(baza.existWay(teraz_id))
 			{
-				way teraz=baza.ways[teraz_id];
+				way teraz=baza.getWay(teraz_id);
 				int s2=teraz.nodes.size();
 				for(int j=0; j<s2; j++)
 				{
@@ -186,7 +188,7 @@ class PrzegladanieCzyPrawidloweStareLinie
 		for(int i=0; i<rels.size(); i++)
 		{
 			link_href="http://openstreetmap.org/relation/"+tostring(rels[i]);
-			string nazwa=bazaOsm->relations[rels[i]].tags["name"];
+			string nazwa=bazaOsm->getTag(rels[i], 'R', "name");
 			tmp1+=htmlgen::div("relboczna", "", "route: "+htmlgen::link(link_href, tostring(rels[i])+" "+nazwa));
 		}
 		return htmlgen::div("infolinie", "", tmp1);

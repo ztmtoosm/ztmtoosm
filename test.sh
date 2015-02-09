@@ -17,6 +17,6 @@ for i in "${a[@]}"
 do
 	rm "test"${i}".osm"
 done
-c=RA150123.TXT
+c=ztm_download1.txt
 d=$(date +"%Y/%m/%d")
 ./dijkstra $c latest.osm wyj4.osm "-all"

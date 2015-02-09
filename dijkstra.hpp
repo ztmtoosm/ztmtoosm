@@ -199,10 +199,11 @@ struct dijkstra
 
 	void laduj_dijkstra_from_base(osm_base* bazuka)
 	{
-		map<long long, way>::iterator it1=bazuka->ways.begin();
-		while(it1!=bazuka->ways.end())
+		long long st1 = bazuka->getNextWay(0);
+		while(st1!=0)
 		{
-			map <string, string> akt_tags=(it1->second).tags;
+			way akt_way = bazuka->getWay(st1);
+			map <string, string> akt_tags=bazuka->getAllTags(akt_way.id, 'W');
 			bool way1=1;
 			bool way2=1;
 			if(akt_tags["oneway"]=="yes")
@@ -217,21 +218,21 @@ struct dijkstra
 				way2=0;
 			if(akt_tags["oneway"]=="no")
 				way2=1;
-			double przelicznik=getPrzelicznikWagiDrog(it1->first, akt_tags);
+			double przelicznik=getPrzelicznikWagiDrog(akt_way.id, akt_tags);
 			if(przelicznik>0)
 			{
-				vector <long long> akt_nodes=(it1->second).nodes;
+				vector <long long> akt_nodes=akt_way.nodes;
 				int s1=akt_nodes.size();
 				for(int i=0; i<s1-1; i++)
 				{
-					double distance_abs=distance(bazuka->nodes[akt_nodes[i]].lon, bazuka->nodes[akt_nodes[i]].lat, bazuka->nodes[akt_nodes[i+1]].lon, bazuka->nodes[akt_nodes[i+1]].lat)*przelicznik;
+					double distance_abs=distance(bazuka->getNode(akt_nodes[i]).lon, bazuka->getNode(akt_nodes[i]).lat, bazuka->getNode(akt_nodes[i+1]).lon, bazuka->getNode(akt_nodes[i+1]).lat)*przelicznik;
 					if(way1)
-						dodaj_nowe(akt_nodes[i], akt_nodes[i+1], it1->first, distance_abs);
+						dodaj_nowe(akt_nodes[i], akt_nodes[i+1], akt_way.id, distance_abs);
 					if(way2)
-						dodaj_nowe(akt_nodes[i+1], akt_nodes[i], it1->first, distance_abs);
+						dodaj_nowe(akt_nodes[i+1], akt_nodes[i], akt_way.id, distance_abs);
 				}
 			}
-			it1++;
+			st1=bazuka->getNextWay(st1);
 		}
 	}
 	void dij_podmien(long long old, long long nju, long long start, long long stop)

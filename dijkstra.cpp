@@ -109,16 +109,17 @@ struct WariantTrasy
 		}
 		return wynik;
 	}
-	relation generateRelationWithoutIdVersion(set <long long>& changeNodes, set <long long>& changeWays)
+	pair<relation, map<string, string> > generateRelationWithoutIdVersion(set <long long>& changeNodes, set <long long>& changeWays)
 	{
 		string typ_maly=nazwa_mala(nazwa);
 		string typ_duzy=nazwa_duza(nazwa);
 		relation rel;
+		map <string, string> tags;
 		rel.modify=1;
-		rel.tags["network"]="ZTM Warszawa";
-		rel.tags["type"]="route";
-		rel.tags["route"]=typ_maly;
-		rel.tags["ref"]=nazwa;
+		tags["network"]="ZTM Warszawa";
+		tags["type"]="route";
+		tags["route"]=typ_maly;
+		tags["ref"]=nazwa;
 		map <string, vector< vector<przystanek_big> > >::iterator it1=bazaZtm->dane_linia.find(nazwa);
 		vector <string> miasta = miejscowosci((it1->second)[wariantId]);
 		for(int i=0; i<miasta.size(); i++)
@@ -142,17 +143,17 @@ struct WariantTrasy
 			if(i<(miasta.size()-2))
 				via+=", ";
 		}
-		rel.tags["name"]=typ_duzy+" "+nazwa+": "+from+" => "+to;
-		rel.tags["from"] = from;
-		rel.tags["to"] = to;
+		tags["name"]=typ_duzy+" "+nazwa+": "+from+" => "+to;
+		tags["from"] = from;
+		tags["to"] = to;
 		if(via!="")
 		{
-			rel.tags["via"] = via;
+			tags["via"] = via;
 		}
 		/*
 		rel.tags["note"]="stan na "+today;
 		*/
-		rel.tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
+		tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
 		dij_data d1(stopPositions, dij);
 		vector <long long> wszystkieDrogi=d1.all_ways;
 		vector <long long> wszystkieWierzcholki=d1.all_nodes;
@@ -194,7 +195,8 @@ struct WariantTrasy
 				rel.members.push_back(foop);
 			}
 		}
-		return rel;
+
+		return pair<relation, map<string, string> >(rel, tags);
 	}
 	void generateGPX(ostream& plik5)
 	{
@@ -207,7 +209,7 @@ struct WariantTrasy
 		plik5<<"<trkseg>"<<endl;
 		for(int i=0; i<wszystkieWierzcholki.size(); i++)
 		{
-			plik5<<"<trkpt lat=\""<<bazaOsm->nodes[wszystkieWierzcholki[i]].lat<<"\" lon=\""<<bazaOsm->nodes[wszystkieWierzcholki[i]].lon<<"\"></trkpt>"<<endl;
+			plik5<<"<trkpt lat=\""<<bazaOsm->getNode(wszystkieWierzcholki[i]).lat<<"\" lon=\""<<bazaOsm->getNode(wszystkieWierzcholki[i]).lon<<"\"></trkpt>"<<endl;
 		}
 		plik5<<"</trkseg>"<<endl;
 		plik5<<"</trk>"<<endl;
@@ -393,12 +395,13 @@ struct galk
 		for(int i=0; i<warianty[nazwa].size(); i++)
 		{
 			warianty[nazwa][i].generateGPX(plik5);
-			relation nowa=warianty[nazwa][i].generateRelationWithoutIdVersion(changeNodes, changeWays);
+			pair<relation, map<string, string> >nowax=warianty[nazwa][i].generateRelationWithoutIdVersion(changeNodes, changeWays);
+			relation& nowa = nowax.first;
 			//GENERUJ ID I WERSJĘ
 			if(i<stareRelacje.size())
 			{
 				nowa.id=stareRelacje[i];
-				nowa.version=bazaOsm->relations[stareRelacje[i]].version;
+				nowa.version=bazaOsm->getRelation(stareRelacje[i]).version;
 			}
 			else
 			{
@@ -406,11 +409,13 @@ struct galk
 				nowa.version=-1;
 			}
 			noweRelacje.push_back(nowa.id);
-			bazaOsm->relations[nowa.id]=nowa;
+			bazaOsm->addRelation(nowax);
 		}
 		for(int i=warianty[nazwa].size(); i<stareRelacje.size(); i++)
 		{
-			bazaOsm->relations[stareRelacje[i]].todelete=true;
+			relation foo = bazaOsm->getRelation(stareRelacje[i]);
+			foo.todelete=true;
+			bazaOsm->addRelation(foo);
 		}
 		string typ_maly=nazwa_mala(nazwa);
 		string typ_duzy=nazwa_duza(nazwa);
@@ -435,8 +440,8 @@ struct galk
 				rel.members.push_back(foo);
 		}
 		if(rel.id>0)
-			rel.version=bazaOsm->relations[rel.id].version;
-		bazaOsm->relations[rel.id]=rel;
+			rel.version=bazaOsm->getRelation(rel.id).version;
+		bazaOsm->addRelation(rel);
 		plik5<<"</gpx>"<<endl;
 		plik5.close();
 		return true;
@@ -450,9 +455,12 @@ struct galk
 	{
 		readArg(argv);
 		readInput();
-		bazaOsm = new osm_base(osmBasePath);
+		bazaOsm = new osm_base_sql(osmBasePath);
+		cout<<"ok!"<<endl;
 		loadAlgorithms();
-		bazaZtm = new ztmread_for_html (osmBasePath, ztmBasePath, merge(algorytmy));
+		cout<<"ok2!"<<endl;
+		bazaZtm = new ztmread_for_html (bazaOsm, ztmBasePath, merge(algorytmy));
+		cout<<"ok3!"<<endl;
 		if(czyWszystkie)
 			linieDoPrzerobienia=wszystkieLinie(bazaZtm);
 		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, &infoHTML);
@@ -510,11 +518,15 @@ struct galk
 		}
 		htmlTile(plik5);
 		plik5.close();
+		cout<<"testtt"<<endl;
 		set <long long> pusty=pustyGen();
-		osm_base bazuka3=bazaOsm->wybrane(changeNodes, changeWays, pusty);
-		osm_base bazuka4=bazaOsm->modified();
-		osm_base bazuka2=osm_base(bazuka4, bazuka3);
-		bazuka2.wypisz(outPath);
+		osm_base_standard* bazuka3= new osm_base_standard(bazaOsm, changeNodes, changeWays, pusty);
+		cout<<"testtt2"<<endl;
+		osm_base_standard* bazuka4= new osm_base_standard(bazaOsm, 1);
+		cout<<"testtt3"<<endl;
+		osm_base_standard* bazuka2= new osm_base_standard(bazuka4, bazuka3);
+		cout<<"testtt4"<<endl;
+		bazuka2->wypisz(outPath);
 	}
 	~galk()
 	{

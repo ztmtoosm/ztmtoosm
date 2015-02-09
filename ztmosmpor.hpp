@@ -8,6 +8,7 @@
 #include <vector>
 #include <cmath>
 #include <fstream>
+#include "osm_base.hpp"
 #include "rapidxml/rapidxml.hpp"
 #include "rapidxml/rapidxml_utils.hpp"
 #include "rapidxml/rapidxml_print.hpp"
@@ -72,30 +73,21 @@ class ztmread_for_html : public ztmread
 	map<string, data1*> bus_stop_lista;
 	map<string, data1*> position_lista;
 	map<string, data1*> platform_lista;
-	void laduj_listke(string plik)
+
+	void laduj_listke(osm_base* baza)
 	{
-		file <> xmlFile(plik.c_str());
-		xml_document<> doc;
-		doc.parse<0>(xmlFile.data());
-		xml_node<>* root=doc.first_node("osm");
-		for(xml_node <> *tag=root->first_node("node"); tag; tag=tag->next_sibling("node"))
+		long long st1=baza->getNextNode(0);
+		while(st1!=0)
 		{
-			map <string, string> tags;
-			for(xml_node <> *tap=tag->first_node("tag"); tap; tap=tap->next_sibling("tag"))
-			{
-				xml_attribute<>*k=tap->first_attribute("k");
-				xml_attribute<>*v=tap->first_attribute("v");
-				tags[k->value()]=v->value();
-			}
+			node aktual = baza->getNode(st1);
+			map<string, string> tags;
+			tags = baza->getAllTags(aktual.id, 'N');
+			data1* foo = new data1;
 			if(tags["highway"]=="bus_stop" || tags["railway"]=="tram_stop" || tags["public_transport"]=="stop_position")
 			{
-				xml_attribute<>*id=tag->first_attribute("id");
-				xml_attribute<>*lat=tag->first_attribute("lat");
-				xml_attribute<>*lon=tag->first_attribute("lon");
-				data1* foo = new data1;
-				foo->id=fromstring<long long>(id->value());
-				foo->lat=fromstring<double>(lat->value());
-				foo->lon=fromstring<double>(lon->value());
+				foo->id=aktual.id;
+				foo->lat=(aktual.lat);
+				foo->lon=(aktual.lon);
 				if(tags.find("name")!=tags.end())
 					foo->name=tags["name"];
 				if(tags["highway"]=="bus_stop")
@@ -117,21 +109,18 @@ class ztmread_for_html : public ztmread
 				if(foo->bus_stop)
 					bus_stop_lista[foo->ref]=foo;
 			}
+			st1=baza->getNextNode(st1);
 		}
-		for(xml_node <> *tag=root->first_node("way"); tag; tag=tag->next_sibling("way"))
+		long long st2=baza->getNextWay(0);
+		while(st2!=0)
 		{
-			map <string, string> tags;
-			for(xml_node <> *tap=tag->first_node("tag"); tap; tap=tap->next_sibling("tag"))
-			{
-				xml_attribute<>*k=tap->first_attribute("k");
-				xml_attribute<>*v=tap->first_attribute("v");
-				tags[k->value()]=v->value();
-			}
+			way aktual=baza->getWay(st2);
+			map<string, string> tags;
+			tags = baza->getAllTags(aktual.id, 'W');
 			if(tags["public_transport"]=="platform" || tags["highway"]=="platform" || tags["railway"]=="platform")
 			{
-				xml_attribute<>*id=tag->first_attribute("id");
 				data1* foo = new data1;
-				foo->id=fromstring<long long>(id->value());
+				foo->id=aktual.id;
 				if(tags["ref"]!="")
 				{
 					foo->ref=tags["ref"];
@@ -139,18 +128,20 @@ class ztmread_for_html : public ztmread
 					platform_lista[foo->ref]=foo;
 				}
 			}
+			st2=baza->getNextWay(st2);
 		}
 	}
+
 	set<long long> eee;
 	
 	public:
 	vector <przystanek_big> dane;
 	map <string, vector< vector<przystanek_big> > > dane_linia;
 	map <string, przystanek_big> dane0;
-	ztmread_for_html (string sciez0, string sciez, set<long long> eee3) : ztmread(sciez)
+	ztmread_for_html (osm_base* baza, string sciez, set<long long> eee3) : ztmread(sciez)
 	{
 		eee=eee3;
-		laduj_listke(sciez0);
+		laduj_listke(baza);
 		run();
 	}
 	void nowy_przystanek(przystanek nowy)
