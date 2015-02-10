@@ -453,6 +453,7 @@ struct galk
 		bazaOsm = new osm_base(osmBasePath);
 		loadAlgorithms();
 		bazaZtm = new ztmread_for_html (osmBasePath, ztmBasePath, merge(algorytmy));
+		cout<<"alpha1"<<endl;
 		if(czyWszystkie)
 			linieDoPrzerobienia=wszystkieLinie(bazaZtm);
 		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, &infoHTML);

@@ -248,23 +248,25 @@ struct osm_base
 	}
 	osm_base(string sciezka)
 	{
+		set <long long> nodes_potrzebne;
 		new_ways=-1;
 		file <> xmlFile(sciezka.c_str());
 		xml_document<> doc;
 		doc.parse<0>(xmlFile.data());
 		xml_node<>* root=doc.first_node("osm");
-		for(xml_node <> *tag=root->first_node("node"); tag; tag=tag->next_sibling("node"))
-		{
-			load_node(tag);
-		}
 		for(xml_node <> *tag=root->first_node("way"); tag; tag=tag->next_sibling("way"))
 		{
-			load_way(tag);
+			load_way(tag, nodes_potrzebne);
+		}
+		for(xml_node <> *tag=root->first_node("node"); tag; tag=tag->next_sibling("node"))
+		{
+			load_node(tag, nodes_potrzebne);
 		}
 		for(xml_node <> *tag=root->first_node("relation"); tag; tag=tag->next_sibling("relation"))
 		{
 			load_relation(tag);
 		}
+		cout<<nodes.size()<<" "<<ways.size()<<" "<<relations.size();
 	}
 	
 	private:
@@ -354,7 +356,7 @@ struct osm_base
 			foo->tags[key->value()]=val->value();
 		}
 	}
-	void load_node(xml_node <>* root)
+	void load_node(xml_node <>* root, set <long long>& nodes_potrzebne)
 	{
 		node foo2;
 		node* foo=&foo2;
@@ -363,10 +365,23 @@ struct osm_base
 		foo->lat=fromstring<double>(lat->value());
 		foo->lon=fromstring<double>(lon->value());
 		read_every(root, foo);
-		if(nodes.find(foo->id)==nodes.end() || nodes[foo->id].version<foo2.version)
+		bool ok=0;
+		if(nodes_potrzebne.find(foo->id)!=nodes_potrzebne.end())
+			ok=1;
+		if(foo->tags.find("highway")!=foo->tags.end())
+			ok=1;
+		if(foo->tags.find("railway")!=foo->tags.end())
+			ok=1;
+		if(foo->tags.find("public_transport")!=foo->tags.end())
+			ok=1;
+		ok=1;
+		if(nodes.find(foo->id)!=nodes.end())
+			if(nodes[foo->id].version>=foo2.version)
+				ok=0;
+		if(ok)
 			nodes[foo->id]=foo2;
 	}
-	void load_way(xml_node <>* root)
+	void load_way(xml_node <>* root, set <long long>& nodes_potrzebne)
 	{
 		way foo2;
 		way* foo=&foo2;
@@ -376,7 +391,23 @@ struct osm_base
 			foo->nodes.push_back(fromstring<long long>(val->value()));
 		}
 		read_every(root, foo);
-		if(ways.find(foo->id)==ways.end() || ways[foo->id].version<foo2.version)
+		bool ok=0;
+		if(foo->tags.find("highway")!=foo->tags.end())
+			ok=1;
+		if(foo->tags.find("railway")!=foo->tags.end())
+			ok=1;
+		if(foo->tags.find("public_transport")!=foo->tags.end())
+			ok=1;
+		if(ok)
+			for(int i=0; i<foo->nodes.size(); i++)
+			{
+				nodes_potrzebne.insert(foo->nodes[i]);
+			}
+		ok=1;
+		if(ways.find(foo->id)!=ways.end())
+			if(ways[foo->id].version>=foo2.version)
+				ok=0;
+		if(ok)
 			ways[foo->id]=foo2;
 	}
 	void load_relation(xml_node <>* root)
