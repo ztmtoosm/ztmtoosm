@@ -834,7 +834,7 @@ class OsmBazaLoader
 		baz->wypelnij_sciezki();
 	}
 };
-
+*/
 class OsmBazaLoaderBis
 {
 	set <pair<string, string> >dodane;
@@ -897,9 +897,9 @@ class OsmBazaLoaderBis
 					}
 					for(int j=0; j<nods.size(); j++)
 					{
-						if(base->nodes[nods[j]].tags["public_transport"]=="stop_position")
+						if(base->nodes[nods[j]].getTags()["public_transport"]=="stop_position")
 						{
-							refs[base->nodes[nods[j]].tags["ref"]]=nods[j];
+							refs[base->nodes[nods[j]].getTags()["ref"]]=nods[j];
 						}
 					}
 				}
@@ -918,9 +918,9 @@ class OsmBazaLoaderBis
 					ok=1;
 				if(akt_rel.members[i].role=="stop_exit_only")
 					ok=1;
-				if(ok && base->nodes[node_id].tags["ref"]!="")
+				if(ok && base->nodes[node_id].getTags()["ref"]!="")
 				{
-					string ref=base->nodes[node_id].tags["ref"];
+					string ref=base->nodes[node_id].getTags()["ref"];
 					ref1.push_back(ref);
 				}
 			}
@@ -967,5 +967,4 @@ class OsmBazaLoaderBis
 		plik_out.close();
 	}
 };
-*/
 

@@ -1,5 +1,5 @@
-#include "HafasBaza.hpp"
-#include "sciezka1.hpp"
+#include "src/HafasBaza.hpp"
+#include "src/sciezka1.hpp"
 #include "fcgi_stdio.h"
 void wypisz(stringstream& lol)
 {
@@ -34,9 +34,9 @@ int main(int argc, char** argv)
 {
 	string sciezka, sciezka2;
 	sciezka=SCIEZKA1;
-	sciezka+="/ztm_download1.txt";
+	sciezka+="/data/ztm_download1.txt";
 	sciezka2=sciezka;
-	sciezka2+="/latest.osm";
+	sciezka2+="/data/latest.osm";
 	HafasBaza* baza=new HafasBaza();
 	HafasBazaLoader loader(baza, sciezka);
 	//OsmBazaLoader loader2(baza, sciezka2);
