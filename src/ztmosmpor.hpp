@@ -11,9 +11,6 @@
 #include "osm_base.hpp"
 #include "readztm.hpp"
 using namespace std;
-using namespace rapidxml;
-
-
 struct data1
 {
 bool position;

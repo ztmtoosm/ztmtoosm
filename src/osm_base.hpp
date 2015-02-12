@@ -1,14 +1,11 @@
 #ifndef OSMAPI
 #define OSMAPI
-#include "XmlInspector.hpp"
+#include "../xml/XmlInspector.hpp"
 #include <vector>
 #include <cstring>
 #include <map>
-#include "rapidxml/rapidxml.hpp"
-#include "rapidxml/rapidxml_utils.hpp"
 #include "stringspecial.hpp"
 using namespace std;
-using namespace rapidxml;
 struct every_member
 {
 	static map <string, int> kodyKey;
@@ -491,47 +488,6 @@ struct osm_base
 		}
 		plik<<"</relation>"<<endl;
 	}
-	void read_every(xml_node <>* root, every_member* foo)
-	{
-		xml_attribute<>*id=root->first_attribute("id");
-		xml_attribute<>*version=root->first_attribute("version");
-		foo->id=fromstring<long long>(id->value());
-		if(version!=NULL)
-			foo->version=fromstring<int>(version->value());
-		map <string, string> tags;
-		for(xml_node <> *tag=root->first_node("tag"); tag; tag=tag->next_sibling("tag"))
-		{
-			xml_attribute <> *key=tag->first_attribute("k");
-			xml_attribute <> *val=tag->first_attribute("v");
-			tags[key->value()]=val->value();
-		}
-		foo->setTags(tags);
-	}
-	void load_node(xml_node <>* root, set <long long>& nodes_potrzebne)
-	{
-		node foo2;
-		node* foo=&foo2;
-		xml_attribute<>*lat=root->first_attribute("lat");
-		xml_attribute<>*lon=root->first_attribute("lon");
-		foo->lat=fromstring<double>(lat->value());
-		foo->lon=fromstring<double>(lon->value());
-		read_every(root, foo);
-		map <string, string> tags=foo->getTags();
-		bool ok=0;
-		if(nodes_potrzebne.find(foo->id)!=nodes_potrzebne.end())
-			ok=1;
-		if(tags.find("highway")!=tags.end())
-			ok=1;
-		if(tags.find("railway")!=tags.end())
-			ok=1;
-		if(tags.find("public_transport")!=tags.end())
-			ok=1;
-		if(nodes.find(foo->id)!=nodes.end())
-			if(nodes[foo->id].version>=foo2.version)
-				ok=0;
-		if(ok)
-			nodes[foo->id]=foo2;
-	}
 	void load_tag(Xml::Inspector<Xml::Encoding::Utf8Writer> &ins, map<string, string>& lista)
 	{
 		string k, v;
@@ -738,32 +694,5 @@ struct osm_base
 			}
 		}
 	}
-
-	void load_relation(xml_node <>* root)
-	{
-		relation foo2;
-		relation* foo=&foo2;
-		for(xml_node <> *tag=root->first_node("member"); tag; tag=tag->next_sibling("member"))
-		{
-			relation_member foo2;
-			xml_attribute <> *role=tag->first_attribute("role");
-			xml_attribute <> *ref=tag->first_attribute("ref");
-			xml_attribute <> *type=tag->first_attribute("type");
-			string typ=type->value();
-			if(typ=="relation")
-				foo2.member_type=RELATION;
-			if(typ=="way")
-				foo2.member_type=WAY;
-			if(typ=="node")
-				foo2.member_type=NODE;
-			foo2.member_id=(fromstring<long long>(ref->value()));
-			foo2.role=role->value();
-			foo->members.push_back(foo2);
-		}
-		read_every(root, foo);
-		if(relations.find(foo->id)==relations.end() || relations[foo->id].version<foo2.version)
-			relations[foo->id]=foo2;
-	}
-	
 };
 #endif

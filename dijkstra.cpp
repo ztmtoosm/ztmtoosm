@@ -3,15 +3,14 @@
 #include <vector>
 #include <map>
 #include <sstream>
-#include "stringspecial.hpp"
-#include "ztmosmpor.hpp"
-#include "osm_base.hpp"
-#include "dijkstra.hpp"
-#include "dij_data.hpp"
-#include "htmlgen.hpp"
-#include "starelinie.hpp"
+#include "src/stringspecial.hpp"
+#include "src/ztmosmpor.hpp"
+#include "src/osm_base.hpp"
+#include "src/dijkstra.hpp"
+#include "src/dij_data.hpp"
+#include "src/htmlgen.hpp"
+#include "src/starelinie.hpp"
 using namespace std;
-using namespace rapidxml;
 
 set <long long> pustyGen()
 {

@@ -1,4 +1,4 @@
-#include "HafasBaza.hpp"
+#include "src/HafasBaza.hpp"
 int main(int argc, char** argv)
 {
 	string sciezka, sciezka2, sciezka3;

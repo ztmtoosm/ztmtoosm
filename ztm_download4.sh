@@ -21,17 +21,17 @@ today=$(date +%s)
 wynik=8
 
 while [ $wynik -ne 0  ] ; do
-	$(textdata $today $1/ztm_download0.7z)
+	$(textdata $today $1/data/ztm_download0.7z)
 	wynik=$?
 	today2=$(textdata2 $today)
 	echo $wynik
 	let "today = today - 24*60*60"
 	echo $today
 done
-7z e $1"/ztm_download0.7z"
-rm $1"/ztm_download0.7z"
-mv $1"/"$today2 $1"/ztm_download1.txt"
-iconv -f windows-1250 -t utf-8 $1"/"ztm_download1.txt > $1"/"ztm_downloade.txt
-mv $1"/"ztm_downloade.txt $1"/"ztm_download1.txt
-$1"/ztm_download5" $1"/ztm_download1.txt" $1"/ztm_download2.txt"
-mysql -u root --local-infile < $1"/"ztm_download3.txt
+7z e $1"/data/ztm_download0.7z" -o$1"/data"
+rm $1"/data/ztm_download0.7z"
+mv $1"/data/"$today2 $1"/data/ztm_download1.txt"
+iconv -f windows-1250 -t utf-8 $1"/data/"ztm_download1.txt > $1"/data/"ztm_downloade.txt
+mv $1"/data/"ztm_downloade.txt $1"/data/"ztm_download1.txt
+$1"/bin/ztm_download5" $1"/data/ztm_download1.txt" $1"/data/ztm_download2.txt"
+mysql -u root --local-infile < $1"/ztm_download/"ztm_download3.txt

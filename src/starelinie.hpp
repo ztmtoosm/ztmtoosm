@@ -10,7 +10,6 @@
 #include "dij_data.hpp"
 #include "htmlgen.hpp"
 using namespace std;
-using namespace rapidxml;
 pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long root, string linia)
 {
 	pair<long long, vector <long long> > wynik;

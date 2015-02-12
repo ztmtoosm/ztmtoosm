@@ -692,6 +692,7 @@ class HafasBazaLoader : ztmread
 		run();
 	}
 };
+/*
 class OsmBazaLoader
 {
 	vector <long long> bfs(long long start, long long stop, map <long long, vector <long long> >& prepareBfs)
@@ -966,5 +967,5 @@ class OsmBazaLoaderBis
 		plik_out.close();
 	}
 };
-
+*/
 

@@ -7,7 +7,6 @@
 #include <sstream>
 #include "osm_base.hpp"
 using namespace std;
-using namespace rapidxml;
 
 struct odcinek;
 
