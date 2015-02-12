@@ -16,13 +16,14 @@ pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long roo
 	pair<long long, vector <long long> > wynik;
 	wynik.first=0;
 	relation akt=roo->relations[root];
-	if(akt.tags["ref"]==linia)
+	map <string, string> tags = akt.getTags();
+	if(tags["ref"]==linia)
 	{
-		if(akt.tags["type"]=="route")
+		if(tags["type"]=="route")
 		{
 			wynik.second.push_back(akt.id);
 		}
-		if(akt.tags["type"]=="route_master")
+		if(tags["type"]=="route_master")
 		{
 			wynik.first=akt.id;
 		}
@@ -55,8 +56,9 @@ set <long long> wszystkie_route (osm_base* roo, long long root)
 {
 	set <long long> wynik;
 	relation akt=roo->relations[root];
+	auto tags = akt.getTags();
 	int s1=akt.members.size();
-	if(akt.tags["type"]=="route")
+	if(tags["type"]=="route")
 	{
 		wynik.insert(akt.id);
 	}
@@ -89,11 +91,12 @@ set <string> extract_ref(osm_base* baza, long long rel)
 			if(baza->nodes.find(teraz_id)!=baza->nodes.end())
 			{
 				node teraz=baza->nodes[teraz_id];
-				if(teraz.tags["highway"]=="bus_stop" || teraz.tags["railway"]=="tram_stop" || teraz.tags["public_transport"]=="stop_position")
+				auto tags=teraz.getTags();
+				if(tags["highway"]=="bus_stop" || tags["railway"]=="tram_stop" || tags["public_transport"]=="stop_position")
 				{
-					if(teraz.tags.find("ref")!=teraz.tags.end())
+					if(tags.find("ref")!=tags.end())
 					{
-						wynik.insert(teraz.tags["ref"]);
+						wynik.insert(tags["ref"]);
 					}
 				}
 			}
@@ -104,11 +107,12 @@ set <string> extract_ref(osm_base* baza, long long rel)
 			if(baza->ways.find(teraz_id)!=baza->ways.end())
 			{
 				way teraz=baza->ways[teraz_id];
-				if(teraz.tags["highway"]=="platform" || teraz.tags["railway"]=="platform")
+				auto tags = teraz.getTags();
+				if(tags["highway"]=="platform" || tags["railway"]=="platform")
 				{
-					if(teraz.tags.find("ref")!=teraz.tags.end())
+					if(tags.find("ref")!=tags.end())
 					{
-						wynik.insert(teraz.tags["ref"]);
+						wynik.insert(tags["ref"]);
 					}
 				}
 			}
@@ -186,7 +190,7 @@ class PrzegladanieCzyPrawidloweStareLinie
 		for(int i=0; i<rels.size(); i++)
 		{
 			link_href="http://openstreetmap.org/relation/"+tostring(rels[i]);
-			string nazwa=bazaOsm->relations[rels[i]].tags["name"];
+			string nazwa=bazaOsm->relations[rels[i]].getTags()["name"];
 			tmp1+=htmlgen::div("relboczna", "", "route: "+htmlgen::link(link_href, tostring(rels[i])+" "+nazwa));
 		}
 		return htmlgen::div("infolinie", "", tmp1);

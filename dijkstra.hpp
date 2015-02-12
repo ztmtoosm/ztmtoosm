@@ -202,7 +202,7 @@ struct dijkstra
 		map<long long, way>::iterator it1=bazuka->ways.begin();
 		while(it1!=bazuka->ways.end())
 		{
-			map <string, string> akt_tags=(it1->second).tags;
+			map <string, string> akt_tags=(it1->second).getTags();
 			bool way1=1;
 			bool way2=1;
 			if(akt_tags["oneway"]=="yes")

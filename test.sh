@@ -19,4 +19,4 @@ do
 done
 c=ztm_download1.txt
 d=$(date +"%Y/%m/%d")
-./dijkstra $c latest.osm wyj4.osm "-all"
+./dijkstra $c latest.osm wyj4.osm "/home/marcin/www" "-all"

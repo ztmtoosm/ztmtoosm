@@ -1,5 +1,6 @@
 #ifndef OSMAPI
 #define OSMAPI
+#include "XmlInspector.hpp"
 #include <vector>
 #include <cstring>
 #include <map>
@@ -10,27 +11,153 @@ using namespace std;
 using namespace rapidxml;
 struct every_member
 {
+	static map <string, int> kodyKey;
+	static vector <string> kodyKey2;
 	int version;
 	long long id;
-	map <string, string> tags;
+	private:
+	int tagiSize;
+	int* tagi1;
+	int* tagi2;
+	public:
+	map<string, string> getTags() const
+	{
+		map <string, string> wynik;
+		for(int i=0; i<tagiSize; i++)
+		{
+			wynik[kodyKey2[tagi1[i]]]=kodyKey2[tagi2[i]];
+		}
+		return wynik;
+	}
+	void setTags (map<string, string> tags)
+	{
+		if(tagi1!=NULL)
+		{
+			delete tagi1;
+			tagi1=NULL;
+			delete tagi2;
+			tagi2=NULL;
+		}
+		tagiSize=tags.size();
+		if(tags.size()>0)
+		{
+			tagi1 = new int[tags.size()];
+			tagi2 = new int[tags.size()];
+		}
+		auto it1=tags.begin();
+		int licznik=0;
+		while(it1!=tags.end())
+		{
+			if(kodyKey.find(it1->first)==kodyKey.end())
+			{
+				int s1=kodyKey2.size();
+				kodyKey.insert(make_pair(it1->first, s1));
+				kodyKey2.push_back(it1->first);
+			}
+			if(kodyKey.find(it1->second)==kodyKey.end())
+			{
+				int s1=kodyKey2.size();
+				kodyKey.insert(make_pair(it1->second, s1));
+				kodyKey2.push_back(it1->second);
+			}
+			tagi1[licznik]=kodyKey[it1->first];
+			tagi2[licznik]=kodyKey[it1->second];
+			licznik++;
+			it1++;
+		}
+	}
 	bool modify;
 	bool todelete;
 	every_member()
 	{
+		tagi1=NULL;
+		tagi2=NULL;
+		tagiSize=0;
 		modify=0;
 		todelete=0;
 	}
+	every_member(every_member& foo)
+	{
+		tagi1=NULL;
+		tagi2=NULL;
+		tagiSize=0;
+		version=foo.version;
+		id=foo.id;
+		modify=foo.modify;
+		todelete=foo.todelete;
+		setTags(foo.getTags());
+	}
+	every_member(const every_member& foo)
+	{
+		tagi1=NULL;
+		tagi2=NULL;
+		tagiSize=0;
+		version=foo.version;
+		id=foo.id;
+		modify=foo.modify;
+		todelete=foo.todelete;
+		map<string,string> tags=foo.getTags();
+		setTags(tags);
+	}
+	every_member& operator=(every_member const& foo)
+	{
+		tagi1=NULL;
+		tagi2=NULL;
+		tagiSize=0;
+		version=foo.version;
+		id=foo.id;
+		modify=foo.modify;
+		todelete=foo.todelete;
+		map<string,string> tags=foo.getTags();
+		setTags(tags);
+	
+	}
+	~every_member()
+	{
+		if(tagi1!=NULL)
+		{
+			delete[] tagi1;
+			delete[] tagi2;
+		}
+	}
 };
 
+map <string, int> every_member::kodyKey;
+vector <string> every_member::kodyKey2;
+	
 struct node : every_member
 {
 	double lat;
 	double lon;
+	node(node& foo) : every_member(foo)
+	{
+		lat=foo.lat;
+		lon=foo.lon;
+	}
+	node(const node& foo) : every_member(foo)
+	{
+		lat=foo.lat;
+		lon=foo.lon;
+	}
+	node() : every_member()
+	{
+	}
 };
 
 struct way : every_member
 {
 	vector <long long> nodes;
+	way(way& foo) : every_member(foo)
+	{
+		nodes=foo.nodes;
+	}
+	way(const way& foo) : every_member(foo)
+	{
+		nodes=foo.nodes;
+	}
+	way() : every_member()
+	{
+	}
 };
 
 enum relation_member_type
@@ -48,6 +175,17 @@ struct relation_member
 struct relation : every_member
 {
 	vector <relation_member > members;
+	relation(relation& foo) : every_member(foo)
+	{
+		members=foo.members;
+	}
+	relation(const relation& foo) : every_member(foo)
+	{
+		members=foo.members;
+	}
+	relation() : every_member()
+	{
+	}
 };
 
 struct osm_base
@@ -250,31 +388,42 @@ struct osm_base
 	{
 		set <long long> nodes_potrzebne;
 		new_ways=-1;
+		/*
 		file <> xmlFile(sciezka.c_str());
 		xml_document<> doc;
 		doc.parse<0>(xmlFile.data());
 		xml_node<>* root=doc.first_node("osm");
+		*/
+		load_ways(sciezka, nodes_potrzebne);
+		load_nodes(sciezka, nodes_potrzebne);
+		load_relations(sciezka);
+		/*
 		for(xml_node <> *tag=root->first_node("way"); tag; tag=tag->next_sibling("way"))
 		{
 			load_way(tag, nodes_potrzebne);
 		}
+		*/
+		/*
 		for(xml_node <> *tag=root->first_node("node"); tag; tag=tag->next_sibling("node"))
 		{
 			load_node(tag, nodes_potrzebne);
 		}
+		*/
+		/*
 		for(xml_node <> *tag=root->first_node("relation"); tag; tag=tag->next_sibling("relation"))
 		{
 			load_relation(tag);
 		}
-		cout<<nodes.size()<<" "<<ways.size()<<" "<<relations.size();
+		*/
 	}
 	
 	private:
 	
 	void wypisz_tags(every_member& teraz, ostream& plik)
 	{
-		map<string, string>::iterator it1=teraz.tags.begin();
-		while(it1!=teraz.tags.end())
+		map<string, string> tags = teraz.getTags();
+		map<string, string>::iterator it1=tags.begin();
+		while(it1!=tags.end())
 		{
 			plik<<"<tag k=\""<<it1->first<<"\" v=\""<<avoid_cudzyslow(it1->second)<<"\"/>"<<endl;
 			it1++;
@@ -349,12 +498,14 @@ struct osm_base
 		foo->id=fromstring<long long>(id->value());
 		if(version!=NULL)
 			foo->version=fromstring<int>(version->value());
+		map <string, string> tags;
 		for(xml_node <> *tag=root->first_node("tag"); tag; tag=tag->next_sibling("tag"))
 		{
 			xml_attribute <> *key=tag->first_attribute("k");
 			xml_attribute <> *val=tag->first_attribute("v");
-			foo->tags[key->value()]=val->value();
+			tags[key->value()]=val->value();
 		}
+		foo->setTags(tags);
 	}
 	void load_node(xml_node <>* root, set <long long>& nodes_potrzebne)
 	{
@@ -365,51 +516,229 @@ struct osm_base
 		foo->lat=fromstring<double>(lat->value());
 		foo->lon=fromstring<double>(lon->value());
 		read_every(root, foo);
+		map <string, string> tags=foo->getTags();
 		bool ok=0;
 		if(nodes_potrzebne.find(foo->id)!=nodes_potrzebne.end())
 			ok=1;
-		if(foo->tags.find("highway")!=foo->tags.end())
+		if(tags.find("highway")!=tags.end())
 			ok=1;
-		if(foo->tags.find("railway")!=foo->tags.end())
+		if(tags.find("railway")!=tags.end())
 			ok=1;
-		if(foo->tags.find("public_transport")!=foo->tags.end())
+		if(tags.find("public_transport")!=tags.end())
 			ok=1;
-		ok=1;
 		if(nodes.find(foo->id)!=nodes.end())
 			if(nodes[foo->id].version>=foo2.version)
 				ok=0;
 		if(ok)
 			nodes[foo->id]=foo2;
 	}
-	void load_way(xml_node <>* root, set <long long>& nodes_potrzebne)
+	void load_tag(Xml::Inspector<Xml::Encoding::Utf8Writer> &ins, map<string, string>& lista)
 	{
-		way foo2;
-		way* foo=&foo2;
-		for(xml_node <> *tag=root->first_node("nd"); tag; tag=tag->next_sibling("nd"))
+		string k, v;
+		Xml::Inspector<Xml::Encoding::Utf8Writer>::SizeType i;
+		for (i = 0; i < ins.GetAttributesCount(); ++i)
 		{
-			xml_attribute <> *val=tag->first_attribute("ref");
-			foo->nodes.push_back(fromstring<long long>(val->value()));
+			if(ins.GetAttributeAt(i).Name=="k")
+				k=ins.GetAttributeAt(i).Value;
+			if(ins.GetAttributeAt(i).Name=="v")
+				v=ins.GetAttributeAt(i).Value;
 		}
-		read_every(root, foo);
-		bool ok=0;
-		if(foo->tags.find("highway")!=foo->tags.end())
-			ok=1;
-		if(foo->tags.find("railway")!=foo->tags.end())
-			ok=1;
-		if(foo->tags.find("public_transport")!=foo->tags.end())
-			ok=1;
-		if(ok)
-			for(int i=0; i<foo->nodes.size(); i++)
-			{
-				nodes_potrzebne.insert(foo->nodes[i]);
-			}
-		ok=1;
-		if(ways.find(foo->id)!=ways.end())
-			if(ways[foo->id].version>=foo2.version)
-				ok=0;
-		if(ok)
-			ways[foo->id]=foo2;
+		lista[k]=v;
 	}
+	long long load_nd(Xml::Inspector<Xml::Encoding::Utf8Writer> &ins)
+	{
+		Xml::Inspector<Xml::Encoding::Utf8Writer>::SizeType i;
+		for (i = 0; i < ins.GetAttributesCount(); ++i)
+		{
+			if(ins.GetAttributeAt(i).Name=="ref")
+				return fromstring<long long>(ins.GetAttributeAt(i).Value);
+		}
+		return 0;
+	}
+	void load_basic(Xml::Inspector<Xml::Encoding::Utf8Writer> &ins, every_member& foo)
+	{
+		Xml::Inspector<Xml::Encoding::Utf8Writer>::SizeType i;
+		for (i = 0; i < ins.GetAttributesCount(); ++i)
+		{
+			if(ins.GetAttributeAt(i).Name=="id")
+				foo.id=fromstring<long long>(ins.GetAttributeAt(i).Value);
+			if(ins.GetAttributeAt(i).Name=="version")
+				foo.version=fromstring<int>(ins.GetAttributeAt(i).Value);
+		}
+	}
+	void load_member(Xml::Inspector<Xml::Encoding::Utf8Writer> &ins, relation& foo)
+	{
+		relation_member foo2;
+		Xml::Inspector<Xml::Encoding::Utf8Writer>::SizeType i;
+		for (i = 0; i < ins.GetAttributesCount(); ++i)
+		{
+			if(ins.GetAttributeAt(i).Name=="ref")
+				foo2.member_id=fromstring<long long>(ins.GetAttributeAt(i).Value);
+			if(ins.GetAttributeAt(i).Name=="role")
+				foo2.role=(ins.GetAttributeAt(i).Value);
+			if(ins.GetAttributeAt(i).Name=="type")
+			{
+				string type=(ins.GetAttributeAt(i).Value);
+				if(type=="node")
+					foo2.member_type=NODE;
+				if(type=="way")
+					foo2.member_type=WAY;
+				if(type=="relation")
+					foo2.member_type=RELATION;
+			}
+		}
+		foo.members.push_back(foo2);
+	}
+	void load_latlon(Xml::Inspector<Xml::Encoding::Utf8Writer> &ins, node& foo)
+	{
+		Xml::Inspector<Xml::Encoding::Utf8Writer>::SizeType i;
+		for (i = 0; i < ins.GetAttributesCount(); ++i)
+		{
+			if(ins.GetAttributeAt(i).Name=="lat")
+				foo.lat=fromstring<double>(ins.GetAttributeAt(i).Value);
+			if(ins.GetAttributeAt(i).Name=="lon")
+				foo.lon=fromstring<double>(ins.GetAttributeAt(i).Value);
+		}
+	}
+	void load_ways(string sciezka, set <long long>& nodes_potrzebne)
+	{
+		Xml::Inspector<Xml::Encoding::Utf8Writer> inspector(sciezka.c_str());
+		while (inspector.Inspect())
+		{
+			if (inspector.GetInspected() == Xml::Inspected::StartTag)
+			{
+				if(inspector.GetName()=="way")
+				{
+					way foo;
+					load_basic(inspector, foo);
+					map <string, string> tags;
+					bool ok=1;
+					bool dodaj=0;
+					while (inspector.Inspect() && ok)
+					{
+						if (inspector.GetInspected() == Xml::Inspected::EndTag)
+						{
+							if(inspector.GetName() == "way")
+							{
+								ok=0;
+								if(tags.find("highway")!=tags.end())
+									dodaj=1;
+								if(tags.find("railway")!=tags.end())
+									dodaj=1;
+								if(tags.find("public_transport")!=tags.end())
+									dodaj=1;
+								if(dodaj)
+								{
+									foo.setTags(tags);
+									ways[foo.id]=foo;
+									for(int i=0; i<foo.nodes.size(); i++)
+									{
+										nodes_potrzebne.insert(foo.nodes[i]);
+									}
+								}
+							}
+						}
+						else
+						{
+							if(inspector.GetName() == "nd")
+								foo.nodes.push_back(load_nd(inspector));
+							if(inspector.GetName() == "tag")
+								load_tag(inspector, tags);	
+						}
+					}
+				}
+			}
+		}
+	}
+	void load_nodes(string sciezka, set <long long>& nodes_potrzebne)
+	{
+		Xml::Inspector<Xml::Encoding::Utf8Writer> inspector(sciezka.c_str());
+		while (inspector.Inspect())
+		{
+			if (inspector.GetInspected() == Xml::Inspected::StartTag)
+			{
+				if(inspector.GetName()=="node")
+				{
+					node foo;
+					load_basic(inspector, foo);
+					load_latlon(inspector, foo);
+					map <string, string> tags;
+					bool ok=1;
+					bool dodaj=0;
+					while (inspector.Inspect() && ok)
+					{
+						if (inspector.GetInspected() == Xml::Inspected::EndTag)
+						{
+							if(inspector.GetName() == "node")
+							{
+								ok=0;
+								if(tags.find("highway")!=tags.end())
+									dodaj=1;
+								if(tags.find("railway")!=tags.end())
+									dodaj=1;
+								if(tags.find("public_transport")!=tags.end())
+									dodaj=1;
+								if(nodes_potrzebne.find(foo.id)!=nodes_potrzebne.end())
+									dodaj=1;
+								if(dodaj)
+								{
+									foo.setTags(tags);
+									nodes[foo.id]=foo;
+								}
+							}
+						}
+						else
+						{
+							if(inspector.GetName() == "tag")
+								load_tag(inspector, tags);	
+						}
+					}
+				}
+			}
+		}
+	}
+	void load_relations(string sciezka)
+	{
+		Xml::Inspector<Xml::Encoding::Utf8Writer> inspector(sciezka.c_str());
+		while (inspector.Inspect())
+		{
+			if (inspector.GetInspected() == Xml::Inspected::StartTag)
+			{
+				if(inspector.GetName()=="relation")
+				{
+					relation foo;
+					load_basic(inspector, foo);
+					map <string, string> tags;
+					bool ok=1;
+					bool dodaj=1;
+					while (inspector.Inspect() && ok)
+					{
+						if (inspector.GetInspected() == Xml::Inspected::EndTag)
+						{
+							if(inspector.GetName() == "relation")
+							{
+								ok=0;
+								if(dodaj)
+								{
+									foo.setTags(tags);
+									relations[foo.id]=foo;
+								}
+							}
+						}
+						else
+						{
+							if(inspector.GetName() == "tag")
+								load_tag(inspector, tags);	
+							if(inspector.GetName() == "member")
+								load_member(inspector, foo);	
+					
+						}
+					}
+				}
+			}
+		}
+	}
+
 	void load_relation(xml_node <>* root)
 	{
 		relation foo2;

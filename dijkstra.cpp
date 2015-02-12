@@ -109,16 +109,16 @@ struct WariantTrasy
 		}
 		return wynik;
 	}
-	relation generateRelationWithoutIdVersion(set <long long>& changeNodes, set <long long>& changeWays)
+	void generateRelationWithoutIdVersion(set <long long>& changeNodes, set <long long>& changeWays, relation& rel)
 	{
 		string typ_maly=nazwa_mala(nazwa);
 		string typ_duzy=nazwa_duza(nazwa);
-		relation rel;
+		map <string, string> tags;
 		rel.modify=1;
-		rel.tags["network"]="ZTM Warszawa";
-		rel.tags["type"]="route";
-		rel.tags["route"]=typ_maly;
-		rel.tags["ref"]=nazwa;
+		tags["network"]="ZTM Warszawa";
+		tags["type"]="route";
+		tags["route"]=typ_maly;
+		tags["ref"]=nazwa;
 		map <string, vector< vector<przystanek_big> > >::iterator it1=bazaZtm->dane_linia.find(nazwa);
 		vector <string> miasta = miejscowosci((it1->second)[wariantId]);
 		for(int i=0; i<miasta.size(); i++)
@@ -142,17 +142,17 @@ struct WariantTrasy
 			if(i<(miasta.size()-2))
 				via+=", ";
 		}
-		rel.tags["name"]=typ_duzy+" "+nazwa+": "+from+" => "+to;
-		rel.tags["from"] = from;
-		rel.tags["to"] = to;
+		tags["name"]=typ_duzy+" "+nazwa+": "+from+" => "+to;
+		tags["from"] = from;
+		tags["to"] = to;
 		if(via!="")
 		{
-			rel.tags["via"] = via;
+			tags["via"] = via;
 		}
 		/*
 		rel.tags["note"]="stan na "+today;
 		*/
-		rel.tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
+		tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
 		dij_data d1(stopPositions, dij);
 		vector <long long> wszystkieDrogi=d1.all_ways;
 		vector <long long> wszystkieWierzcholki=d1.all_nodes;
@@ -194,7 +194,7 @@ struct WariantTrasy
 				rel.members.push_back(foop);
 			}
 		}
-		return rel;
+		rel.setTags(tags);
 	}
 	void generateGPX(ostream& plik5)
 	{
@@ -310,6 +310,7 @@ struct galk
 	string ztmBasePath;
 	string osmBasePath;
 	string outPath;
+	string pathHTML;
 	string ztmBaseFreshTime;
 	set <string> linieDoPrzerobienia;
 	vector <dijkstra*> algorytmy;
@@ -320,7 +321,8 @@ struct galk
 		ztmBasePath=argv[1];
 		osmBasePath=argv[2];
 		outPath=argv[3];
-		string czyW=argv[4];
+		pathHTML=argv[4];
+		string czyW=argv[5];
 		if(czyW=="-all")
 		{
 			czyWszystkie=1;
@@ -385,7 +387,7 @@ struct galk
 			if(warianty[nazwa][i].blad)
 				return false;
 		}
-		string nazwaGPX="/home/marcin/www/"+nazwa+".gpx";
+		string nazwaGPX=pathHTML+"/"+nazwa+".gpx";
 		fstream plik5(nazwaGPX.c_str(), ios::out | ios::trunc);
 		plik5<<"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?><gpx>"<<endl;
 		plik5.precision(9);
@@ -393,7 +395,8 @@ struct galk
 		for(int i=0; i<warianty[nazwa].size(); i++)
 		{
 			warianty[nazwa][i].generateGPX(plik5);
-			relation nowa=warianty[nazwa][i].generateRelationWithoutIdVersion(changeNodes, changeWays);
+			relation nowa;
+			warianty[nazwa][i].generateRelationWithoutIdVersion(changeNodes, changeWays, nowa);
 			//GENERUJ ID I WERSJĘ
 			if(i<stareRelacje.size())
 			{
@@ -419,13 +422,14 @@ struct galk
 		rel.id=(-50)-linia_licznik*100;
 		if(stareId!=0)
 			rel.id=stareId;
-		rel.tags["network"]="ZTM Warszawa";
-		rel.tags["type"]="route_master";
-		rel.tags["route_master"]=typ_maly;
-		rel.tags["ref"]=nazwa;
-		rel.tags["url"]="http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+nazwa;
-		rel.tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
-		rel.tags["name"]=typ_duzy+" "+nazwa;
+		map<string,string> tags;
+		tags["network"]="ZTM Warszawa";
+		tags["type"]="route_master";
+		tags["route_master"]=typ_maly;
+		tags["ref"]=nazwa;
+		tags["url"]="http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+nazwa;
+		tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
+		tags["name"]=typ_duzy+" "+nazwa;
 		for(int g=0; g<noweRelacje.size(); g++)
 		{
 				relation_member foo;
@@ -436,6 +440,7 @@ struct galk
 		}
 		if(rel.id>0)
 			rel.version=bazaOsm->relations[rel.id].version;
+		rel.setTags(tags);
 		bazaOsm->relations[rel.id]=rel;
 		plik5<<"</gpx>"<<endl;
 		plik5.close();
@@ -452,7 +457,7 @@ struct galk
 		readInput();
 		bazaOsm = new osm_base(osmBasePath);
 		loadAlgorithms();
-		bazaZtm = new ztmread_for_html (osmBasePath, ztmBasePath, merge(algorytmy));
+		bazaZtm = new ztmread_for_html (bazaOsm, ztmBasePath, merge(algorytmy));
 		cout<<"alpha1"<<endl;
 		if(czyWszystkie)
 			linieDoPrzerobienia=wszystkieLinie(bazaZtm);
@@ -473,7 +478,7 @@ struct galk
 		}
 		map <string, vector<WariantTrasy> >::iterator it2=warianty.begin();
 		int licznik=1000;
-		string n2="/home/marcin/www/openlayers.html";
+		string n2=pathHTML+"/openlayers.html";
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
 		htmlHead(plik5);
