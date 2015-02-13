@@ -507,8 +507,13 @@ struct osm_base
 		for (i = 0; i < ins.GetAttributesCount(); ++i)
 		{
 			if(ins.GetAttributeAt(i).Name=="ref")
-				return fromstring<long long>(ins.GetAttributeAt(i).Value);
+			{
+				long long value=fromstring<long long>(ins.GetAttributeAt(i).Value);
+				cout<<value<<endl;
+				return value;
+			}
 		}
+		cout<<"0000000000000000000000"<<endl;
 		return 0;
 	}
 	void load_basic(Xml::Inspector<Xml::Encoding::Utf8Writer> &ins, every_member& foo)
@@ -611,7 +616,7 @@ struct osm_base
 		Xml::Inspector<Xml::Encoding::Utf8Writer> inspector(sciezka.c_str());
 		while (inspector.Inspect())
 		{
-			if (inspector.GetInspected() == Xml::Inspected::StartTag)
+			if (inspector.GetInspected() == Xml::Inspected::StartTag || inspector.GetInspected() == Xml::Inspected::EmptyElementTag)
 			{
 				if(inspector.GetName()=="node")
 				{
@@ -621,6 +626,26 @@ struct osm_base
 					map <string, string> tags;
 					bool ok=1;
 					bool dodaj=0;
+					if (inspector.GetInspected() == Xml::Inspected::EmptyElementTag)
+					{
+						if(inspector.GetName() == "node")
+						{
+							ok=0;
+							if(tags.find("highway")!=tags.end())
+								dodaj=1;
+							if(tags.find("railway")!=tags.end())
+								dodaj=1;
+							if(tags.find("public_transport")!=tags.end())
+								dodaj=1;
+							if(nodes_potrzebne.find(foo.id)!=nodes_potrzebne.end())
+								dodaj=1;
+							if(dodaj)
+							{
+								foo.setTags(tags);
+								nodes[foo.id]=foo;
+							}
+						}
+					}
 					while (inspector.Inspect() && ok)
 					{
 						if (inspector.GetInspected() == Xml::Inspected::EndTag)
@@ -649,6 +674,7 @@ struct osm_base
 								load_tag(inspector, tags);	
 						}
 					}
+
 				}
 			}
 		}
