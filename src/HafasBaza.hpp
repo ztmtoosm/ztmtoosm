@@ -606,6 +606,7 @@ class HafasBaza : public sql_polaczenia
 
 class HafasBazaLoader : ztmread
 {
+	public:
 	map <string, vector <string> > kalendarz;
 	HafasBaza* baza;
 	private:
@@ -711,6 +712,186 @@ class HafasBazaLoader : ztmread
 		run();
 	}
 };
+class HafasBazaLoaderMetro
+{
+	map <string, vector <string> > kalendarz;
+	HafasBaza* baza;
+	private:
+	string datetostring(time_t data)
+	{
+		tm* tim = localtime(&data);
+		stringstream foo;
+		foo<<(tim->tm_year+1900);
+		foo<<"-";
+		if((tim->tm_mon)<9)
+			foo<<"0";
+		foo<<(tim->tm_mon+1)<<"-";
+		if((tim->tm_mday)<10)
+			foo<<"0";
+		foo<<(tim->tm_mday);
+		return foo.str();
+	}
+	time_t midnight(time_t data)
+	{
+		tm* tim = localtime(&data);
+		tim->tm_sec=0;
+		tim->tm_min=0;
+		tim->tm_hour=0;
+		return mktime(tim);
+	}
+	vector <int> diffs(string type)
+	{
+		vector <int> wynik;
+		int today=midnight(time(NULL));
+		for(int i=-1; i<=2; i++)
+		{
+			string data=datetostring(today+i*24*3600);
+			bool ok=0;
+			for(int j=0; j<kalendarz[data].size(); j++)
+			{
+				if(kalendarz[data][j]==type)
+					ok=1;
+			}
+			if(ok)
+			{
+				wynik.push_back(today+i*24*3600);
+			}
+		}
+		return wynik;
+	}
+	void nowy_kurs(kurs nowy)
+	{
+		cout<<"NSTART "<<nowy.dni<<endl;
+		vector <int> dify = diffs(nowy.dni);
+		cout<<"NSTART2"<<endl;
+		for(int g=0; g<dify.size(); g++)
+		{
+			cout<<"NSTART3 "<<endl;
+			vector <HafasPrzejazd*> dodane;
+			for(int i=0; i<nowy.postoje.size()-1; i++)
+			{
+				HafasPrzejazd* nowy2 = new HafasPrzejazd;
+				nowy2->linia=baza->linie[nowy.linia];
+				nowy2->root=nowy2;
+				if(i>0)
+					nowy2->root=dodane[0];
+				nowy2->poprzedni=NULL;
+				if(dodane.size()>0)
+				{
+					nowy2->poprzedni=dodane[dodane.size()-1];
+					dodane[dodane.size()-1]->nastepny=nowy2;
+				}
+				nowy2->nastepny=NULL;
+				cout<<nowy.postoje[i].time<<" x"<<endl;
+				nowy2->timestart=nowy.postoje[i].time+dify[g];
+				nowy2->timestop=nowy.postoje[i+1].time+dify[g];
+				cout<<nowy2->timestart<<endl;
+				nowy2->pierwszy=baza->przystanki[nowy.postoje[i].stop_id];
+				nowy2->drugi=baza->przystanki[nowy.postoje[i+1].stop_id];
+				baza->przystanki[nowy.postoje[i].stop_id]->wychodzace[baza->przystanki[nowy.postoje[i+1].stop_id]].push_back(nowy2);
+				baza->przystanki[nowy.postoje[i+1].stop_id]->wchodzace[baza->przystanki[nowy.postoje[i].stop_id]].push_back(nowy2);
+				dodane.push_back(nowy2);
+			}
+			if(dodane.size()>0)
+			{
+				baza->linie[nowy.linia]->kursy.push_back(dodane[0]);
+			}
+		}
+		cout<<"NSop"<<endl;
+	}
+	void nowy_przystanek(przystanek nowy)
+	{
+		HafasStop* nowy2 = new HafasStop;
+		nowy2->name = nowy.name+" "+nowy.id[4]+nowy.id[5];
+		nowy2->id = nowy.id;
+		nowy2->miejscowosc = nowy.miejscowosc;
+		nowy2->wspol.lon = nowy.lon;
+		nowy2->wspol.lat = nowy.lat;
+		baza->przystanki[nowy.id] = nowy2;
+	}
+	void nowa_linia(string nazwa, vector <vector <string> > trasy)
+	{
+		baza->linie[nazwa]=new HafasLinia;
+		baza->linie[nazwa]->id=nazwa;
+		baza->linie[nazwa]->trasy=trasy;
+	}
+	public:
+	HafasBazaLoaderMetro(map <string, vector <string> > kalen, HafasBaza* baz, string sciezka)
+	{
+		baza=baz;
+		vector <vector <string> > puste;
+		nowa_linia("M1", puste);
+		nowa_linia("M2", puste);
+		kalendarz=kalen;
+		fstream plik;
+		plik.open(sciezka.c_str());
+		string id;
+		int licznik=0;
+		while(id!="***")
+		{
+			licznik++;
+			char linia[1000];
+			plik.getline(linia, 1000);
+			stringstream foo;
+			foo<<linia;
+			foo>>id;
+			if(id!="***")
+			{
+				przystanek nowy;
+				foo>>nowy.name;
+				foo>>nowy.lat;
+				foo>>nowy.lon;
+				nowy.id=id;
+				nowy.miejscowosc="WARSZAWA";
+				cout<<nowy.id<<endl;
+				nowy_przystanek(nowy);
+			}
+		}
+		while(!plik.eof())
+		{
+			cout<<"###"<<endl;
+			id="";
+			kurs nowy;
+			nowy.linia="M1";
+			bool ok=0;
+			while(id!="***" && !plik.eof())
+			{
+				char linia[1000];
+				plik.getline(linia, 1000);
+				if(!plik.eof())
+				{
+					stringstream foo;
+					foo<<linia;
+					foo>>id;
+					if(id!="***")
+					{
+						postoj n2;
+						string time;
+						foo>>time;
+						if(!ok)
+						{
+							foo>>nowy.dni;
+							ok=1;
+						}
+						n2.stop_id=id;
+						int czas=get_times(time)*60;
+						n2.time=czas;
+						nowy.postoje.push_back(n2);
+					}
+				}
+			}
+			if(nowy.postoje.size()>0)
+			{
+				cout<<"$$$"<<endl;
+				nowy_kurs(nowy);
+			}
+			cout<<"eee"<<endl;
+		}
+		plik.close();
+		cout<<"eeeend"<<endl;
+	}
+};
+
 /*
 class OsmBazaLoader
 {

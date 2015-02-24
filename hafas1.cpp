@@ -32,13 +32,16 @@ map <string, string> mapaenv()
 }
 int main(int argc, char** argv)
 {
-	string sciezka, sciezka2;
+	string sciezka, sciezka2, sciezka3;
 	sciezka=SCIEZKA1;
 	sciezka+="/data/ztm_download1.txt";
 	sciezka2=sciezka;
+	sciezka3=SCIEZKA1;
 	sciezka2+="/data/latest.osm";
+	sciezka3+="/data/metro.txt";
 	HafasBaza* baza=new HafasBaza();
 	HafasBazaLoader loader(baza, sciezka);
+	HafasBazaLoaderMetro loader3(loader.kalendarz, baza, sciezka3);
 	//OsmBazaLoader loader2(baza, sciezka2);
 	baza->wypelnij_sciezki();
 	//baza->dijkstra_print(argv[1], argv[2], time(NULL), cout);

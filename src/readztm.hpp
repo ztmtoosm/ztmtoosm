@@ -246,8 +246,8 @@ class ztmread
 				plt>>time;
 				postoj foo;
 				int czas=get_times(time)*60;
-				if(czas<(3*60*60))
-					czas+=(1440*60);
+		//		if(czas<(3*60*60))
+		//			czas+=(1440*60);
 				foo.time=czas;
 				foo.stop_id=id;
 				postoje.push_back(foo);
