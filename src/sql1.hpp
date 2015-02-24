@@ -83,7 +83,7 @@ struct sql_polaczenia
 		if(delim_type=="=")
 		{
 			limits.first=limity_polaczenia(from,time,"<",sasiednie,10).first;
-			limits.second=limity_polaczenia(from,time,"<",sasiednie,10).second;
+			limits.second=limity_polaczenia(from,time,">",sasiednie,10).second;
 		}
 		else
 		{
@@ -114,9 +114,11 @@ struct sql_polaczenia
 		catch (sql::SQLException &e) {}
 		out<<"]";
 	}
-	void wypisz_kurs (string from, int time, string line, stringstream& out)
+	virtual void wypiszKurs (string line, vector <pair <string, int> > pary, ostream& out)
 	{
-		out<<"[";
+	}
+	void wypiszKurs2 (string from, int time, string line, stringstream& out)
+	{
 		bool ok=0;
 		vector <pair <double, double> > wynik;
 		try {
@@ -141,27 +143,18 @@ struct sql_polaczenia
 			bool ok=0;
 			string ost_id="";
 			int ost_time=-1;
+			vector <pair<string, int> > dane;
 			while (res->next()) 
 			{
-				if(ok)
-					out<<",";
-				ok=1;
 				ost_id=res->getString("toid");
 				ost_time=res->getInt("totime");
-				out<<"{\"id\":\""<<res->getString("fromid")<<"\",";
-				out<<"\"name\":\""<<getNameP(res->getString("fromid"))<<"\",";
-				out<<"\"time\":\""<<res->getString("fromtime")<<"\"}";
+				dane.push_back(make_pair(res->getString("fromid"), res->getInt("fromtime")));
 			}
-					out<<",{\"id\":\""<<ost_id<<"\",";
-				out<<"\"name\":\""<<getNameP(ost_id)<<"\",";
-				out<<"\"time\":\""<<ost_time<<"\"}";
-		
+			dane.push_back(make_pair(ost_id, ost_time));
+			wypiszKurs(line, dane, out);
 		}
-		
 		}
 		catch (sql::SQLException &e) {}
-		
-		out<<"]";
 	}
 };
 

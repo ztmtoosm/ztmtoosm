@@ -536,6 +536,25 @@ class HafasBaza : public sql_polaczenia
 		strim<<"]";
 	}
 	*/
+	void wypiszKurs (string line, vector <pair <string, int> > pary, ostream& strim)
+	{
+		strim<<"[";
+		strim<<"{";
+		strim<<"\"line\": \""<<line<<"\",";
+		strim<<"\"route\": ";
+		strim<<"[";
+		bool ostatni=0;
+		for(int i=0; i<pary.size()-1; i++)
+		{
+			if(i==pary.size()-2)
+				ostatni=1;
+			wypiszPartRoute(pary[i].second, pary[i+1].second, pary[i].first, pary[i+1].first, strim, ostatni);
+		}
+		strim<<"]";
+		strim<<"}";
+		strim<<"]";
+
+	}
 	void wypiszKurs (vector <pair<HafasPrzejazd*, HafasPrzejazd*> >kursy, ostream& strim)
 	{
 		strim<<"[";

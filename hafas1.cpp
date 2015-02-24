@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 		}
 		if(tryb==2)
 		{
-			baza->wypisz_kurs(env["from"], stringtoint(env["time"]), env["line"], wyp);
+			baza->wypiszKurs2(env["from"], stringtoint(env["time"]), env["line"], wyp);
 		}
 		if(tryb==0)
 		{

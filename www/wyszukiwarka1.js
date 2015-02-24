@@ -37,8 +37,9 @@ function podrozSciezka (from, to, time)
 	sciezka+='\?from\='+from;
 	sciezka+='\&to\='+to;
 	sciezka+='\&time\='+time;
+	console.log(sciezka);
 	return sciezka;
-}	
+}
 function polaczeniaSciezka (from, delim, time)
 {
 	var sciezka="/hafas";
@@ -160,8 +161,13 @@ var mins=tim.getMinutes();
 				timString+=mins;
 				return timString;
 }
-var WizualizacjaPodrozy = function (from, to, time)
+
+var WizualizacjaPodrozy = function (from, toOrLine, time, type)
 {
+	this.minLat=100.0;
+	this.maxLat=-100.0;
+	this.minLon=100.0;
+	this.maxLon=-100.0;
 	map.removeLayer(layerLines2);
 	map.removeLayer(layerLines);
 	this.warstwaVector1 = new ol.source.Vector({});
@@ -182,13 +188,21 @@ var WizualizacjaPodrozy = function (from, to, time)
 	});
  	map.addLayer(layerLines);
         map.addLayer(layerLines2);
-	this.bazaJSON = loadJSON(podrozSciezka(from, to, time));
+	if(type==0)
+	{
+		this.bazaJSON = loadJSON(podrozSciezka(from, toOrLine, time));
+	}
+	else
+	{
+		this.bazaJSON = loadJSON(kursSciezka(from, toOrLine, time));
+	}
 	this.heart=document.getElementById("heart");
 	heart.innerHTML="";
-	var podstawa=loadJSON(podrozSciezka(from, to, time));
+	var podstawa = this.bazaJSON;
 	this.przystanki = [];
 	for(var i=0; i < this.bazaJSON.length; i++)
 	{
+		var liczbaPrzystankow=0;
 		var nowalinia=document.createElement("DIV");
 		var nowalinia_kolorek=document.createElement("DIV");
 		var nowaliniaid=document.createElement("DIV");
@@ -204,14 +218,15 @@ var WizualizacjaPodrozy = function (from, to, time)
 		nowaliniaid_number.className="hafasliniaid_number";
 		nowaliniaid_more.className="hafasliniaid_more";
 		nowalinia_srodkowe.className="hafaslinia_srodek";
-		nowaliniaid_morea.powiazany=nowalinia_srodkowe;;
-		nowalinia_srodkowe.style.display="none";
+		nowaliniaid_morea.powiazany=nowalinia_srodkowe;
+		if(type==0)
+			nowalinia_srodkowe.style.display="none";
 		nowaliniaid_morea.onclick=function(e)
 		{
 			console.log(this.powiazany);
 			if(this.powiazany.style.display=="block")
 			{
-				this.innerHTML=">>> przystanki: "+this.powiazany.childNodes.length+1;
+				this.innerHTML=">>>";
 				this.powiazany.style.display="none";
 			}
 			else
@@ -220,9 +235,17 @@ var WizualizacjaPodrozy = function (from, to, time)
 				this.powiazany.style.display="block";
 			}
 		};
+		if(type==0)
+		{
+			nowaliniaid_number.onclick=function(e)
+			{
+				new WizualizacjaPodrozy(this.fooId, this.innerHTML, this.fooTime, 1);
+			}
+		}
 		nowalinia.appendChild(nowaliniaid);
 		nowaliniaid.appendChild(nowaliniaid_number);
-		nowaliniaid_more.appendChild(nowaliniaid_morea);
+		if(type==0)
+			nowaliniaid_more.appendChild(nowaliniaid_morea);
 		nowalinia.className="hafaslinia";
 		nowalinia_kolorek.className="kolorek";
 		var col=getpalette(i, this.bazaJSON.length);
@@ -236,9 +259,11 @@ var WizualizacjaPodrozy = function (from, to, time)
 		for(var j=0; j < n; j++)
 		{
 			var tmp=ol.proj.transform([podstawa[i].route[j].lon, podstawa[i].route[j].lat], 'EPSG:4326', 'EPSG:3857');
+			this.updateMinimal(podstawa[i].route[j].lon, podstawa[i].route[j].lat);
 			tablica1[tablica1.length] = tmp;
 			if(podstawa[i].route[j].type=="stop")
 			{
+				liczbaPrzystankow++;
 				if(this.przystanki[podstawa[i].route[j].id]==undefined)
 				{
 					this.przystanki[podstawa[i].route[j].id] = new PrzystanekNaMapie (podstawa[i].route[j].name, podstawa[i].route[j].id, tmp, this.warstwaVector1);
@@ -251,6 +276,8 @@ var WizualizacjaPodrozy = function (from, to, time)
 				var nowystoptime=document.createElement("DIV");
 				nowystoptime.className="nowystoptime";
 				nowystoptime.innerHTML=stringTime(tim0);
+				nowaliniaid_number.fooTime=tim0;
+				nowaliniaid_number.fooId=podstawa[i].route[j].id;
 				nowystopname.innerHTML=podstawa[i].route[j].name;
 				nowystop.friend=this.przystanki[podstawa[i].route[j].id];
 				nowystop.friend2=this;
@@ -280,6 +307,8 @@ var WizualizacjaPodrozy = function (from, to, time)
 				}
 			}
 		}
+		if(liczbaPrzystankow<2)
+			nowaliniaid_more.style.display="none";
 		addLineToSource(tablica1, getpalette(i, this.bazaJSON.length), podstawa[i].line, this.warstwaVector1, this.warstwaVector2);
 		for (var item in this.przystanki)
 		{
@@ -303,8 +332,30 @@ var WizualizacjaPodrozy = function (from, to, time)
 		this.warstwaVector1.addFeature(fea_tmp3);
 	*/
 	}
+	var cenLon=(this.minLon+this.maxLon)/2;
+	var cenLat=(this.minLat+this.maxLat)/2;
+	var newCenter=ol.proj.transform([cenLat, cenLon], 'EPSG:4326', 'EPSG:3857');
+ var pan = ol.animation.pan({
+	     duration: 500,
+	         source: /** @type {ol.Coordinate} */ (map.getView().getCenter())
+		   });
+  var pan2 = ol.animation.zoom({
+	     duration: 500,
+	         resolution: /** @type {ol.Coordinate} */ (map.getView().getResolution())
+		   });
+ 
+   map.beforeRender(pan);
+   map.beforeRender(pan2);
+   var extent = this.warstwaVector1.getExtent();
+   map.getView().fitExtent(extent, [map.getSize()[0]-150, map.getSize()[1]-30]);
 };
-
+WizualizacjaPodrozy.prototype.updateMinimal = function(lat, lon)
+{
+	this.minLat=Math.min(this.minLat, lat);
+	this.maxLat=Math.max(this.maxLat, lat);
+	this.minLon=Math.min(this.minLon, lon);
+	this.maxLon=Math.max(this.maxLon, lon);
+}
 var WizualizacjaDrzewa = function (from, time, linia, div, type)
 {
 	this.type=type;
@@ -424,10 +475,7 @@ WizualizacjaDrzewa.prototype.ladujDIV = function (from, to)
 		{
 			var id=this.implicit.from;
 			var teraz=this.implicit.tabela[this.index];
-			if(this.implicit.type==0)
-				var extra = new WizualizacjaDrzewa(teraz.id, teraz.time, teraz.linia, this.implicit.div, 1);
-			else
-				var extra = new WizualizacjaDrzewa(teraz.id, teraz.time, null, this.implicit.div, 0);
+			var extra = new WizualizacjaPodrozy(teraz.id, teraz.linia, teraz.time, 1);
 		}
 	}
 }
@@ -566,7 +614,7 @@ function changesource()
     	var from = document.getElementById("from").value;
     	var to = document.getElementById("to").value;
     	var time = document.getElementById("time").value;
-	tabsource = new WizualizacjaPodrozy(from, to, time);
+	tabsource = new WizualizacjaPodrozy(from, to, time, 0);
 }
 
 function changesource2(from, time)
