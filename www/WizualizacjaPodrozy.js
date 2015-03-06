@@ -48,10 +48,15 @@ var WizualizacjaPodrozy = function (from, toOrLine, time, type)
 		var nowaliniaid=document.createElement("DIV");
 		var nowalinia_srodkowe=document.createElement("DIV");
 		var nowaliniaid_number=document.createElement("DIV");
+		var nowaliniaid_numbera=document.createElement("A");
 		var nowaliniaid_more=document.createElement("DIV");
 		var nowaliniaid_morea=document.createElement("A");
 
-		nowaliniaid_number.innerHTML=podstawa[i].line;
+		nowaliniaid_numbera.innerHTML=podstawa[i].line;
+		nowaliniaid_number.numer=podstawa[i].line;
+		nowaliniaid_numbera.href="javascript:void(0)";
+		nowaliniaid_numbera.title="pokaż pełen kurs";
+		nowaliniaid_number.appendChild(nowaliniaid_numbera);
 		nowaliniaid_morea.href="javascript:void(0)";
 		nowaliniaid_morea.innerHTML=">>>";
 		nowaliniaid.className="hafasliniaid";
@@ -79,7 +84,7 @@ var WizualizacjaPodrozy = function (from, toOrLine, time, type)
 		{
 			nowaliniaid_number.onclick=function(e)
 			{
-				new WizualizacjaPodrozy(this.fooId, this.innerHTML, this.fooTime, 1);
+				new WizualizacjaPodrozy(this.fooId, this.numer, this.fooTime, 1);
 			}
 		}
 		nowalinia.appendChild(nowaliniaid);
@@ -112,13 +117,17 @@ var WizualizacjaPodrozy = function (from, toOrLine, time, type)
 				this.przystanki[podstawa[i].route[j].id].addLine(tim0, podstawa[i].line, getpalette(i, podstawa.length));
 				var nowystop=document.createElement("DIV");
 				var nowystopname=document.createElement("DIV");
+				var nowystopnamelink=document.createElement("A");
+				nowystopnamelink.href="javascript:void(0)";
+				nowystopnamelink.title="pokaż odjazdy z przystanku";
+				nowystopname.appendChild(nowystopnamelink);
 				nowystopname.className="nowystopname";
 				var nowystoptime=document.createElement("DIV");
 				nowystoptime.className="nowystoptime";
 				nowystoptime.innerHTML=stringTime(tim0);
 				nowaliniaid_number.fooTime=tim0;
 				nowaliniaid_number.fooId=podstawa[i].route[j].id;
-				nowystopname.innerHTML=podstawa[i].route[j].name;
+				nowystopnamelink.innerHTML=podstawa[i].route[j].name;
 				nowystop.friend=this.przystanki[podstawa[i].route[j].id];
 				nowystop.friend2=this;
 				nowystop.onmouseover=function(e)

@@ -151,7 +151,6 @@ class PrzegladanieCzyPrawidloweStareLinie
 {
 	set <string> oldRelationStops(string linia, osm_base* baza)
 	{
-		cout<<"okgamma"<<endl;
 		set <string> wynik0;
 		vector <long long> rels=relacje_linia(baza, 3651336, linia).second;
 		for(int i=0; i<rels.size(); i++)
@@ -159,13 +158,11 @@ class PrzegladanieCzyPrawidloweStareLinie
 			set <string> tmp1=extract_ref(baza, rels[i]);
 			wynik0.insert(tmp1.begin(), tmp1.end());
 		}
-		cout<<"okdela"<<endl;
 		return wynik0;
 	}
 
 	set <string> newRelationStops(string linia, ztmread_for_html* baza)
 	{
-		cout<<"okalfa"<<endl;
 		set <string> wynik;
 		for(int i=0; i<(baza->dane_linia[linia]).size(); i++)
 		{
@@ -175,7 +172,6 @@ class PrzegladanieCzyPrawidloweStareLinie
 				wynik.insert(przystanki[j].id);
 			}
 		}
-		cout<<"okbeta"<<endl;
 		return wynik;
 	}
 	string infoLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm)
@@ -184,7 +180,7 @@ class PrzegladanieCzyPrawidloweStareLinie
 		long long rel_head=relacje_linia(bazaOsm, 3651336, linia).first;
 		string link_href="http://openstreetmap.org/relation/"+tostring(rel_head);
 		string tmp1;
-		tmp1+=htmlgen::div("linia_head", "", htmlgen::link("http://www.ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+linia, linia));
+		tmp1+=htmlgen::div("linia_head", "poczatek"+linia, htmlgen::div("humer_linii", "", linia)+htmlgen::link("http://www.ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+linia, "pokaż rozkład"));
 		tmp1+=htmlgen::div("relglowna", "", "route_master: "+htmlgen::link(link_href, tostring(rel_head)));
 		for(int i=0; i<rels.size(); i++)
 		{
@@ -227,9 +223,9 @@ class PrzegladanieCzyPrawidloweStareLinie
 		}
 		else
 		{
-			wynik=htmlgen::div("bledy1", "", "Wykryto następujące błędy")+wynik;
 		
-			(*infoHTML)[linia]+=htmlgen::div("roznice", "", wynik);
+			(*infoHTML)[linia]+=htmlgen::div("bledy1", "bledy1_"+linia, "Pokaż różnice pomiędzy bazami >>>");
+			(*infoHTML)[linia]+=htmlgen::div("roznice", "roznice_"+linia, wynik);
 			nieprawidlowe.insert(linia);
 		}
 	}

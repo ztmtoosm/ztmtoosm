@@ -368,7 +368,7 @@ var stopZnacznik = nowyZnacznik([21.0,52.2], 'red.png', function(wspolrzedne){do
 		}
     		document.getElementById("wyborMinuty").add(option);
 	}
-	for(var i=0; i<4; i++)
+	for(var i=0; i<2; i++)
 	{
 		var d = new Date();
 		var d_prim = new Date();
@@ -462,18 +462,18 @@ map.on('singleclick', function(evt){
 	    console.log(evt);
 	    console.log(evt.coordinate[0]);
 	    console.log(evt.coordinate[1]);
-	if(tribe==0)
+	/*if(tribe==0)
 	{
     		document.getElementById("from").value=extraCoord[0].toString()+"x"+extraCoord[1].toString();
 	}
 	if(tribe==1)
 	{
     		document.getElementById("to").value=extraCoord[0].toString()+"x"+extraCoord[1].toString();
-	}
+	}*/
 	changeTribe(tribe+1);
 	if(tribe==2)
 	{
-		changesource();
+	//	changesource();
 		changeTribe(0);
 	}
 })

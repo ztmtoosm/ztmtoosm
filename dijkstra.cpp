@@ -302,6 +302,16 @@ set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
 	}
 	return wynik;
 }
+string zeraWiodace (string jeden)
+{
+	string wynik;
+	for(int i=0; i<(10-jeden.length()); i++)
+	{
+		wynik+="0";
+	}
+	wynik+=jeden;
+	return wynik;
+}
 struct galk
 {
 	osm_base* bazaOsm;
@@ -481,7 +491,13 @@ struct galk
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
 		htmlHead(plik5);
-		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
+		char buff[20];
+		time_t now = time(NULL);
+		strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
+		string buff2=buff;
+		plik5<<htmlgen::div("gentime", "", "Wygenerowano: "+buff2)<<endl;
+		map <string, string> slownik0;
+		map <string, pair<string, int> > slownikX;
 		while(it2!=warianty.end())
 		{
 			if(!generujLinie(it2->first, licznik))
@@ -491,25 +507,63 @@ struct galk
 			else
 			{
 				infoHTML[it2->first]+=ok_route(it2->first);
-				plik5<<htmlgen::div("linia_green", "", infoHTML[it2->first])<<endl;
+				slownik0[zeraWiodace(it2->first)]=it2->first;
+				slownikX[zeraWiodace(it2->first)]=make_pair(it2->first, 1);
 			}
 			it2++;
 			licznik++;
 		}
-		plik5<<htmlgen::div("partx", "", "Trasy niewygenerowane...")<<endl;
-		auto it3=przegl.nieprawidlowe.begin();
-		while(it3!=przegl.nieprawidlowe.end())
+		map <string, string> slownik1;
+		auto it3prim=przegl.nieprawidlowe.begin();
+		while(it3prim!=przegl.nieprawidlowe.end())
 		{
-			plik5<<htmlgen::div("linia_red", "", infoHTML[*it3])<<endl;
+			slownik1[zeraWiodace(*it3prim)]=*it3prim;
+			slownikX[zeraWiodace(*it3prim)]=make_pair(*it3prim, 2);
+			it3prim++;
+		}
+		map <string, string> slownik2;
+		auto it4prim=przegl0.prawidlowe.begin();
+		while(it4prim!=przegl0.prawidlowe.end())
+		{
+			slownik2[zeraWiodace(*it4prim)]=*it4prim;
+			slownikX[zeraWiodace(*it4prim)]=make_pair(*it4prim, 3);
+			it4prim++;
+		}
+		string divX;
+		auto i1prim = slownikX.begin();
+		while(i1prim != slownikX.end())
+		{
+			string znak="tryb_niebieski";
+			if(i1prim->second.second==1)
+				znak="tryb_zielony";
+			if(i1prim->second.second==2)
+				znak="tryb_czerwony";
+			divX+=htmlgen::div(znak, "", htmlgen::link( "#poczatek"+i1prim->second.first,  i1prim->second.first));
+			i1prim++;
+		}
+		plik5<<htmlgen::div("spist", "", divX)<<endl;
+		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
+		auto it0prim=slownik0.begin();
+		while(it0prim!=slownik0.end())
+		{
+			plik5<<htmlgen::div("linia_green", "", infoHTML[it0prim->second])<<endl;
+			it0prim++;
+		}
+		plik5<<htmlgen::div("partx", "", "Trasy niewygenerowane...")<<endl;
+		
+		auto it3=slownik1.begin();
+		while(it3!=slownik1.end())
+		{
+			plik5<<htmlgen::div("linia_red", "", infoHTML[it3->second])<<endl;
 			it3++;
 		}
 		if(czyWszystkie)
 		{
 			plik5<<htmlgen::div("partx", "", "Trasy bez zmian...")<<endl;
-			auto it4=przegl0.prawidlowe.begin();
-			while(it4!=przegl0.prawidlowe.end())
+			auto it4=slownik2.begin();
+			while(it4!=slownik2.end())
 			{
-				plik5<<htmlgen::div("linia_blue", "", infoHTML[*it4])<<endl;
+				plik5<<htmlgen::div("linia_blue", "", infoHTML[it4->second])<<endl;
 				it4++;
 			}
 		}

@@ -16,7 +16,7 @@ var WizualizacjaDrzewa = function (from, time, linia, div, type)
 	{
 		this.more1 = document.createElement("DIV");
 		this.more1.implicit = this;
-		this.more1.innerHTML="MORE...";
+		this.more1.innerHTML="<a href=\"javascript:void(0)\">WCZEŚNIEJ...</a>";
 		this.div.appendChild(this.more1);
 		this.more1.onclick=function(e)
 		{
@@ -31,7 +31,7 @@ var WizualizacjaDrzewa = function (from, time, linia, div, type)
 	{
 		this.more2 = document.createElement("DIV");
 		this.more2.implicit = this;
-		this.more2.innerHTML="MORE...";
+		this.more2.innerHTML="<a href=\"javascript:void(0)\">PÓŹNIEJ...</a>";
 		this.div.appendChild(this.more2);
 		this.more2.onclick=function(e)
 		{
@@ -88,6 +88,8 @@ WizualizacjaDrzewa.prototype.ladujDIV = function (from, to)
 		var nowy_postoj_linia = document.createElement("div");
 		var nowy_postoj_godzina = document.createElement("div");
 		var nowy_postoj_link = document.createElement("a");
+		nowy_postoj_link.href="javascript:void(0)";
+		nowy_postoj_link.title="pokaż kurs";
 		nowy_postoj.className="nowy_postoj";
 		if(i<this.center)
 		{

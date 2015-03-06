@@ -57,8 +57,38 @@
 	     margin-bottom: 15px;
 	
       }
+      div.linia_head, div.ok_route
+      {
+	      position: relative;
+	      font-size: 20px;
+      }
       div.linia_head a, div.linia_head a:hover, div.ok_route a, div.ok_route a:hover
       {
-	      font-size: 22px;
+	      position: absolute;
+	      top: 0px;
+	      right: 0px;
+	      font-size: 12px;
 	      	color: white;
+      }
+      .ok_route:hover, .bledy1:hover
+      {
+	     text-decoration: underline;
+      }
+      .roznice
+      {
+	      display: none;
+      }
+      .spist{
+	      width: 500px;
+	          -webkit-column-count: 7; /* Chrome, Safari, Opera */
+		      -moz-column-count: 7; /* Firefox */
+		          column-count: 7;
+      }
+      .tryb_czerwony a
+      {
+	      color: red;
+      }
+      .tryb_zielony a
+      {
+	      color: green;
       }
