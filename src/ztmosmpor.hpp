@@ -62,7 +62,7 @@ miejscowosc=foo.miejscowosc;
 
 
 
-class ztmread_for_html : public ztmread
+class ztmread_for_html : public ScheduleHandler
 {
 	map<string, data1*> bus_stop_lista;
 	map<string, data1*> position_lista;
@@ -128,11 +128,12 @@ class ztmread_for_html : public ztmread
 	vector <przystanek_big> dane;
 	map <string, vector< vector<przystanek_big> > > dane_linia;
 	map <string, przystanek_big> dane0;
-	ztmread_for_html (osm_base* sciez0, string sciez, set<long long> eee3) : ztmread(sciez)
+	ztmread_for_html (osm_base* sciez0, string sciez, set<long long> eee3)
 	{
+		ScheduleReaderZtm nowo(sciez, this);
 	eee=eee3;
 	laduj_listke(sciez0);
-	run();
+	nowo.run();
 	}
 	void nowy_przystanek(przystanek nowy)
 	{

@@ -77,8 +77,8 @@ var layerLines2 = new ol.layer.Vector({
             source: new ol.source.OSM({layer: 'sat'})
           }), layerLines, layerLines2],
         view: new ol.View({
-          center: ol.proj.transform([37.41, 8.82], 'EPSG:4326', 'EPSG:3857'),
-          zoom: 4
+          center: ol.proj.transform([21,52.3], 'EPSG:4326', 'EPSG:3857'),
+          zoom: 10
         })});
             function changesource(path)
             {

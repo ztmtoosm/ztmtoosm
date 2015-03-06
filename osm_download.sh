@@ -6,7 +6,7 @@ for i in "${a[@]}"
 do
 	wget http://api.openstreetmap.org/api/0.6/relation/"${i}" -O $1"/data/"test"${i}".osm
 done
-b='../osmconvert/osmconvert '$1'/data/latest0.osm'
+b='../osmconvert '$1'/data/latest0.osm'
 for i in "${a[@]}"
 do
 	b+=" "$1"/data/test"${i}".osm"

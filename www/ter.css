@@ -5,10 +5,60 @@
         height: 100%;
         width: 50%;
       }
+
       .map {
 	position: fixed;
 	top: 0px;
 	right: 0px;
         height: 100%;
         width: 50%;
+      }
+      body
+      {
+	      font-family: sans-serif
+      }
+      div.linia_head, div.bledy1, div.ok_route, div.bledy2
+      {
+	      background-color: black;
+	      color:white;
+      }
+      div.linia_green, div.linia_red, div.linia_blue
+      {
+	     width: 500px;
+	     border: 1px solid;
+	     margin-top: 15px;
+	     margin-bottom: 15px;
+	     margin-left: 15px;
+	     margin-right: 15px;
+      }
+      div.relglowna
+      {
+	      background-color: gray;
+      }
+      div.relboczna
+      {
+	      background-color: silver;
+      }
+      a:hover
+      {
+	      color: navy;
+	      text-decoration: underline;
+      }
+      a
+      {
+	      text-decoration: none;
+      }
+      div.partx
+      {
+
+	     margin-left: 15px;
+	      font-size: 28px;
+      	     margin-top: 15px;
+	     margin-bottom: 15px;
+	
+      }
+      div.linia_head a, div.linia_head a:hover, div.ok_route a, div.ok_route a:hover
+      {
+	      font-size: 22px;
+	      	color: white;
       }

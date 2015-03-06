@@ -160,7 +160,7 @@ struct sql_polaczenia
 
 
 
-class HafasBazaSQL : ztmread
+class HafasBazaSQL : public ScheduleHandler
 {
 	fstream plik;
 	sql::Driver *driver;
@@ -256,190 +256,18 @@ class HafasBazaSQL : ztmread
 		*/
 	}
 	public:
-	HafasBazaSQL (string sciezka, string sciezka2) : ztmread(sciezka)
+	HafasBazaSQL (string sciezka, string sciezka2, string sciezka3)
 	{
+		ScheduleReaderZtm nowo(sciezka, this);
+		ScheduleReaderMetro nowo2(sciezka3, this);
 		driver = get_driver_instance();
 		con = driver->connect("tcp://127.0.0.1:3306", "root", "");
 		con->setSchema("osm");
 		stmt = con->createStatement();
 		plik.open(sciezka2.c_str(), ios::trunc | ios::out);
-		run();
+		nowo.run();
+		cout<<"NOWO2"<<endl;
+		nowo2.run();
 		plik.close();
-	}
-};
-
-class HafasBazaSQL2
-{
-	fstream plik;
-	sql::Driver *driver;
-	sql::Connection *con;
-	sql::Statement *stmt;
-	sql::ResultSet *res;
-	map <string, int> liczbaKursow;
-	public:
-	map <string, vector <string> > kalendarz;
-	private:
-	
-	string datetostring(time_t data)
-	{
-		tm* tim = localtime(&data);
-		stringstream foo;
-		foo<<(tim->tm_year+1900);
-		foo<<"-";
-		if((tim->tm_mon)<9)
-			foo<<"0";
-		foo<<(tim->tm_mon+1)<<"-";
-		if((tim->tm_mday)<10)
-			foo<<"0";
-		foo<<(tim->tm_mday);
-		return foo.str();
-	}
-	time_t midnight(time_t data)
-	{
-		tm* tim = localtime(&data);
-		tim->tm_sec=0;
-		tim->tm_min=0;
-		tim->tm_hour=0;
-		return mktime(tim);
-	}
-	vector <int> diffs(string type)
-	{
-		vector <int> wynik;
-		int today=midnight(time(NULL));
-		for(int i=-1; i<=2; i++)
-		{
-			string data=datetostring(today+i*24*3600);
-			bool ok=0;
-			for(int j=0; j<kalendarz[data].size(); j++)
-			{
-				if(kalendarz[data][j]==type)
-					ok=1;
-			}
-			if(ok)
-			{
-				wynik.push_back(today+i*24*3600);
-			}
-		}
-		return wynik;
-	}
-	void nowy_kurs(kurs nowy)
-	{
-		vector <int> dify = diffs(nowy.dni);
-		for(int g=0; g<dify.size(); g++)
-		{
-			liczbaKursow[nowy.linia]++;
-			for(int i=0; i<nowy.postoje.size()-1; i++)
-			{
-				plik<<nowy.linia<<"	";
-				plik<<nowy.postoje[i].stop_id<<"	";
-				plik<<nowy.postoje[i+1].stop_id<<"	";
-				plik<<nowy.postoje[i].time+dify[g]<<"	";
-				plik<<nowy.postoje[i+1].time+dify[g]<<"	";
-				plik<<liczbaKursow[nowy.linia]<<"	";
-				plik<<endl;
-			}
-		}
-	}
-	void nowy_przystanek(przystanek nowy)
-	{
-		/*
-		HafasStop* nowy2 = new HafasStop;
-		nowy2->name = nowy.name;
-		nowy2->id = nowy.id;
-		nowy2->miejscowosc = nowy.miejscowosc;
-		nowy2->wspol.lon = nowy.lon;
-		nowy2->wspol.lat = nowy.lat;
-		baza->przystanki[nowy.id] = nowy2;
-		*/
-	}
-	void nowa_linia(string nazwa, vector <vector <string> > trasy)
-	{
-		/*
-		baza->linie[nazwa]=new HafasLinia;
-		baza->linie[nazwa]->id=nazwa;
-		baza->linie[nazwa]->trasy=trasy;
-		*/
-	}
-	public:
-	HafasBazaSQL2(map <string, vector <string> > kalen, string sciezka, string sciezka2)
-	{
-		driver = get_driver_instance();
-		con = driver->connect("tcp://127.0.0.1:3306", "root", "");
-		con->setSchema("osm");
-		stmt = con->createStatement();
-		plik.open(sciezka2.c_str(), ios::trunc | ios::out);
-
-
-		kalendarz=kalen;
-		fstream plik2;
-		plik2.open(sciezka.c_str());
-		string id;
-		int licznik=0;
-		while(id!="***")
-		{
-			licznik++;
-			char linia[1000];
-			plik2.getline(linia, 1000);
-			stringstream foo;
-			foo<<linia;
-			foo>>id;
-			if(id!="***")
-			{
-				przystanek nowy;
-				foo>>nowy.name;
-				foo>>nowy.lat;
-				foo>>nowy.lon;
-				nowy.id=id;
-				nowy.miejscowosc="WARSZAWA";
-				cout<<nowy.id<<endl;
-				nowy_przystanek(nowy);
-			}
-		}
-		while(!plik2.eof())
-		{
-			cout<<"###"<<endl;
-			id="";
-			kurs nowy;
-			nowy.linia="M1";
-			bool ok=0;
-			while(id!="***" && !plik2.eof())
-			{
-				char linia[1000];
-				plik2.getline(linia, 1000);
-				if(!plik2.eof())
-				{
-					stringstream foo;
-					foo<<linia;
-					foo>>id;
-					if(id!="***")
-					{
-						postoj n2;
-						string time;
-						foo>>time;
-						if(!ok)
-						{
-							foo>>nowy.dni;
-							ok=1;
-						}
-						n2.stop_id=id;
-						int czas=get_times(time)*60;
-						n2.time=czas;
-						nowy.postoje.push_back(n2);
-					}
-				}
-			}
-			if(nowy.postoje.size()>0)
-			{
-				cout<<"$$$"<<endl;
-				nowy_kurs(nowy);
-			}
-			cout<<"eee"<<endl;
-		}
-		plik2.close();
-	
-		plik.close();
-	
-	
-		cout<<"eeeend"<<endl;
 	}
 };

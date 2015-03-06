@@ -32,10 +32,8 @@ struct przystanek
 	double lat;
 };
 
-
-class ztmread
+class ScheduleHandler
 {
-	string sciez;
 	public:
 	virtual void nowy_kurs(kurs nowy)
 	{
@@ -49,7 +47,22 @@ class ztmread
 	virtual void newkalendar(string date, vector<string>caltypes)
 	{
 	}
-	ztmread (string sciezka) : sciez(sciezka)
+};
+
+class ScheduleReader
+{
+	protected:
+	string sciez;
+	ScheduleHandler* hand;
+	public:
+	virtual void run() {}
+	ScheduleReader (string sciezka, ScheduleHandler* handler) : hand(handler), sciez(sciezka) {}
+};
+
+class ScheduleReaderZtm : public ScheduleReader
+{
+	public:
+	ScheduleReaderZtm (string sciezka, ScheduleHandler* handler) : ScheduleReader(sciezka, handler)
 	{
 	}
 	void run()
@@ -217,7 +230,7 @@ class ztmread
 				string nowe;
 				while(plt>>nowe)
 					nowe2.push_back(nowe);
-				newkalendar(lll, nowe2);
+				hand->newkalendar(lll, nowe2);
 			}
 		}
 		cout<<"arritvederci"<<endl;
@@ -267,7 +280,7 @@ class ztmread
 						nowy.postoje=postoje;
 						nowy.dni=type;
 						nowy.linia=nazwa2;
-						nowy_kurs(nowy);
+						hand->nowy_kurs(nowy);
 						postoje.clear();
 					}
 				}
@@ -316,7 +329,7 @@ class ztmread
 				ok=0;
 			if(lll=="*WK")
 			{
-				nowa_linia(nazwa1, trasy);
+				hand->nowa_linia(nazwa1, trasy);
 				readwk("WK", plik, nazwa1);
 			}
 			if(lll=="*LW")
@@ -430,7 +443,7 @@ class ztmread
 				foo.id=lll;
 				foo.lon=x1;
 				foo.lat=y1;
-				nowy_przystanek(foo);
+				hand->nowy_przystanek(foo);
 				pominlinie(licz, plik);
 			}
 		}
@@ -466,4 +479,110 @@ class ztmread
 		}
 	}
 };
+
+
+class ScheduleReaderMetro : public ScheduleReader
+{
+	public:
+	ScheduleReaderMetro(string sciezka, ScheduleHandler* handler) : ScheduleReader (sciezka, handler)
+	{
+	}
+	string readForDelimeter(fstream& alpha, string& out)
+	{
+		char data[1000];
+		alpha.getline(data, 1000);
+		if(alpha.eof())
+			return "EOF";
+		stringstream foo;
+		foo<<data;
+		string foo2=foo.str();
+		out=foo2;
+		string wyj;
+		foo>>wyj;
+		cout<<wyj<<endl;
+		return wyj;
+	}
+	void run()
+	{
+		vector <vector <string> > puste;
+		hand->nowa_linia("M1", puste);
+		hand->nowa_linia("M2", puste);
+		fstream plik;
+		plik.open(sciez.c_str());
+		string id;
+		string aktualny;
+		cout<<"ok1"<<endl;
+		while(readForDelimeter(plik, aktualny)!="***")
+		{
+			stringstream foo;
+			foo<<aktualny;
+			foo>>id;
+			przystanek nowy;
+			foo>>nowy.name;
+			foo>>nowy.lat;
+			foo>>nowy.lon;
+			nowy.id=id;
+			nowy.miejscowosc="WARSZAWA";
+			hand->nowy_przystanek(nowy);
+		}
+		cout<<"ok2"<<endl;
+		map<pair<string, string>, vector <string> > mapka;
+		map<pair<string, string>, vector <int> > czasy;
+		while(readForDelimeter(plik, aktualny)!="###")
+		{
+			stringstream foo;
+			foo<<aktualny;
+			string lineName;
+			string lineKierunek;
+			foo>>lineName;
+			foo>>lineKierunek;
+			while(readForDelimeter(plik, aktualny)!="***")
+			{
+				stringstream foo;
+				foo<<aktualny;
+				string przystanek;
+				int czas;
+				foo>>przystanek;
+				foo>>czas;
+				mapka[make_pair(lineName, lineKierunek)].push_back(przystanek);
+				czasy[make_pair(lineName, lineKierunek)].push_back(czas);
+			}
+		}
+		cout<<"ok3"<<endl;
+		while(readForDelimeter(plik, aktualny)!="***")
+		{
+			kurs nowy;
+			nowy.dni="DP";
+			string time1, linia, kierunek, start, stop, dni;
+			stringstream foo;
+			foo<<aktualny;
+			foo>>time1>>linia>>kierunek>>start>>stop>>dni;
+			nowy.linia=linia;
+			int time2=get_times(time1)*60;
+			vector <string> przystanki = mapka[make_pair(linia, kierunek)];
+			vector <int> czasyPrzejazdu = czasy[make_pair(linia, kierunek)];
+			bool ok=0;
+			for(int i=0; i<przystanki.size(); i++)
+			{
+				if(przystanki[i]==start)
+					ok=1;
+				if(ok)
+				{
+					postoj foo;
+					foo.stop_id = przystanki[i];
+					foo.time = time2+czasyPrzejazdu[i]*60;
+					cout<<"xD"<<foo.stop_id<<" "<<foo.time<<endl;
+					nowy.postoje.push_back(foo);
+				}
+				if(przystanki[i]==stop)
+					ok=0;
+		
+			}
+			hand->nowy_kurs(nowy);
+		}
+		plik.close();
+	}
+};
+
+
 #endif
