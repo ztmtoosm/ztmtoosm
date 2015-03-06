@@ -1,12 +1,12 @@
 #!/bin/bash
 readarray -t a < data/lista9.ooo
-pol="wget http://overpass-api.de/api/map?bbox=20.5225,51.9561,21.5250,52.4953 -O "+$1+"/data/latest0.osm"
-# $pol
+pol="wget http://overpass-api.de/api/map?bbox=20.5225,51.9561,21.5250,52.4953 -O "$1"/data/latest0.osm"
+$pol
 for i in "${a[@]}"
 do
 	wget http://api.openstreetmap.org/api/0.6/relation/"${i}" -O $1"/data/"test"${i}".osm
 done
-b='../osmconvert/osmconvert '$1'/data/latest0.osm'
+b='../osmconvert '$1'/data/latest0.osm'
 for i in "${a[@]}"
 do
 	b+=" "$1"/data/test"${i}".osm"

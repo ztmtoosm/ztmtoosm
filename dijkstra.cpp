@@ -448,7 +448,7 @@ struct galk
 	map <string, string> infoHTML;
 	string ok_route(string cos)
 	{
-		return htmlgen::div("ok_route", cos, htmlgen::link("javascript:changesource("+cos+");", "Trasa "+cos+" wygenerowana, pokaż..."));
+		return htmlgen::div("ok_route", cos, "Trasa "+cos+" wygenerowana, pokaż...");
 	}
 	galk(char** argv)
 	{
