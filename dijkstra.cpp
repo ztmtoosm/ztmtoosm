@@ -488,6 +488,8 @@ struct galk
 		map <string, vector<WariantTrasy> >::iterator it2=warianty.begin();
 		int licznik=1000;
 		string n2=pathHTML+"/openlayers.html";
+		if(!czyWszystkie)
+			n2=pathHTML+"/openlayers2.html";
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
 		htmlHead(plik5);

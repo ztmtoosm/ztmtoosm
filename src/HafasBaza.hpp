@@ -7,7 +7,21 @@ struct wspolrzedne
 	double lon;
 	double lat;
 };
-
+double toRad (double x)
+	{
+		return x*M_PI/180.0;
+	}
+	double calcDistanceInMeters (double lat1, double lon1, double lat2, double lon2)
+	{
+		double R = 6371;
+		double dLat = toRad(lat2-lat1);
+		double dLon = toRad(lon2-lon1);
+		lat1 = toRad(lat1);
+		lat2 = toRad(lat2);
+		double a = sin(dLat/2)*sin(dLat/2)+cos(lat1)*cos(lat2)*sin(dLon/2)*sin(dLon/2);
+		double c = 2 * atan2(sqrt(a), sqrt(1-a));
+		return R*c*1000.0;
+	}
 
 struct HafasPrzejazd;
 struct HafasLinia;
@@ -206,21 +220,7 @@ class HafasBaza : public sql_polaczenia
 
 
 	}*/
-	double toRad (double x)
-	{
-		return x*M_PI/180.0;
-	}
-	double calcDistanceInMeters (double lat1, double lon1, double lat2, double lon2)
-	{
-		double R = 6371;
-		double dLat = toRad(lat2-lat1);
-		double dLon = toRad(lon2-lon1);
-		lat1 = toRad(lat1);
-		lat2 = toRad(lat2);
-		double a = sin(dLat/2)*sin(dLat/2)+cos(lat1)*cos(lat2)*sin(dLon/2)*sin(dLon/2);
-		double c = 2 * atan2(sqrt(a), sqrt(1-a));
-		return R*c*1000.0;
-	}
+	
 	double odlegloscMiedzyPrzystankami(HafasStop* alfa, HafasStop* beta)
 	{
 		if(alfa->wspol.lat<10)

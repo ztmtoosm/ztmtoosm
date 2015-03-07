@@ -19,6 +19,7 @@ struct postoj
 };
 struct kurs
 {
+	string id;
 	string linia;
 	vector <postoj> postoje;
 	string dni;
@@ -277,6 +278,8 @@ class ScheduleReaderZtm : public ScheduleReader
 					{
 						foo.typ=KONCOWY;
 						kurs nowy;
+						nowy.id = lll;
+						cout<<lll<<endl;
 						nowy.postoje=postoje;
 						nowy.dni=type;
 						nowy.linia=nazwa2;
@@ -552,11 +555,11 @@ class ScheduleReaderMetro : public ScheduleReader
 		while(readForDelimeter(plik, aktualny)!="***")
 		{
 			kurs nowy;
-			nowy.dni="DP";
 			string time1, linia, kierunek, start, stop, dni;
 			stringstream foo;
 			foo<<aktualny;
 			foo>>time1>>linia>>kierunek>>start>>stop>>dni;
+			nowy.dni=dni;
 			nowy.linia=linia;
 			int time2=get_times(time1)*60;
 			vector <string> przystanki = mapka[make_pair(linia, kierunek)];

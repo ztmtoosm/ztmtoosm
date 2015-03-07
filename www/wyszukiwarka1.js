@@ -368,7 +368,7 @@ var stopZnacznik = nowyZnacznik([21.0,52.2], 'red.png', function(wspolrzedne){do
 		}
     		document.getElementById("wyborMinuty").add(option);
 	}
-	for(var i=0; i<2; i++)
+	for(var i=0; i<3; i++)
 	{
 		var d = new Date();
 		var d_prim = new Date();
