@@ -293,7 +293,6 @@ set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
 		string kand=it1->first;
 		if(kand[0]!='K')
 		if(kand[0]!='S')
-		if(kand[0]!='L')
 		if(kand[0]!='W')
 		{
 			wynik.insert(kand);
