@@ -1,6 +1,6 @@
 #!/bin/bash
 readarray -t a < data/lista9.ooo
-pol="wget http://overpass-api.de/api/map?bbox=20.5225,51.9561,21.5250,52.4953 -O "$1"/data/latest0.osm"
+pol="wget http://overpass-api.de/api/map?bbox=20.5225,51.9,21.5250,52.4953 -O "$1"/data/latest0.osm"
 $pol
 for i in "${a[@]}"
 do

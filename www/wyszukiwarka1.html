@@ -4,20 +4,21 @@
 <head>
 <link rel="stylesheet" href="http://openlayers.org/en/v3.0.0/css/ol.css" type="text/css">
 <link rel="stylesheet" href="wyszukiwarka1.css" type="text/css">
+ <link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
+   <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+     <script src="//code.jquery.com/ui/1.11.3/jquery-ui.js"></script>
 <script src="http://openlayers.org/en/v3.0.0/build/ol.js" type="text/javascript"></script>
 </head>
 <body>
 	<div id="map0" class="map0">
 		<div id="map" class="map"></div>
 		<div id="datak" class="datak">
-			<input type="text" id="from">
-			<input type="text" id="to">
+			<input type="text" class="fromto" id="from">
+			<input type="text" class="fromto" id="to">
 			<select name="nazwa" id="wyborGodziny"></select>
 			<select name="nazwa2" id="wyborMinuty"></select>
 			<select name="nazwa3" id="wyborDnia"></select>
 			<input type="submit" onclick="changesource()" value="szukaj">
-			<input type="submit" class="startznacznik" id="startznacznik" selected="no" value="">
-			<input type="submit" class="stopznacznik" id="stopznacznik"selected="yes" value="">
 		</div>
 		<div id="heart"></div>
 	</div>

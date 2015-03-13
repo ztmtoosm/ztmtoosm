@@ -1,8 +1,135 @@
+function makeMovable(feature, moveMove) 
+{
+	var modify = new ol.interaction.Modify({
+		features: new ol.Collection([feature])
+	});
+
+  feature.on('change',function() {
+	            this.sterownik.onMovePointer(ol.proj.transform(this.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326'));
+										    }, feature);
+	return modify;
+}
+
+function nowyZnacznik(wspolrzedne, znak, sterownik)
+{
+	var moveMove = function(wsp){};
+	var loc = ol.proj.transform(wspolrzedne, 'EPSG:4326', 'EPSG:3857');
+	    var iconFeature = new ol.Feature({
+		            geometry: new ol.geom.Point(loc)
+			        });
+	var style = new ol.style.Style({
+	    image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+		            anchor: [0.25, 1],
+			            anchorXUnits: 'fraction',
+				            anchorYUnits: 'fraction',
+					            src: znak,
+						        }))
+	});
+	iconFeature.setStyle(style);
+	basicZnaczniki.addFeature(iconFeature);
+	console.log(moveMove);
+	var modifyInteraction = makeMovable(iconFeature, moveMove);
+	map.addInteraction(modifyInteraction);
+	iconFeature.sterownik=sterownik;
+	return iconFeature;
+}
+
+var WprowadzanieWspolrzednych = function(wpis, color)
+{
+	console.log(wpis);
+	console.log("xD");
+	this.color = color;
+	this.znacznik = null;
+	this.show = 0;
+	this.wspolrzedne = [0,0];
+	this.wpis = wpis;
+	this.wpis.style.backgroundColor="white";
+	wpis.onfocus = function(){console.log(this);this.value=""; this.sterownik.onClearSelector()};
+	wpis.sterownik = this;
+	console.log(wpis);
+}
+
+WprowadzanieWspolrzednych.prototype.onSelectPhrase= function(wspolrzedne)
+{
+	this.show = 2;
+	this.wpis.style.backgroundColor="#99CCFF";
+	this.wspolrzedne = wspolrzedne;
+	this.znacznik = nowyZnacznik(this.wspolrzedne, this.color, this);
+}
+
+WprowadzanieWspolrzednych.prototype.onMovePointer = function(wspolrzedne)
+{
+	console.log(wspolrzedne);
+	this.show = 1;
+	this.wpis.style.backgroundColor="#99CCFF";
+	this.wspolrzedne = wspolrzedne;
+	console.log(this.wspolrzedne);
+	var lol=wspolrzedne[0]+"x"+wspolrzedne[1];
+	console.log(lol);
+	this.wpis.value=lol;
+}
+
+WprowadzanieWspolrzednych.prototype.instantCoordinates = function()
+{
+	return this.wspolrzedne[0]+"x"+this.wspolrzedne[1];
+}
+
+WprowadzanieWspolrzednych.prototype.onClearSelector=function(wspolrzedne)
+{
+	this.wpis.style.backgroundColor="white";
+	this.show = 0;
+}
+
+$(function() {
+$( ".fromto" ).autocomplete({
+
+source: function( request, response ) {
+	var req = "Bus stop "+request.term;
+	        $.ajax({
+			url: "http://nominatim.openstreetmap.org/search",
+					              data: {
+							      q : req,
+							      format: "json",
+							      viewbox : "20.5225,51.9561,21.5250,52.4953",
+							      bounded : "1"
+									            },
+										              success: function( data ) {
+												      var data2 = [];
+												      for(var i=0; i<data.length; i++)
+												      {
+													      console.log(data[i]);
+													      data2[i]=
+													      {label: data[i].display_name,
+													      value: data[i].display_name,
+													      bbox: data[i].boundingbox,
+													      icon: data[i].icon};
+												      }
+												                  response( data2 );
+														            }
+															            });
+		      },
+	select: function( event, ui ) {
+		var wspolrzedne = [parseFloat(ui.item.bbox[2]), parseFloat(ui.item.bbox[0])];
+ 		this.sterownik.onSelectPhrase(wspolrzedne);
+}
+}).data( "ui-autocomplete" )._renderItem = function( ul, item ) {
+	console.log(item);
+	        return $( "<li></li>" )
+		            .data( "item.autocomplete", item )
+			                .append( "<a>" + "<img src='" + item.icon + "' />" + item.label+ "</a>" )
+					            .appendTo( ul );
+						        };
+});
+
+
+
+/*
 var tribe = 0;
 function changeTribe(newTribe)
 {
 	tribe = newTribe;
 }
+*/
 var palette = ['#ab0d15'
 ,'#F7931D'
 /*,'#FFF200'*/
@@ -30,16 +157,6 @@ var miesiace = [
 "maja",
 "czerwca",
 "lipca"];
-
-
-function eleganckiCzas(czas)
-{
-	var wynik = "";
-	wynik+=dni[czas.getDay()]+", ";
-	wynik+=czas.getDate()+" ";
-	wynik+=miesiace[czas.getMonth()]+" ";
-	return wynik;
-}
 
 function getpalette(poz, n)
 {
@@ -197,59 +314,6 @@ var mins=tim.getMinutes();
 }
 
 
-/*
-var style = {
-  'MultiPoint': [new ol.style.Style({
-    image: new ol.style.Circle({
-      fill: new ol.style.Fill({
-        color: 'rgba(255,255,0,255)',
-      radius: 12,
-      stroke: new ol.style.Stroke({
-        color: '#ff0',
-        width: 1
-      })
-    })
-  })],
-  'MultiLineString': [new ol.style.Style({
-    stroke: new ol.style.Stroke({
-      color: '#f0f',
-      width: 12
-    })
-  })],
-  'LineString': [new ol.style.Style({
-    stroke: new ol.style.Stroke({
-      color: '#fff',
-      width: 5
-    })
-  })]
-};
-var style2 = {
-  'MultiPoint': [new ol.style.Style({
-    image: new ol.style.Circle({
-      fill: new ol.style.Fill({
-        color: 'rgba(255,255,0,255)'
-      }),
-      radius: 12,
-      stroke: new ol.style.Stroke({
-        color: '#ff0',
-        width: 1
-      })
-    })
-  })],
-  'MultiLineString': [new ol.style.Style({
-    stroke: new ol.style.Stroke({
-      color: '#000',
-      width: 1
-    })
-  })],
-  'LineString': [new ol.style.Style({
-    stroke: new ol.style.Stroke({
-      color: '#f07',
-      width: 2
-    })
-  })]
-};
-*/
 function loadJSON(url) {
 var resp ;
 var xmlHttp ;
@@ -290,18 +354,7 @@ var layerLinesZnaczniki = new ol.layer.Vector({
   }
 });
 
-function makeMovable(feature, moveMove) {
-	    var modify = new ol.interaction.Modify({
-		            features: new ol.Collection([feature])
-			        });
 
-	        feature.on('change',function() {
-
-          moveMove(ol.proj.transform(this.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326'));
-			        console.log('Feature Moved To:' + this.getGeometry().getCoordinates());
-				    }, feature);
-		    return modify;
-}
 
 
       var map = new ol.Map({
@@ -313,96 +366,80 @@ function makeMovable(feature, moveMove) {
         view: new ol.View({
           center: ol.proj.transform([21.05, 52.23], 'EPSG:4326', 'EPSG:3857'),
           zoom: 12
-        })});
-
-function nowyZnacznik(wspolrzedne, znak, moveMove)
-{
-	var loc = ol.proj.transform(wspolrzedne, 'EPSG:4326', 'EPSG:3857');
-	    var iconFeature = new ol.Feature({
-		            geometry: new ol.geom.Point(loc)
-			        });
-	var style = new ol.style.Style({
-	    image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-		            anchor: [0.25, 1],
-			            anchorXUnits: 'fraction',
-				            anchorYUnits: 'fraction',
-					            src: znak,
-						        }))
-});
-	console.log(iconFeature);
-	        iconFeature.setStyle(style);
-basicZnaczniki.addFeature(iconFeature);
-var modifyInteraction = makeMovable(iconFeature, moveMove);
-map.addInteraction(modifyInteraction);
-return iconFeature;
-}
-
+	})});
 //document.body.style.cursor = 'url("marker-icon.png"), auto';
 
-var startZnacznik = nowyZnacznik([21.012228699999998,52.2296756], 'green.png', function(wspolrzedne){document.getElementById("from").value=wspolrzedne[0]+"x"+wspolrzedne[1]});
-var stopZnacznik = nowyZnacznik([21.0,52.2], 'red.png', function(wspolrzedne){document.getElementById("to").value=wspolrzedne[0]+"x"+wspolrzedne[1]});
 //fett.style.display="none";
-    	document.getElementById("from").value="21.012228699999998x52.2296756";
-	document.getElementById("to").value="21.0x52.2";
-	for(var i=0; i<24; i++)
+for(var i=0; i<24; i++)
+{
+	var option = document.createElement("option");
+	option.text=i;
+	option.value=i;
+	var d=new Date();
+	if(d.getHours()==i)
+		option.selected="selected";
+	document.getElementById("wyborGodziny").add(option);
+}
+for(var i=0; i<60; i++)
+{
+	var option = document.createElement("option");
+	option.text=i;
+	option.value=i;
+	var d=new Date();
+	if(d.getMinutes()==i)
+		option.selected="selected";
+	if(i<10)
 	{
-		var option = document.createElement("option");
-		option.text=i;
-		option.value=i;
-    		var d=new Date();
-		if(d.getHours()==i)
-			option.selected="selected";
-		document.getElementById("wyborGodziny").add(option);
+		option.text="0"+i;
 	}
-	for(var i=0; i<60; i++)
-	{
-		var option = document.createElement("option");
-		option.text=i;
-		option.value=i;
-		var d=new Date();
-		if(d.getMinutes()==i)
-			option.selected="selected";
-		if(i<10)
-		{
-			option.text="0"+i;
-		}
-    		document.getElementById("wyborMinuty").add(option);
-	}
-	for(var i=0; i<3; i++)
-	{
-		var d = new Date();
-		var d_prim = new Date();
-		d_prim.setTime(d.getTime()+i*24*60*60*1000);
-		var option = document.createElement("option");
-		option.text=eleganckiCzas(d_prim);
-		option.value=i;
-		document.getElementById("wyborDnia").add(option);
-	}
+	document.getElementById("wyborMinuty").add(option);
+}
 
-	function getSettedTime()
-	{
-		var d = new Date();
-		var d1 = new Date();
-		var wyborDnia=document.getElementById("wyborDnia");
-		var wyborGodziny=document.getElementById("wyborGodziny");
-		var wyborMinuty=document.getElementById("wyborMinuty");
-		var wyb=parseInt(wyborDnia.options[wyborDnia.selectedIndex].value);
-		d1.setTime(d.getTime()+wyb*24*60*60*1000);
-		var wybMin=parseInt(wyborMinuty.options[wyborMinuty.selectedIndex].value);
-		var wybGodz=parseInt(wyborGodziny.options[wyborGodziny.selectedIndex].value);
-		
-		
-		var d2=new Date(d1.getFullYear(), d1.getMonth(), d1.getDate(), wybGodz, wybMin,0, 0);
-		var wynik=d2.getTime();
-		console.log(wynik);
-		console.log(wybMin);
-		console.log(wybGodz);
-		return wynik;
-	}
+function eleganckiCzas(czas)
+{
+	var wynik = "";
+	wynik+=dni[czas.getDay()]+", ";
+	wynik+=czas.getDate()+" ";
+	wynik+=miesiace[czas.getMonth()]+" ";
+	return wynik;
+}
 
-	var today = new Date();
-	var aktfeature = null;
-    	var mapcnt=document.getElementById("map");
+
+for(var i=0; i<3; i++)
+{
+	var d = new Date();
+	var d_prim = new Date();
+	d_prim.setTime(d.getTime()+i*24*60*60*1000);
+	var option = document.createElement("option");
+	option.text=eleganckiCzas(d_prim);
+	option.value=i;
+	document.getElementById("wyborDnia").add(option);
+}
+
+function getSettedTime()
+{
+	var d = new Date();
+	var d1 = new Date();
+	var wyborDnia=document.getElementById("wyborDnia");
+	var wyborGodziny=document.getElementById("wyborGodziny");
+	var wyborMinuty=document.getElementById("wyborMinuty");
+	var wyb=parseInt(wyborDnia.options[wyborDnia.selectedIndex].value);
+	d1.setTime(d.getTime()+wyb*24*60*60*1000);
+	var wybMin=parseInt(wyborMinuty.options[wyborMinuty.selectedIndex].value);
+	var wybGodz=parseInt(wyborGodziny.options[wyborGodziny.selectedIndex].value);
+	
+	
+	var d2=new Date(d1.getFullYear(), d1.getMonth(), d1.getDate(), wybGodz, wybMin,0, 0);
+	var wynik=d2.getTime();
+	console.log(wynik);
+	console.log(wybMin);
+	console.log(wybGodz);
+	return wynik;
+}
+
+var today = new Date();
+var aktfeature = null;
+var mapcnt=document.getElementById("map");
 
 
 
@@ -438,10 +475,17 @@ mapcnt.onmousemove = function(e)
 function changesource()
 {
 	tribe=0;
-    	var from = document.getElementById("from").value;
-    	var to = document.getElementById("to").value;
-	var time = parseInt(getSettedTime()/1000);
-	tabsource = new WizualizacjaPodrozy(from, to, time, 0);
+    	var from = wpf.instantCoordinates();
+    	var to = wpt.instantCoordinates();
+	if(wpf.show==0 || wpt.show==0)
+	{
+		alert("Brak wprowadzonych danych");
+	}
+	else
+	{
+		var time = parseInt(getSettedTime()/1000);
+		tabsource = new WizualizacjaPodrozy(from, to, time, 0);
+	}
 }
 
 function changesource2(from, time)
@@ -457,33 +501,23 @@ function zrownaj()
 	heart.style.maxHeight=(window.innerHeight-110)+"px";
 }
 zrownaj();
-map.on('singleclick', function(evt){
-	var extraCoord=ol.proj.transform(evt.coordinate, 'EPSG:3857', 'EPSG:4326');
-	    console.log(evt);
-	    console.log(evt.coordinate[0]);
-	    console.log(evt.coordinate[1]);
-	/*if(tribe==0)
-	{
-    		document.getElementById("from").value=extraCoord[0].toString()+"x"+extraCoord[1].toString();
-	}
-	if(tribe==1)
-	{
-    		document.getElementById("to").value=extraCoord[0].toString()+"x"+extraCoord[1].toString();
-	}*/
-	changeTribe(tribe+1);
-	if(tribe==2)
-	{
-	//	changesource();
-		changeTribe(0);
-	}
-})
-function showPosition(position) {
-	 document.getElementById("from").value = position.coords.longitude + "x" + position.coords.latitude;
-	 tribe=1;
-}
 
+map.on('click', function(evt){
+console.log("dupa");
+});
+
+/*
 if (navigator.geolocation) {
 	        navigator.geolocation.getCurrentPosition(showPosition);
 		    }
+*/
+
+var wpf = new WprowadzanieWspolrzednych(document.getElementById("from"), "green.png");
+var wpt = new WprowadzanieWspolrzednych(document.getElementById("to"), "red.png");
 window.addEventListener("resize", zrownaj, false);
 document.getElementById("overlay").style.display="none";
+map.on('contextmenu', function(evt){
+		var extraCoord=ol.proj.transform(evt.coordinate, 'EPSG:3857', 'EPSG:4326');
+			    console.log(evt);
+			    	    console.log(evt.coordinate[0]);
+				    	    console.log(evt.coordinate[1]);});

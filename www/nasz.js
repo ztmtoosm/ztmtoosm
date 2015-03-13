@@ -1,3 +1,13 @@
+var kolory = [
+'#FF0000',
+'#0000CC',
+'#00BB00',
+'#FF7700'
+,'#008888'
+,'#880088'
+,'#555555'];
+
+
 var style = {
   'Point': [new ol.style.Style({
     image: new ol.style.Circle({
@@ -20,7 +30,7 @@ var style = {
   'MultiLineString': [new ol.style.Style({
     stroke: new ol.style.Stroke({
       color: '#fff',
-      width: 5
+      width: 10
     })
   })]
 };
@@ -46,7 +56,7 @@ var style2 = {
   'MultiLineString': [new ol.style.Style({
     stroke: new ol.style.Stroke({
       color: '#f07',
-      width: 2
+      width: 4
     })
   })]
 };
@@ -98,20 +108,45 @@ source: new ol.source.GPX({
 projection: projection,
 url: path
 }),
-style: function(feature, resolution) {
-return style2[feature.getGeometry().getType()];
-}
+style: new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: '#f07',
+      width: 2
+    })})
 });
     map.addLayer(layerLines);
         map.addLayer(layerLines2);
-            }
+	var source = layerLines2.getSource();
+	var key = source.on('change', function() {
+		  if (source.getState() == 'ready') {
+			      source.unByKey(key);
+			      var tabb = this.getFeatures();
+			      for(var i=0; i<tabb.length; i++)
+			      {
+				      var rnd = Math.floor((Math.random() * 6) + 4);
+				      console.log(tabb[i]);
+				      tabb[i].setStyle(
+				      new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: kolory[i%7],
+    //  lineDash: [rnd,rnd],
+      width: 3
+    })}));
+			      }
+			        console.log("dupa");
+				  // do something with the source
+				    }
+	});
+	console.log("ready");
+	    }
     
     var elementos = document.getElementsByClassName("ok_route");
     console.log(elementos.length);
     for(i=0; i<elementos.length; i++)
     {
       var str=elementos[i].innerHTML;
-     elementos[i].addEventListener('click', function() { changesource(this.getAttribute('id')+".gpx"); console.log(this.innerHTML)});    
+     elementos[i].addEventListener('click', function() { var lol=layerLines2.getSource().getFeatures();
+console.log(lol.length); changesource(this.getAttribute('id')+".gpx"); console.log(this.innerHTML)});    
     }
 
 
