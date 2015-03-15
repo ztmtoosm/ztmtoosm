@@ -1,3 +1,52 @@
+function makeMovable(feature, moveMove) 
+{
+	var modify = new ol.interaction.Modify({
+		features: new ol.Collection([feature])
+	});
+
+  feature.on('change',function(ev) {
+	  znaczek=this;
+	//	    this.sterownik.onMovePointer(ol.proj.transform(this.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326'));
+										    }, feature);
+	return modify;
+}
+
+function nowyZnacznik(wspolrzedne, znak, sterownik)
+{
+	var moveMove = function(wsp){};
+	var loc = ol.proj.transform(wspolrzedne, 'EPSG:4326', 'EPSG:3857');
+	    var iconFeature = new ol.Feature({
+			    geometry: new ol.geom.Point(loc)
+				});
+	var style = new ol.style.Style({
+	    image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+			    anchor: [0.25, 1],
+				    anchorXUnits: 'fraction',
+					    anchorYUnits: 'fraction',
+						    src: znak,
+							}))
+	});
+	iconFeature.setStyle(style);
+	basicZnaczniki.addFeature(iconFeature);
+	console.log(moveMove);
+	var modifyInteraction = makeMovable(iconFeature, moveMove);
+	map.addInteraction(modifyInteraction);
+	iconFeature.sterownik=sterownik;
+	iconFeature.interac=modifyInteraction;
+	return iconFeature;
+}
+/*function usunZnacznik(znacznik)
+{
+}
+function usunZnacznik(znacznik)
+{
+	map.removeInteraction(znacznik.interac);
+	basicZnaczniki.removeFeature(znacznik);
+}*/
+
+
+
+
 var palette = ['#ab0d15'
 ,'#F7931D'
 /*,'#FFF200'*/
@@ -50,31 +99,22 @@ function loadJSON(url)
 	}
 	return JSON.parse(resp); 
 }
-function podrozSciezka (from, to, time)
+function punktSciezka (y, x)
 {
-	var sciezka="/hafas";
-	sciezka+='\?from\='+from;
-	sciezka+='\&to\='+to;
-	sciezka+='\&time\='+time;
+	var sciezka="/dijkstra";
+	sciezka+='\?y\='+y;
+	sciezka+='\&x\='+x;
 	console.log(sciezka);
 	return sciezka;
 }
-function polaczeniaSciezka (from, delim, time)
+function punktySciezka (from, to)
 {
-	var sciezka="/hafas";
+	var sciezka="/dijkstra";
 	sciezka+='\?from\='+from;
-	sciezka+='\&delim\='+delim;
-	sciezka+='\&time\='+time;
+	sciezka+='\&to\='+to;
 	return sciezka;
 }
-function kursSciezka (from, line, time)
-{
-	var sciezka="/hafas";
-	sciezka+='\?from\='+from;
-	sciezka+='\&line\='+line;
-	sciezka+='\&time\='+time;
-	return sciezka;
-}
+/*
 function addLineToSource (coordinates, colorLine, name, vectorSource1, vectorSource2)
 {
 	var warstwa1 = new ol.Feature({geometry: new ol.geom.LineString(coordinates)});
@@ -181,7 +221,7 @@ var mins=tim.getMinutes();
 				return timString;
 }
 
-
+*/
 function loadJSON(url) {
 var resp ;
 var xmlHttp ;
@@ -215,7 +255,7 @@ var layerLines2 = new ol.layer.Vector({
     return style2[feature.getGeometry().getType()];
   }
 });
-var layerLinesZnaczniki = new ol.layer.Vector({
+var layerLines3 = new ol.layer.Vector({
   source: basicZnaczniki,
     style: function(feature, resolution) {
     return style2[feature.getGeometry().getType()];
@@ -230,116 +270,64 @@ var layerLinesZnaczniki = new ol.layer.Vector({
         layers: [
           new ol.layer.Tile({
             source: new ol.source.OSM({url: " http://a.tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", crossOrigin: null})
-          }), layerLines, layerLines2, layerLinesZnaczniki],
+          }), layerLines, layerLines2, layerLines3],
         view: new ol.View({
           center: ol.proj.transform([21.05, 52.23], 'EPSG:4326', 'EPSG:3857'),
           zoom: 12
 	})});
 //document.body.style.cursor = 'url("marker-icon.png"), auto';
 
-//fett.style.display="none";
-for(var i=0; i<24; i++)
-{
-	var option = document.createElement("option");
-	option.text=i;
-	option.value=i;
-	var d=new Date();
-	if(d.getHours()==i)
-		option.selected="selected";
-	document.getElementById("wyborGodziny").add(option);
-}
-for(var i=0; i<60; i++)
-{
-	var option = document.createElement("option");
-	option.text=i;
-	option.value=i;
-	var d=new Date();
-	if(d.getMinutes()==i)
-		option.selected="selected";
-	if(i<10)
-	{
-		option.text="0"+i;
-	}
-	document.getElementById("wyborMinuty").add(option);
-}
-
-function eleganckiCzas(czas)
-{
-	var wynik = "";
-	wynik+=dni[czas.getDay()]+", ";
-	wynik+=czas.getDate()+" ";
-	wynik+=miesiace[czas.getMonth()]+" ";
-	return wynik;
-}
-
-
-for(var i=0; i<3; i++)
-{
-	var d = new Date();
-	var d_prim = new Date();
-	d_prim.setTime(d.getTime()+i*24*60*60*1000);
-	var option = document.createElement("option");
-	option.text=eleganckiCzas(d_prim);
-	option.value=i;
-	document.getElementById("wyborDnia").add(option);
-}
-
-function getSettedTime()
-{
-	var d = new Date();
-	var d1 = new Date();
-	var wyborDnia=document.getElementById("wyborDnia");
-	var wyborGodziny=document.getElementById("wyborGodziny");
-	var wyborMinuty=document.getElementById("wyborMinuty");
-	var wyb=parseInt(wyborDnia.options[wyborDnia.selectedIndex].value);
-	d1.setTime(d.getTime()+wyb*24*60*60*1000);
-	var wybMin=parseInt(wyborMinuty.options[wyborMinuty.selectedIndex].value);
-	var wybGodz=parseInt(wyborGodziny.options[wyborGodziny.selectedIndex].value);
-	
-	
-	var d2=new Date(d1.getFullYear(), d1.getMonth(), d1.getDate(), wybGodz, wybMin,0, 0);
-	var wynik=d2.getTime();
-	console.log(wynik);
-	console.log(wybMin);
-	console.log(wybGodz);
-	return wynik;
-}
-
-var today = new Date();
 var aktfeature = null;
 var mapcnt=document.getElementById("map");
 
 
+function addLineToSource (coordinates, id, colorLine, name, vectorSource1, vectorSource2)
+{
+	var warstwa1 = new ol.Feature({geometry: new ol.geom.LineString(coordinates)});
+	var warstwaStroke1 = new ol.style.Stroke ({color: colorLine, width: 4});
+	var warstwaStrokeText1 = new ol.style.Stroke ({color: '#fff', width: 6});
+	var warstwaFont1 = '18px helvetica,sans-serif,bold';
+	var warstwaFill1 = new ol.style.Fill({color: colorLine});
+	var warstwaText1 = new ol.style.Text({text: name, font: warstwaFont1, fill: warstwaFill1, stroke: warstwaStrokeText1});
+	var warstwaStyle1 =new ol.style.Style({stroke : warstwaStroke1, text : warstwaText1});
+	warstwa1.setStyle(warstwaStyle1);
+	var warstwa2 = new ol.Feature({geometry: new ol.geom.LineString(coordinates)});
+	var warstwaStroke2 = new ol.style.Stroke ({color: '#fff', width: 7});
+	var warstwaStyle2 = new ol.style.Style({stroke : warstwaStroke2});
+	warstwa2.setStyle(warstwaStyle2);
+	warstwa1.id = id;
+	warstwa2.id = id;
+	vectorSource1.addFeature(warstwa1);
+	vectorSource2.addFeature(warstwa2);
+	return [warstwa1, warstwa2];
+}
 
 
-
-
-	
-mapcnt.onmousemove = function(e)
+mapcnt.onclick = function(e)
 {
 	var pos   = {X : mapcnt.offsetLeft, Y : mapcnt.offsetTop};
 	var mPos  = {X : e.clientX - pos.X, Y : e.clientY - pos.Y};
 	var newfeature = null;
+	var block = false;
 	map.forEachFeatureAtPixel([mPos.X, mPos.Y], function(feature, layer){
+	console.log(feature.getGeometry().getType());
+	if(feature.getGeometry().getType()=='LineString')
+	{
+		newfeature=feature;
+	}
 	if(feature.getGeometry().getType()=='Point')
 	{
-		newfeature=feature.getId();
+		block=true;
 	}
 	});
-	if(newfeature!=aktfeature)
+	if(block)
+		newfeature = null;
+	if(newfeature !=null)
 	{
-		if(newfeature!=null)
-		{
-			tabsource.przystanki[newfeature].setExtraStyle();
-		}
-		if(aktfeature!=null)
-		{
-			tabsource.przystanki[aktfeature].setBasicStyle();
-		}
-		aktfeature=newfeature;
+		var wsp = ol.proj.transform(map.getCoordinateFromPixel([mPos.X, mPos.Y]), 'EPSG:3857', 'EPSG:4326');
+		znacznikWPolowie(newfeature.id, wsp);
 	}
 }
-
 function changesource()
 {
 	tribe=0;
@@ -380,15 +368,122 @@ if (navigator.geolocation) {
 		    }
 */
 
-var wpf = new WprowadzanieWspolrzednych(document.getElementById("from"), "green.png", "Z...");
-var wpt = new WprowadzanieWspolrzednych(document.getElementById("to"), "red.png", "Do...");
 window.addEventListener("resize", zrownaj, false);
-document.getElementById("overlay").style.display="none";
 
 
+var tablicaZnacznikow = [];
+var tablicaLacznikow1 = [];
+var tablicaLacznikow2 = [];
 
+function dodajLacznik(from, to, col)
+{
+	var lacznik = loadJSON(punktySciezka(from.osmid, to.osmid));
+	var tablica1 = [];
+	console.log(lacznik);
+	//tablicaLacznikow2[from.id]=lacznik;
+	for(var i=0; i<lacznik.length; i++)
+	{
+		var tmp =ol.proj.transform([lacznik[i].x, lacznik[i].y], 'EPSG:4326', 'EPSG:3857');
+		tablica1[tablica1.length]=tmp;
+	}
+	var l2=addLineToSource (tablica1, from.id, col, "xxx", basicZnaczniki, basicVector);
+	return [lacznik, l2];
+}
 
+function nowyZnacznikNaKoncu(wsp)
+{
+	var zzz=loadJSON(punktSciezka(wsp[1], wsp[0]));
+	console.log(zzz);
+	var zn = nowyZnacznik([zzz.x, zzz.y], 'green.png', null);
+	zn.id=tablicaZnacznikow.length;
+	zn.osmid=zzz.id;
+	if(tablicaZnacznikow.length>0)
+	{
+		var nl=dodajLacznik(tablicaZnacznikow[tablicaZnacznikow.length-1], zn, "#00ff00");
+		tablicaLacznikow1[tablicaLacznikow1.length]=nl[0];
+		tablicaLacznikow2[tablicaLacznikow2.length]=nl[1];
+	}
+	tablicaZnacznikow[tablicaZnacznikow.length]=zn;
+}
 
+function znacznikWPolowie(id, wsp)
+{
+	console.log(ol.Sphere);
+	var distance = 1000.0;
+	var id_tmp = -1;
+	for(var i=0; i<tablicaLacznikow1[id].length; i++)
+	{
+	             var line = new ol.geom.LineString([[tablicaLacznikow1[id][i].x, tablicaLacznikow1[id][i].y], wsp]);
+		          var tmp_distance= line.getLength();
+			  if(tmp_distance<distance)
+			  {
+				  distance = tmp_distance;
+				  id_tmp = i;
+			  }
+	}
+	if(id_tmp>0 && id_tmp<tablicaLacznikow1[id].length-1)
+	{
+		var zntmp = tablicaLacznikow1[id][id_tmp];
+		for (var i=tablicaZnacznikow.length-1; i>id; i--)
+		{
+			tablicaZnacznikow[i+1]=tablicaZnacznikow[i];
+			tablicaZnacznikow[i+1].id=i+1;
+		}
+		for (var i=tablicaLacznikow1.length-1; i>id; i--)
+		{
+			tablicaLacznikow1[i+1]=tablicaLacznikow1[i];
+			tablicaLacznikow2[i+1]=tablicaLacznikow2[i];
+			tablicaLacznikow2[i+1][0].id=i+1;
+			tablicaLacznikow2[i+1][1].id=i+1;
+		}
+		basicZnaczniki.removeFeature(tablicaLacznikow2[id][0]);
+		basicVector.removeFeature(tablicaLacznikow2[id][1]);
+		tablicaZnacznikow[id+1] = nowyZnacznik([zntmp.x, zntmp.y], 'red.png', null);
+		tablicaZnacznikow[id+1].id=id+1;
+		tablicaZnacznikow[id+1].osmid=zntmp.id;
+		var nl=dodajLacznik(tablicaZnacznikow[id], tablicaZnacznikow[id+1], "#00ff00");
+		tablicaLacznikow1[id]=nl[0];
+		tablicaLacznikow2[id]=nl[1];
+		var nl2=dodajLacznik(tablicaZnacznikow[id+1], tablicaZnacznikow[id+2], "#00ff00");
+		tablicaLacznikow1[id+1]=nl2[0];
+		tablicaLacznikow2[id+1]=nl2[1];
+	}
+}
+
+function zmienionyZnacznik(ref)
+{
+	var wsp=ol.proj.transform(ref.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326');
+	var zzz=loadJSON(punktSciezka(wsp[1], wsp[0]));
+	var zn = nowyZnacznik([zzz.x, zzz.y], 'green.png', null);
+	zn.id=ref.id;
+	zn.osmid=zzz.id;
+	var n = tablicaZnacznikow.length;
+	map.removeInteraction(ref.interac);
+	basicZnaczniki.removeFeature(ref);
+	if(zn.id<n-1)
+	{
+		basicZnaczniki.removeFeature(tablicaLacznikow2[zn.id][0]);
+		basicVector.removeFeature(tablicaLacznikow2[zn.id][1]);
+		var nl=dodajLacznik(zn, tablicaZnacznikow[zn.id+1], "#00ff00");
+		tablicaLacznikow1[zn.id]=nl[0];
+		tablicaLacznikow2[zn.id]=nl[1];
+	}
+	if(zn.id>0)
+	{
+		basicZnaczniki.removeFeature(tablicaLacznikow2[zn.id-1][0]);
+		basicVector.removeFeature(tablicaLacznikow2[zn.id-1][1]);
+		var nl=dodajLacznik(tablicaZnacznikow[zn.id-1], zn, "#00ff00");
+		tablicaLacznikow1[zn.id-1]=nl[0];
+		tablicaLacznikow2[zn.id-1]=nl[1];
+	}
+	/*if(tablicaZnacznikow.length>0)
+	{
+		var nl=dodajLacznikNaKoncu(tablicaZnacznikow[tablicaZnacznikow.length-1], zn);
+		tablicaLacznikow1[tablicaLacznikow1.length]=nl[0];
+		tablicaLacznikow2[tablicaLacznikow2.length]=nl[1];
+	}*/
+	tablicaZnacznikow[zn.id]=zn;
+}
 
 $(document).ready(function() {
 
@@ -407,10 +502,11 @@ console.log(map);
 var pix=[mouseX(event), mouseY(event)];
 this.wsp=ol.proj.transform(map.getCoordinateFromPixel(pix), 'EPSG:3857', 'EPSG:4326');
 console.log("xDDDD");
-document.getElementById("startlink").wsp = this.wsp;
-document.getElementById("stoplink").wsp = this.wsp;
-document.getElementById("startlink").onclick = function(){wpf.onIndicatePointer(this.wsp)};
-document.getElementById("stoplink").onclick = function(){wpt.onIndicatePointer(this.wsp)};
+document.getElementById("nowy").wsp = this.wsp;
+document.getElementById("nowy").onclick = function()
+{
+	nowyZnacznikNaKoncu(this.wsp);
+};
 document.getElementById("rmenu").className = "show";  
 document.getElementById("rmenu").style.top =  mouseY(event) + "px";
 document.getElementById("rmenu").style.left = mouseX(event) + "px";
@@ -452,3 +548,5 @@ document.body.scrollTop);
 return null;
 }
 }
+var znaczek = null;
+$("#map").on("mouseup", function(){if(znaczek!=null){zmienionyZnacznik(znaczek);}znaczek = null;});

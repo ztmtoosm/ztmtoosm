@@ -323,7 +323,18 @@ struct galk
 	set <string> linieDoPrzerobienia;
 	vector <dijkstra*> algorytmy;
 	map <string, vector <WariantTrasy> > warianty;
+	set <long long> changeNodes;
+	set <long long> changeWays;
 	bool czyWszystkie;
+	dijkstra* algorithmForLine(string lineName)
+	{
+		if(lineName=="WKD" || lineName[0]=='K' || lineName[0]=='S')
+			return algorytmy[2];
+		else
+			if(lineName.length()<3)
+				return algorytmy[1];
+		return algorytmy[0];
+	}
 	void readArg(char** argv)
 	{
 		ztmBasePath=argv[1];
@@ -371,20 +382,9 @@ struct galk
 		algorytmy.push_back(dijTram);
 		algorytmy.push_back(dijRail);
 	}
-	dijkstra* algorithmForLine(string lineName)
-	{
-		if(lineName=="WKD" || lineName[0]=='K' || lineName[0]=='S')
-			return algorytmy[2];
-		else
-			if(lineName.length()<3)
-				return algorytmy[1];
-		return algorytmy[0];
-	}
+	
 
-	set <long long> changeNodes;
-	set <long long> changeWays;
-
-	bool generujLinie(string nazwa, int linia_licznik)
+		bool generujLinie(string nazwa, int linia_licznik)
 	{
 		cout<<"GENEROWANIE "<<nazwa<<endl;
 		vector <long long> stareRelacje=relacje_linia(bazaOsm, 3651336, nazwa).second;
@@ -458,6 +458,10 @@ struct galk
 	string ok_route(string cos)
 	{
 		return htmlgen::div("ok_route", cos, "Trasa "+cos+" wygenerowana, pokaż...");
+	}
+	void wypiszRaport()
+	{
+
 	}
 	galk(char** argv)
 	{
