@@ -166,10 +166,10 @@ class PrzegladanieCzyPrawidloweStareLinie
 		set <string> wynik;
 		for(int i=0; i<(baza->dane_linia[linia]).size(); i++)
 		{
-			vector <przystanek_big> przystanki=baza->dane_linia[linia][i];
+			vector <string> przystanki=baza->dane_linia[linia][i];
 			for(int j=0; j<przystanki.size(); j++)
 			{
-				wynik.insert(przystanki[j].id);
+				wynik.insert(przystanki[j]);
 			}
 		}
 		return wynik;

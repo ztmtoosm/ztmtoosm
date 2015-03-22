@@ -50,4 +50,5 @@ struct dat
 		return dd.size();
 	}
 };
+bool isStringOnlyWithDigits(string nastepne);
 #endif

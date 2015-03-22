@@ -178,3 +178,13 @@ string godz(int godzina)
 	return wynik;
 }
 
+bool isStringOnlyWithDigits(string nastepne)
+{
+	int s1=nastepne.length();
+	for(int i=0; i<s1; i++)
+	{
+		if(nastepne[i]<'0' || nastepne[i]>'9')
+		return false;
+	}
+	return true;
+}

@@ -44,20 +44,27 @@ int main(int argc, char** argv)
 		wyp.precision(9);
 		wyp<<"Content-type: application/json\n\n";
 		map<string, string>env=mapaenv();
-		if(env.find("y")!=env.end())
+		if(env.find("y")!=env.end() || env.find("val")!=env.end())
 		{
 			double wynik=1000000;
 			long long val = 0;
-			map <long long, node>::iterator it1=bazaOsm.nodes.begin();
-			while(it1!=bazaOsm.nodes.end())
+			if(env.find("val")!=env.end())
 			{
-				double kand = distance(it1->second.lat, it1->second.lon, fromstring<double>(env["y"]), fromstring<double>(env["x"]));
-				if(wynik>kand)
+				val = fromstring<long long>(env["val"]);
+			}
+			else
+			{
+				map <long long, node>::iterator it1=bazaOsm.nodes.begin();
+				while(it1!=bazaOsm.nodes.end())
 				{
-					val=it1->first;
-					wynik=kand;
+					double kand = distance(it1->second.lat, it1->second.lon, fromstring<double>(env["y"]), fromstring<double>(env["x"]));
+					if(wynik>kand)
+					{
+						val=it1->first;
+						wynik=kand;
+					}
+					it1++;
 				}
-				it1++;
 			}
 			wyp<<"{\"id\":"<<val<<", \"y\":"<<bazaOsm.nodes[val].lat<<", \"x\":"<<bazaOsm.nodes[val].lon<<"}"<<endl;
 			wypisz(wyp);
