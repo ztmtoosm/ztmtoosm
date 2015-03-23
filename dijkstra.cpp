@@ -414,7 +414,7 @@ struct galk
 		long long stareId=relacje_linia(bazaOsm, 3651336, nazwa).first;
 		if(stareId==0)
 			stareId=-1;
-		string nazwaGEN=pathHTML+"/"+nazwa+".genn";
+		string nazwaGEN=pathHTML+"/js"+nazwa+".json";
 		fstream plik(nazwaGEN.c_str(), ios::out | ios::trunc);
 		vector <long long> noweRelacje;
 		int s1 = bazaZtm -> dane_linia[nazwa].size();
@@ -429,6 +429,8 @@ struct galk
 			if(i<stareRelacje.size())
 				wariantOsmRelId = stareRelacje[i];
 			map <string, string> tags;
+			if(i>0)
+				plik<<",";
 			plik<<"{ \"id\":"<<wariantOsmRelId<<","<<endl;
 			tags["ref"]=nazwa;
 			tags["type"]="route";
@@ -442,7 +444,9 @@ struct galk
 			plik<<"[";
 			for(int j=0; j<wariant.size(); j++)
 			{
-				plik<<osmStopData[wariant[j]].stop_position<<",";
+				if(j>0)
+					plik<<",";
+				plik<<osmStopData[wariant[j]].stop_position;
 			}
 			plik<<"]";
 			plik<<",\"members\":[";
@@ -459,11 +463,11 @@ struct galk
 					addMember(j, type, osmStopData[wariant[j]].platform, "platform", plik);
 				}
 			}
-			plik<<"]},";
+			plik<<"]}";
 			noweRelacje.push_back(wariantOsmRelId);
 		}
 		plik<<"]";
-		plik<<"@ RELATION "<<stareId<<endl;
+		/*plik<<"@ RELATION "<<stareId<<endl;
 		plik<<"TAGS type route_master "<<endl;
 		plik<<"TAGS network ZTM Warszawa"<<endl;
 		plik<<"TAGS ref "<<nazwa<<endl;
@@ -471,6 +475,7 @@ struct galk
 		{
 			plik<<"R . "<<noweRelacje[i]<<endl;
 		}
+*/
 		/*
 		for(int i=0; i<warianty[nazwa].size(); i++)
 		{

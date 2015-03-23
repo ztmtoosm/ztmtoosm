@@ -255,5 +255,8 @@ var Relation = function(root, relation)
 	this.tags = new Tags(this, relation.tags);
 	this.members = new Members(this, relation.members);
 }
-var rel = new Relacja(managerRelacji, tablica[0].track);
-var gowno = new Relation({div : document.body}, tablica[0]);
+//var rel = new Relacja(managerRelacji, tablica[0].track);
+for(var i=0; i<tablica.length; i++)
+{
+	var gowno = new Relation({div : document.body}, tablica[i]);
+}

@@ -1,1 +1,1 @@
-#define SCIEZKA1 "/home/marcin/programowanie/ztmtoosm/ztmtoosm"
+#define SCIEZKA1 "/ztmtoosm"
