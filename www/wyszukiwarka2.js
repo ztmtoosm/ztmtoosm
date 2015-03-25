@@ -148,6 +148,7 @@ console.log(tablica);
 var KeyValue = function (root, kv)
 {
 	this.div = document.createElement("DIV");
+	this.div.className="keyvalue";
 	var key = document.createElement("INPUT");
 	key.type="text";
 	var value = document.createElement("INPUT");
@@ -166,7 +167,9 @@ KeyValue.prototype.getPair = function()
 var RelationMember = function (root, memberData)
 {
 	this.div = document.createElement("DIV");
+	this.div.className="relationmember";
 	var category = document.createElement("INPUT");
+	category.className="membercategory";
 	category.type="text";
 	var osmId = document.createElement("INPUT");
 	osmId.type="text";
@@ -188,6 +191,7 @@ KeyValue.prototype.getPair = function()
 var Tags = function (root, tags)
 {
 	this.div = document.createElement("DIV");
+	this.div.className="tags";
 	root.div.appendChild(this.div);
 	var addTag = document.createElement("INPUT");
 	addTag.type="submit";
@@ -219,19 +223,57 @@ Tags.prototype.getTags = function()
 
 var Members = function (root, members)
 {
+	this.divCore = document.createElement("DIV");
+	this.showMore = document.createElement("A");
+	this.showMore.innerHTML = "Dodadkowi członkowie - pokaż";
+	this.showMore.showed = false;
+	this.showMore.href="javascript:void(0)";
+	this.showMore.root=this;
+	this.divDoUkrycia = document.createElement("DIV");
 	this.div = document.createElement("DIV");
-	root.div.appendChild(this.div);
+	var header = document.createElement("DIV");
+	this.div.className="members";
+	root.div.appendChild(this.divCore);
+	this.divCore.appendChild(this.showMore);
+	this.divCore.appendChild(this.divDoUkrycia);
+	this.div.appendChild(header);
+	this.divDoUkrycia.appendChild(this.div);
+	$(this.divDoUkrycia).hide();
 	var addMember = document.createElement("INPUT");
 	addMember.type="submit";
 	addMember.id="nowytag";
-	addMember.value="nowy tag";
+	addMember.value="nowy członek";
 	addMember.root=this;
 	addMember.onclick=function()
 	{
-		this.root.memberValues[this.root.memberValues.length] = new RelationMember(this.root, {role:"", category:"", id:99});
+		this.root.memberValues[this.root.memberValues.length] = new RelationMember(this.root, {role:"", category:"", id:""});
 	}
+	this.showMore.onclick=function()
+	{
+		if(this.showed)
+		{
+			this.showed = false;
+			this.innerHTML = "Dodadkowi członkowie - pokaż";
+			$(this.root.divDoUkrycia).hide(1000);
+		}
+		else
+		{
+			this.showed = true;
+			this.innerHTML = "Dodadkowi członkowie - ukryj";
+			$(this.root.divDoUkrycia).show(1000);
+		}
+	}
+	var headercategory = document.createElement("DIV");
+	header.appendChild(headercategory);
+	headercategory.innerHTML="member type";
+	var headerid = document.createElement("DIV");
+	headerid.innerHTML="id";
+	header.appendChild(headerid);
+	var headerrole = document.createElement("DIV");
+	headerrole.innerHTML="role";
+	header.appendChild(headerrole);
 	this.memberValues = [];
-	this.div.appendChild(addMember);
+	this.divDoUkrycia.appendChild(addMember);
 	for(var i=0; i<members.length; i++)
 	{
 		var tmp = new RelationMember(this, members[i]);
@@ -248,15 +290,116 @@ Members.prototype.getTags = function()
 	return wynik;
 }
 
+var aktRelacja = null;
+
 var Relation = function(root, relation)
 {
+	this.relation = relation;
 	this.div = document.createElement("DIV");
+	this.div.className="relation";
+	this.relId = document.createElement("DIV");
+	this.posrednie = document.createElement("DIV");
+	$(this.posrednie).hide();
+	this.posrednieHeader = document.createElement("A");
+	this.posrednieHeader.href = "javascript:void(0)";
+	this.posrednieHeader.root = this;
+	this.posrednieHeader.showed = false;
+	this.posrednieHeader.onclick = function()
+	{
+		if(this.showed)
+		{
+			this.showed = false;
+			$(this.root.posrednie).hide(1000);
+		}
+		else
+		{
+			this.showed = true;
+			$(this.root.posrednie).show(1000);
+		}
+	}
+	this.posrednieHeader.innerHTML = "XXX";
+	this.posrednie.innerHTML = "XXX<br>YYY<br>Zz";
+	this.relId.innerHTML = "Relacja id: "+relation.id;
+	this.div.appendChild(this.relId);
+	this.div.appendChild(this.posrednieHeader);
+	this.div.appendChild(this.posrednie);
+	this.relacja = null;
+	this.relLink = document.createElement("A");
+	this.relLink.root = this;
+	this.relLink.innerHTML="pokaż trasę";
+// - punkty pośrednie: "+relation.track.length;
+	this.relLink.href="javascript:void(0)";
+	this.relLink.onclick = function()
+	{
+		this.root.addTrack();
+	}	
+	this.div.appendChild(this.relLink);
+	
 	root.div.appendChild(this.div);
 	this.tags = new Tags(this, relation.tags);
 	this.members = new Members(this, relation.members);
 }
-//var rel = new Relacja(managerRelacji, tablica[0].track);
+Relation.prototype.updatePosrednie = function()
+{
+	if(this.relacja!=null)
+	{
+		var lol = this.relacja.getTrackPoints();
+		console.log(lol);
+		this.posrednie.innerHTML = "";
+		for(var i=0; i<lol[0].length; i++)
+		{
+			this.posrednie.innerHTML+=lol[0][i]+"</br>";
+		}
+	}
+}
+Relation.prototype.podswietl = function()
+{
+	this.div.style.backgroundColor="yellow";
+}
+Relation.prototype.zaciemnij = function()
+{
+	this.div.style.backgroundColor="white";
+}
+Relation.prototype.addTrack = function()
+{
+	if(aktRelacja!=null)
+		aktRelacja.clear();
+	if(this.relacja!=null)
+	{
+		this.relacja.reopen();
+	}
+	else
+	{
+		this.relacja = new Relacja(managerRelacji, this.relation.track);
+		this.relacja.handler = this;
+		this.relacja.onChange = function (these)
+		{
+			these.updatePosrednie();
+		}
+		this.relacja.onReopen = function (these)
+		{
+			these.podswietl();
+		}
+		this.relacja.onClear = function (these)
+		{
+			these.zaciemnij();
+		}
+	}
+	this.updatePosrednie();
+	this.podswietl();
+	aktRelacja = this.relacja;
+}
+console.log("xyz");
+console.log(tablica[0].track);
 for(var i=0; i<tablica.length; i++)
 {
 	var gowno = new Relation({div : document.body}, tablica[i]);
 }
+/*
+$(function() {
+  $( "#map0" ).resizable({
+ minHeight: 150,  
+    minWidth: 200,
+	handles: "w"  
+});
+});*/

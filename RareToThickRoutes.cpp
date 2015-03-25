@@ -7,7 +7,7 @@ void wypisz(stringstream& lol)
 }
 map <string, string> mapaenv()
 {
-	map<string, string> wynik;
+	map<string,string>wynik;
 	string podstawa=getenv("QUERY_STRING");
 	int s1=podstawa.length();
 	int i=0;
@@ -32,11 +32,10 @@ map <string, string> mapaenv()
 }
 int main(int argc, char** argv)
 {
-	string osmBasePath = "/home/marcin/programowanie/ztmtoosm/ztmtoosm/data/latest.osm";
+	string osmBasePath = "/ztmtoosm/data/latest.osm";
 	osm_base bazaOsm(osmBasePath);
 	dijkstra dij;
 	dij.laduj_dijkstra_from_base(&bazaOsm);
-
 	while(FCGI_Accept() >= 0)
 	{
 		cout<<"elo"<<endl;

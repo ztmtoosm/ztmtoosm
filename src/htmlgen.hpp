@@ -18,7 +18,7 @@ void htmlHead(fstream& plik5)
 	plik5<<"<script src=\"http://openlayers.org/en/v3.0.0/build/ol.js\" type=\"text/javascript\"></script>"<<endl;
 	plik5<<"</head>"<<endl;
 	plik5<<"<body>"<<endl;
-	plik5<<"<div id=\"map\" class=\"map\"></div>"<<endl;
+//	plik5<<"<div id=\"map\" class=\"map\"></div>"<<endl;
 	plik5<<"<div id=\"hdd\">"<<endl;
 }
 void htmlTile(fstream& plik5)

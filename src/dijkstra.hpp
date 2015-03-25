@@ -92,7 +92,11 @@ struct dijkstra
 	{
 		dijkstra_clear();
 		punkt* destination=punkty[stop_id];
+		punkt* start=punkty[start_id];
+		if(start==NULL || destination == NULL)
+			return;
 		nowa_krawedz_zaznaczona(punkty[start_id], NULL, 0);
+		cout<<"xf"<<endl;	
 		while(!do_odwiedzenia.empty())
 		{
 			set <pair<double, punkt*> >::iterator it1=do_odwiedzenia.begin();

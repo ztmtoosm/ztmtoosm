@@ -509,11 +509,9 @@ struct osm_base
 			if(ins.GetAttributeAt(i).Name=="ref")
 			{
 				long long value=fromstring<long long>(ins.GetAttributeAt(i).Value);
-				cout<<value<<endl;
 				return value;
 			}
 		}
-		cout<<"0000000000000000000000"<<endl;
 		return 0;
 	}
 	void load_basic(Xml::Inspector<Xml::Encoding::Utf8Writer> &ins, every_member& foo)

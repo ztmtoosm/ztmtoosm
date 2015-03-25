@@ -26,7 +26,9 @@ var ManagerRelacji = function ()
           center: ol.proj.transform([21.05, 52.23], 'EPSG:4326', 'EPSG:3857'),
           zoom: 12
 	})});
+	
 	this.mapcnt = document.getElementById("map");
+	this.map.gowno=this.mapcnt;
 	console.log(this.mapcnt);
 	this.mapcnt.sterownik = this;
 	this.mapcnt.onclick = function(e)
@@ -53,6 +55,38 @@ var ManagerRelacji = function ()
 			var wsp = ol.proj.transform(this.sterownik.map.getCoordinateFromPixel([mPos.X, mPos.Y]), 'EPSG:3857', 'EPSG:4326');
 			if(this.sterownik.onClickLine!=undefined)
 				this.sterownik.onClickLine(newfeature, wsp, this.sterownik.lineHandler);
+		}
+	}
+	this.mapcnt.onmousemove = function(e)
+	{
+		var that = this;
+		var newfeature = null;
+		var block = false;
+		var pos   = {X : that.offsetLeft, Y : that.offsetTop};
+		var mPos  = {X : e.clientX - pos.X, Y : e.clientY - pos.Y};
+		
+		this.sterownik.map.forEachFeatureAtPixel([mPos.X, mPos.Y], function(feature, layer){
+		if(feature.getGeometry().getType()=='LineString')
+		{
+			newfeature=feature;
+		}
+		if(feature.getGeometry().getType()=='Point')
+		{
+			block=true;
+		}
+		});
+		if(block)
+			newfeature = null;
+		if(newfeature !=null)
+		{
+			console.log(this.style);
+			this.style.cursor="pointer";
+			this.title="";
+		}
+		else
+		{
+			this.style.cursor="default";
+			this.title="Dodaj punkt pośredni";
 		}
 	}
 	$("#map").on("mouseup", function(){if(this.sterownik.znaczek!=null){this.sterownik.zmienionyZnacznik(this.sterownik.znaczek, this.sterownik.znaczekWsp, this.sterownik.znacznikHandler);}this.sterownik.znaczek = null;});

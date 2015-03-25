@@ -28,12 +28,48 @@ var Relacja = function (manager, podstawa)
 	console.log(manager);
 	if(podstawa!=undefined)
 	{
-		console.log(tablica);
-		for(var i=0; i<tablica.length; i++)
+		for(var i=0; i<podstawa.length; i++)
 		{
 			var xxx = loadJSON(punktId(podstawa[i]));
 			this.nowyZnacznikNaKoncu2(xxx);
 		}
+	}
+}
+
+Relacja.prototype.reopen = function() {
+	for(var i=0; i<this.tablicaZnacznikow.length; i++)
+	{
+		var zzz = this.tablicaZnacznikow[i];
+		this.tablicaZnacznikowFeatures[i]=this.manager.nowyZnacznikFizycznie([zzz.x, zzz.y], i);	
+	}
+	for(var i=0; i<this.tablicaLacznikow.length; i++)
+	{
+		var wspolrzedne = this.tablicaLacznikow[i];
+		this.tablicaLacznikowFeatures[i] = this.manager.nowaLiniaFizycznie(wspolrzedne, i);
+	}
+	this.zmienna = function(fet, wsp, these)
+	{
+		these.zmienionyZnacznik(wsp, fet);
+	};
+	this.manager.znacznikHandler = this;
+	this.manager.lineHandler = this;
+	this.manager.ppmHandler = this;
+	this.manager.zmienionyZnacznik = this.zmienna;
+	this.manager.onClickLine = function(fet, wsp, these) {
+		for(var i=0; i<these.tablicaLacznikowFeatures.length; i++)
+		{
+			if(these.tablicaLacznikowFeatures[i][0]==fet || these.tablicaLacznikowFeatures[i][1]==fet)
+			{
+				these.znacznikWPolowie(i, wsp);
+			}
+		}
+	};
+	this.manager.onPpm = function(wsp, these) {
+		these.nowyZnacznikNaKoncu(wsp);
+	};
+	if(this.onReopen!=undefined)
+	{
+		this.onReopen(this.handler);
 	}
 }
 
@@ -111,6 +147,10 @@ Relacja.prototype.znacznikWPolowie = function (id, wsp)
 		this.tablicaLacznikow[id+1]=ws2;
 		this.tablicaLacznikowFeatures[id+1]=nl2;
 	}
+	if(this.onChange!=undefined)
+	{
+		this.onChange(this.handler);
+	}
 }
 Relacja.prototype.zmienionyZnacznik = function (wsp, ref)
 {
@@ -137,16 +177,36 @@ Relacja.prototype.zmienionyZnacznik = function (wsp, ref)
 		this.tablicaLacznikow[zn.id-1]=wspolrzedne;
 		this.tablicaLacznikowFeatures[zn.id-1]=nl;
 	}
+	if(this.onChange!=undefined)
+	{
+		this.onChange(this.handler);
+	}
 }
 Relacja.prototype.clear = function()
 {
 	for(var i=0; i<this.tablicaZnacznikowFeatures.length; i++)
 	{
-		this.manager.usunLinie(this.tablicaZnacznikowFeatures[i]);
+		this.manager.usunPunkt(this.tablicaZnacznikowFeatures[i]);
 	}
 	for(var i=0; i<this.tablicaLacznikowFeatures.length; i++)
 	{
 		this.manager.usunLinie(this.tablicaLacznikowFeatures[i]);
 	}
+	if(this.onClear!=undefined)
+	{
+		this.onClear(this.handler);
+	}
 }
-
+Relacja.prototype.getTrackPoints = function()
+{
+	var akt = -1;
+	var wynik =[];
+	var wynik_tmp =[];
+	for (var i=0; i<this.tablicaLacznikow.length; i++)
+	{
+		for (var j=0; j<this.tablicaLacznikow[i].length; j++)
+			wynik_tmp[wynik_tmp.length]=this.tablicaLacznikow[i][j].id;
+	}
+	wynik[0]=wynik_tmp;
+	return wynik;
+}

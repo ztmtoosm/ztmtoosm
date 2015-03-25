@@ -1,130 +1,19 @@
-      .map0 {
-	      overflow: hidden;
-	position: absolute;
-	box-sizing: border-box;
-	display: block;
-	top: 0px;
-	left: 0px;
-	bottom: 0px;
-	right: 0px;
-        height: 100%;
-        width: 100%;
-      }
-      .hafasliniaid_number
+ body
       {
-	      display: inline-block;
-      }
-	.hafasliniaid_more
-      {
-	      font-size: 10px;
+	      font-family: sans-serif
       }
 	.map {
 	      overflow: hidden;
-	position: absolute;
+	position: fixed;
 	box-sizing: border-box;
 	display: block;
 	top: 0px;
-	left: 40%;
 	bottom: 0px;
 	right: 0px;
         height: 100%;
         width: 60%;
       }
-      .hafaslinia_srodek .hafasstop
-      {
-	      font-size: 10px;
-      }
-	 #heart {
-		 padding-left: 20px;
-		 padding-right: 20px;
-	position: absolute;
-	top: 100px;
-	left: 10px;
-	max-height: 80%;
-	max-width: 500px;
-	background-color: rgba(255,255,255,0.9);
-	overflow-y: auto;
-	overflow-x: hidden;
-      }
-	 .subb {
-		 padding-left: 20px;
-	}
-      .datak {
-	position: absolute;
-	top: 10px;
-	left: 40px;
-        height: 50px;
-        width: 100%;
-      }
-      div.hafaslinia
-      {
-	      position:relative;
-      }
-	div.hafasliniaid
-      {
-	      position: relative;
-	      font-size: 20px;
-      }
-      div.hafasstop
-      {
-	      position: relative;
-      }
-      div.nowy_postoj
-      {
-	      overflow: hidden;
-	      font-size: 16px;
-	      position: relative;
-      }
-      div.kolorek
-      {
-	      top:0;
-	      left:-20px;
-	      position: absolute;
-	      width:12px;
-	      height:100%;
-      }
-      div.malelitery
-      {
-	      font-size: 10px;
-      }
-      div.nowystoptime
-      {
-	      position: absolute;
-	      left:0;
-      		top:0;
-		width:50px;
-      }
-	div.nowystopname
-      {
-	      margin-left:50px;
-      }
-      body
-      {
-	      font-family: sans-serif
-      }
-      div.linia_head, div.bledy1, div.ok_route, div.bledy2
-      {
-	      background-color: black;
-	      color:white;
-      }
-      div.linia_green, div.linia_red, div.linia_blue
-      {
-	     width: 500px;
-	     border: 1px solid;
-	     margin-top: 15px;
-	     margin-bottom: 15px;
-	     margin-left: 15px;
-	     margin-right: 15px;
-      }
-      div.relglowna
-      {
-	      background-color: gray;
-      }
-      div.relboczna
-      {
-	      background-color: silver;
-      }
-      a:hover
+            a:hover
       {
 	      color: navy;
 	      text-decoration: underline;
@@ -205,3 +94,12 @@
 					 .hide {
 						     display: none;
 					 }
+.membercategory {
+	width: 40px;
+}
+.relation
+{
+	margin: 5px;
+	padding: 5px;
+	border: 1px solid;
+}

@@ -45,6 +45,7 @@ struct dij_data
 			if(ok)
 			{
 			dij->oblicz(stop_nodes[i], stop_nodes[i+1]);
+			cout<<"####"<<endl;	
 			punkt* from = dij->punkty[stop_nodes[i]];
 			punkt* destination = dij->punkty[stop_nodes[i+1]];
 			if(from==NULL || destination==NULL)
@@ -91,27 +92,31 @@ struct dij_data
 			}
 			}
 		}
-		long long akt_way=-1;
-		long long akt_from=-1;
-		long long akt_to=-1;
-		for(int i=0; i<dtt.size(); i++)
+		cout<<"nie w"<<endl;
+		if(ok)
 		{
-			if(akt_way!=-1 && dtt[i].way_id!=akt_way)
+			long long akt_way=-1;
+			long long akt_from=-1;
+			long long akt_to=-1;
+			for(int i=0; i<dtt.size(); i++)
+			{
+				if(akt_way!=-1 && dtt[i].way_id!=akt_way)
+				{
+					split_data[akt_way].insert(akt_from);
+					split_data[akt_way].insert(akt_to);
+				}
+				if(dtt[i].way_id!=akt_way)
+				{
+					akt_way=dtt[i].way_id;
+					akt_from=dtt[i].from;
+				}
+				akt_to=dtt[i].to;
+			}
+			if(akt_way!=-1)
 			{
 				split_data[akt_way].insert(akt_from);
 				split_data[akt_way].insert(akt_to);
 			}
-			if(dtt[i].way_id!=akt_way)
-			{
-				akt_way=dtt[i].way_id;
-				akt_from=dtt[i].from;
-			}
-			akt_to=dtt[i].to;
-		}
-		if(akt_way!=-1)
-		{
-			split_data[akt_way].insert(akt_from);
-			split_data[akt_way].insert(akt_to);
 		}
 	}
 };

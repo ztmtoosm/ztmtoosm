@@ -441,7 +441,7 @@ struct galk
 			tags["name"]=nazwa_duza(nazwa)+" "+nazwa+": "+from+" => "+to;
 			tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
 			addTags(tags, plik);
-			plik<<"[";
+			plik<<"\"track\":[";
 			for(int j=0; j<wariant.size(); j++)
 			{
 				if(j>0)
@@ -466,16 +466,18 @@ struct galk
 			plik<<"]}";
 			noweRelacje.push_back(wariantOsmRelId);
 		}
-		plik<<"]";
-		/*plik<<"@ RELATION "<<stareId<<endl;
-		plik<<"TAGS type route_master "<<endl;
-		plik<<"TAGS network ZTM Warszawa"<<endl;
-		plik<<"TAGS ref "<<nazwa<<endl;
+		map <string, string> tags;
+		tags["type"] = "route_master";
+		tags["ref"] = nazwa;
+		tags["network"] = "ZTM Warszawa";
+		plik<<",{\"id\":"<<stareId<<","<<endl;
+		addTags(tags, plik);
+		plik<<"\"track\":[],\"members\":[";
 		for(int i=0; i<noweRelacje.size(); i++)
 		{
-			plik<<"R . "<<noweRelacje[i]<<endl;
+			addMember(i, "R", noweRelacje[i], "", plik);
 		}
-*/
+		plik<<"]}]";
 		/*
 		for(int i=0; i<warianty[nazwa].size(); i++)
 		{
@@ -537,6 +539,10 @@ struct galk
 	string ok_route(string cos)
 	{
 		return htmlgen::div("ok_route", cos, "Trasa "+cos+" wygenerowana, pokaż...");
+	}
+	string oklink(string linia)
+	{
+		return "<a href=\"wyszukiwarka2.html?linia="+linia+"\" target=\"_blank\">Pokaż wygenerowany zestaw</a>";
 	}
 	void wypiszRaport()
 	{
@@ -624,7 +630,7 @@ struct galk
 		auto it0prim=slownik0.begin();
 		while(it0prim!=slownik0.end())
 		{
-			plik5<<htmlgen::div("linia_green", "", infoHTML[it0prim->second])<<endl;
+			plik5<<htmlgen::div("linia_green", "", infoHTML[it0prim->second]+oklink(it0prim->second))<<endl;
 			it0prim++;
 		}
 		plik5<<htmlgen::div("partx", "", "Trasy niewygenerowane...")<<endl;
