@@ -415,8 +415,40 @@ struct osm_base
 	}
 	osm_base(vector <long long> nodes, string apiAddr)
 	{
+		set <long long> nodes_potrzebne;
 		string path = "/tmp/wgetosm.txt";
-		//for(int 
+		for(int i=0; i<nodes.size(); i++)
+		{
+			string nd;
+			stringstream xd;
+			xd<<nodes[i];
+			xd>>nd;
+			string pol ="wget http://"+apiAddr+"0.6/node/"+nd+"/ways -O "+path;
+			system(pol.c_str());
+			load_ways(path, nodes_potrzebne);
+		}
+		for(auto it1 : ways)
+		{
+			string nd;
+			stringstream xd;
+			xd<<it1.first;
+			xd>>nd;
+			string pol ="wget http://"+apiAddr+"0.6/way/"+nd+"/relations -O "+path;
+			system(pol.c_str());
+			load_relations(path);
+		}
+		bool ok=0;
+		stringstream potrzebne;
+		for(auto it1 : nodes_potrzebne)
+		{
+			if(ok)
+				potrzebne<<",";
+			potrzebne<<it1;
+			ok=1;
+		}
+		string pol ="wget http://"+apiAddr+"0.6/nodes?nodes="+potrzebne.str()+" -O "+path;
+		system(pol.c_str());
+		load_nodes(path, nodes_potrzebne);
 	}
 	
 	private:

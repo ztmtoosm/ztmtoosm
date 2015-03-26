@@ -180,7 +180,7 @@ var RelationMember = function (root, memberData)
 	this.div = document.createElement("DIV");
 	this.div.className="relationmember";
 	this.category = document.createElement("SELECT");
-	category.className="membercategory";
+	this.category.className="membercategory";
 	addOption(this.category, "N", ("N"==memberData.category));
 	addOption(this.category, "W", ("W"==memberData.category));
 	addOption(this.category, "R", ("R"==memberData.category));
