@@ -26,7 +26,7 @@ struct punkt
 struct odcinek
 {
 	long long osm_id;
-	double distance;
+	vector <double> distances;
 	punkt* start;
 	punkt* stop;
 };
@@ -109,15 +109,15 @@ struct dijkstra
 			for(int i=0; i<s1; i++)
 			{
 				odcinek* teraz = akt->drogi_start[i];
-				nowa_krawedz_zaznaczona(teraz->stop, teraz, akt->akt_distance+teraz->distance);
+				nowa_krawedz_zaznaczona(teraz->stop, teraz, akt->akt_distance+teraz->distances[0]);
 			}
 		}
 	}
-	set<long long> eee3;
-	void dodaj_nowe(long long id1, long long id2, long long id3, double dist)
+	//set<long long> eee3;
+	void dodaj_nowe(long long id1, long long id2, long long id3, vector<double> dist)
 	{
-		eee3.insert(id1);
-		eee3.insert(id2);
+		//eee3.insert(id1);
+		//eee3.insert(id2);
 		if(punkty.find(id1)==punkty.end())
 		{
 			punkt* nowy= new punkt();
@@ -136,7 +136,7 @@ struct dijkstra
 		punkty[id1]->drogi_start.push_back(nowa);
 		punkty[id2]->drogi_stop.push_back(nowa);
 		nowa->osm_id=id3;
-		nowa->distance=dist;
+		nowa->distances=dist;
 	}
 
 	void laduj_dijkstra_from_file(string sciezka)
@@ -150,8 +150,10 @@ struct dijkstra
 			dtt<<data;
 			long long id1, id2, id3;
 			double distance;
+			vector <double> distances;
+			distances.push_back(distance);
 			dtt>>id1>>id2>>id3>>distance;
-			dodaj_nowe(id1,id2,id3,distance);
+			dodaj_nowe(id1,id2,id3,distances);
 		}
 		plik.close();
 	}
@@ -228,10 +230,12 @@ struct dijkstra
 				for(int i=0; i<s1-1; i++)
 				{
 					double distance_abs=distance(bazuka->nodes[akt_nodes[i]].lon, bazuka->nodes[akt_nodes[i]].lat, bazuka->nodes[akt_nodes[i+1]].lon, bazuka->nodes[akt_nodes[i+1]].lat)*przelicznik;
+					vector <double> distances;
+					distances.push_back(distance_abs);
 					if(way1)
-						dodaj_nowe(akt_nodes[i], akt_nodes[i+1], it1->first, distance_abs);
+						dodaj_nowe(akt_nodes[i], akt_nodes[i+1], it1->first, distances);
 					if(way2)
-						dodaj_nowe(akt_nodes[i+1], akt_nodes[i], it1->first, distance_abs);
+						dodaj_nowe(akt_nodes[i+1], akt_nodes[i], it1->first, distances);
 				}
 			}
 			it1++;

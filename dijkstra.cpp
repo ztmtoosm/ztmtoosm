@@ -24,6 +24,7 @@ set <long long> pustyGen()
 	pusty.insert(3651326);
 	pusty.insert(3651335);
 	pusty.insert(3651336);
+	pusty.insert(4656333);
 	return pusty;
 }
 
@@ -424,7 +425,6 @@ struct galk
 			vector <string> wariant = bazaZtm -> dane_linia[nazwa][i];
 			string from = substituteWhiteCharsBySpace(osmStopData[wariant[0]].name);
 			string to = substituteWhiteCharsBySpace(osmStopData[wariant[wariant.size()-1]].name);
-
 			int wariantOsmRelId = i-100;
 			if(i<stareRelacje.size())
 				wariantOsmRelId = stareRelacje[i];
@@ -432,6 +432,7 @@ struct galk
 			if(i>0)
 				plik<<",";
 			plik<<"{ \"id\":"<<wariantOsmRelId<<","<<endl;
+			plik<<"\"track_type\":"<<nazwa_mala(nazwa)<<","<<endl;
 			tags["ref"]=nazwa;
 			tags["type"]="route";
 			tags["network"]="ZTM Warszawa";
@@ -460,15 +461,23 @@ struct galk
 				{
 					string type="";
 					type+=osmStopData[wariant[j]].platform_type;
-					addMember(j, type, osmStopData[wariant[j]].platform, "platform", plik);
+					addMember(1, type, osmStopData[wariant[j]].platform, "platform", plik);
 				}
 			}
 			plik<<"]}";
 			noweRelacje.push_back(wariantOsmRelId);
 		}
+		if(s1<stareRelacje.size())
+		{
+			for(int i=s1; i<stareRelacje.size(); i++)
+			{
+				plik<<",{\"track\":[],\"members\":[], \"id\":"<<stareRelacje[i]<<"\"tags\":[]}";
+			}
+		}
 		map <string, string> tags;
 		tags["type"] = "route_master";
 		tags["ref"] = nazwa;
+		tags["name"] = nazwa_duza(nazwa)+" "+nazwa;
 		tags["network"] = "ZTM Warszawa";
 		plik<<",{\"id\":"<<stareId<<","<<endl;
 		addTags(tags, plik);

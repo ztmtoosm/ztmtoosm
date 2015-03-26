@@ -413,6 +413,11 @@ struct osm_base
 		}
 		*/
 	}
+	osm_base(vector <long long> nodes, string apiAddr)
+	{
+		string path = "/tmp/wgetosm.txt";
+		//for(int 
+	}
 	
 	private:
 	

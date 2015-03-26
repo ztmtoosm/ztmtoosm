@@ -149,33 +149,46 @@ var KeyValue = function (root, kv)
 {
 	this.div = document.createElement("DIV");
 	this.div.className="keyvalue";
-	var key = document.createElement("INPUT");
-	key.type="text";
-	var value = document.createElement("INPUT");
-	value.type="text";
-	this.div.appendChild(key);
-	this.div.appendChild(value);
-	key.value = kv.key;
-	value.value = kv.value;
+	this.key = document.createElement("INPUT");
+	this.key.type="text";
+	this.value = document.createElement("INPUT");
+	this.value.type="text";
+	this.div.appendChild(this.key);
+	this.div.appendChild(this.value);
+	this.key.value = kv.key;
+	this.value.value = kv.value;
 	root.div.appendChild(this.div);
 }
 KeyValue.prototype.getPair = function()
 {
-	return {key: "xxx", value : "yyy"};
+	return {key: this.key.value, value : this.value.value};
+}
+var addOption = function (root, value, selected)
+{
+	var option = document.createElement("OPTION");
+	root.appendChild(option);
+	option.id = value;
+	option.innerHTML = value;
+	if(selected)
+	{
+		option.selected="selected";
+	}
 }
 
 var RelationMember = function (root, memberData)
 {
 	this.div = document.createElement("DIV");
 	this.div.className="relationmember";
-	var category = document.createElement("INPUT");
+	this.category = document.createElement("SELECT");
 	category.className="membercategory";
-	category.type="text";
+	addOption(this.category, "N", ("N"==memberData.category));
+	addOption(this.category, "W", ("W"==memberData.category));
+	addOption(this.category, "R", ("R"==memberData.category));
 	var osmId = document.createElement("INPUT");
 	osmId.type="text";
 	var role = document.createElement("INPUT");
 	role.type="text";
-	this.div.appendChild(category);
+	this.div.appendChild(this.category);
 	this.div.appendChild(osmId);
 	this.div.appendChild(role);
 	category.value = memberData.category;
@@ -183,10 +196,13 @@ var RelationMember = function (root, memberData)
 	role.value = memberData.role;
 	root.div.appendChild(this.div);
 }
+/*
 KeyValue.prototype.getPair = function()
 {
 	return {role: "stop", id : "5", category: "W"};
 }
+*/
+
 
 var Tags = function (root, tags)
 {
@@ -318,7 +334,7 @@ var Relation = function(root, relation)
 		}
 	}
 	this.posrednieHeader.innerHTML = "XXX";
-	this.posrednie.innerHTML = "XXX<br>YYY<br>Zz";
+	this.posrednie.innerHTML = "";
 	this.relId.innerHTML = "Relacja id: "+relation.id;
 	this.div.appendChild(this.relId);
 	this.div.appendChild(this.posrednieHeader);
@@ -389,11 +405,10 @@ Relation.prototype.addTrack = function()
 	this.podswietl();
 	aktRelacja = this.relacja;
 }
-console.log("xyz");
-console.log(tablica[0].track);
 for(var i=0; i<tablica.length; i++)
 {
 	var gowno = new Relation({div : document.body}, tablica[i]);
+	//gowno.addTrack();
 }
 /*
 $(function() {
