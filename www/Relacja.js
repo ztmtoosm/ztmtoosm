@@ -205,7 +205,10 @@ Relacja.prototype.getTrackPoints = function()
 	for (var i=0; i<this.tablicaLacznikow.length; i++)
 	{
 		for (var j=0; j<this.tablicaLacznikow[i].length; j++)
-			wynik_tmp[wynik_tmp.length]=this.tablicaLacznikow[i][j].id;
+		{
+			if(wynik_tmp.length==0 || wynik_tmp[wynik_tmp.length-1]!=this.tablicaLacznikow[i][j].id)	
+				wynik_tmp[wynik_tmp.length]=this.tablicaLacznikow[i][j].id;
+		}
 	}
 	wynik[0]=wynik_tmp;
 	return wynik;

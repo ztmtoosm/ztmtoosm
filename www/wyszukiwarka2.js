@@ -184,24 +184,22 @@ var RelationMember = function (root, memberData)
 	addOption(this.category, "N", ("N"==memberData.category));
 	addOption(this.category, "W", ("W"==memberData.category));
 	addOption(this.category, "R", ("R"==memberData.category));
-	var osmId = document.createElement("INPUT");
-	osmId.type="text";
+	this.osmId = document.createElement("INPUT");
+	this.osmId.type="text";
 	var role = document.createElement("INPUT");
 	role.type="text";
 	this.div.appendChild(this.category);
-	this.div.appendChild(osmId);
+	this.div.appendChild(this.osmId);
 	this.div.appendChild(role);
-	category.value = memberData.category;
-	osmId.value = memberData.id;
+	this.category.value = memberData.category;
+	this.osmId.value = memberData.id;
 	role.value = memberData.role;
 	root.div.appendChild(this.div);
 }
-/*
-KeyValue.prototype.getPair = function()
+RelationMember.prototype.getPair = function()
 {
-	return {role: "stop", id : "5", category: "W"};
+	return {category: this.category.options[this.category.selectedIndex].value, id: this.osmId.value};
 }
-*/
 
 
 var Tags = function (root, tags)
@@ -348,12 +346,19 @@ var Relation = function(root, relation)
 	this.relLink.onclick = function()
 	{
 		this.root.addTrack();
+		console.log(JSON.stringify(this.root.getJSON()));
 	}	
 	this.div.appendChild(this.relLink);
 	
 	root.div.appendChild(this.div);
 	this.tags = new Tags(this, relation.tags);
 	this.members = new Members(this, relation.members);
+}
+Relation.prototype.getJSON = function()
+{
+	var tags = this.tags.getTags();
+	var members = this.members.getTags();
+	return {id : this.relation.id, finaltrack : this.relacja.getTrackPoints(), tags: tags, members: members};
 }
 Relation.prototype.updatePosrednie = function()
 {
@@ -408,7 +413,7 @@ Relation.prototype.addTrack = function()
 for(var i=0; i<tablica.length; i++)
 {
 	var gowno = new Relation({div : document.body}, tablica[i]);
-	//gowno.addTrack();
+	gowno.addTrack();
 }
 /*
 $(function() {
