@@ -70,7 +70,7 @@ vector <relation_member> getMembers (Value& members)
 	{
 		relation_member nowa;
 		nowa.member_id=fromstring<long long>(members[i]["id"].GetString());
-		nowa.role ="xyz";
+		nowa.role =members[i]["role"].GetString();
 		string category = members[i]["category"].GetString();
 		if(category=="N")
 			nowa.member_type = NODE;
@@ -96,6 +96,7 @@ struct Generator
 			long long id = v[i]["id"].GetInt64();
 			cout<<"uuu"<<endl;
 			relation rel;
+			rel.modify = true;
 			rel.setTags(getTags(v[i]["tags"]));
 			cout<<"xxx"<<endl;
 			rel.members = getMembers(v[i]["members"]);

@@ -93,6 +93,7 @@ struct WariantTrasy
 			cout<<"BŁĄD - LINIA "<<nazwa<<endl;
 		}
 	}
+	*/
 	vector <string> miejscowosci(vector <przystanek> xyz)
 	{
 		vector <string> wynik;
@@ -107,6 +108,7 @@ struct WariantTrasy
 		}
 		return wynik;
 	}
+	/*
 	void generateRelationWithoutIdVersion(set <long long>& changeNodes, set <long long>& changeWays, relation& rel)
 	{
 		string typ_maly=nazwa_mala(nazwa);
@@ -441,6 +443,18 @@ struct galk
 			tags["to"]=to;
 			tags["name"]=nazwa_duza(nazwa)+" "+nazwa+": "+from+" => "+to;
 			tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
+			/*vector <string> miasta = miejscowosci(bazaZtm->dane_linia[nazwa][i];
+			string via;
+			for(int i=1; i<(miasta.size()-1); i++)
+			{
+				via+=miasta[i];
+				if(i<(miasta.size()-2))
+					via+=", ";
+			}*/
+			if(via!="")
+			{
+				tags["via"]=via;
+			}
 			addTags(tags, plik);
 			plik<<"\"track\":[";
 			for(int j=0; j<wariant.size(); j++)
@@ -453,15 +467,20 @@ struct galk
 			plik<<",\"members\":[";
 			for(int j=0; j<wariant.size(); j++)
 			{
+				string dopisek="";
+				if(j==0)
+					dopisek="_entry_only";
+				if(j==wariant.size()-1)
+					dopisek="_exit_only";
 				if(osmStopData[wariant[j]].bus_stop!=0)
-					addMember(j, "N", osmStopData[wariant[j]].bus_stop, "stop", plik);
+					addMember(j, "N", osmStopData[wariant[j]].bus_stop, "stop"+dopisek, plik);
 				else if(osmStopData[wariant[j]].stop_position!=0)
-					addMember(j, "N", osmStopData[wariant[j]].stop_position, "stop", plik);
+					addMember(j, "N", osmStopData[wariant[j]].stop_position, "stop"+dopisek, plik);
 				if(osmStopData[wariant[j]].platform!=0)
 				{
 					string type="";
 					type+=osmStopData[wariant[j]].platform_type;
-					addMember(1, type, osmStopData[wariant[j]].platform, "platform", plik);
+					addMember(1, type, osmStopData[wariant[j]].platform, "platform"+dopisek, plik);
 				}
 			}
 			plik<<"]}";
@@ -477,7 +496,11 @@ struct galk
 		map <string, string> tags;
 		tags["type"] = "route_master";
 		tags["ref"] = nazwa;
+		tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
 		tags["name"] = nazwa_duza(nazwa)+" "+nazwa;
+		tags["type"] = "route_master";
+		tags["url"] = "http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+nazwa;
+		tags["route_master"] = nazwa_mala(nazwa);
 		tags["network"] = "ZTM Warszawa";
 		plik<<",{\"id\":"<<stareId<<","<<endl;
 		addTags(tags, plik);

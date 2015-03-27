@@ -186,19 +186,19 @@ var RelationMember = function (root, memberData)
 	addOption(this.category, "R", ("R"==memberData.category));
 	this.osmId = document.createElement("INPUT");
 	this.osmId.type="text";
-	var role = document.createElement("INPUT");
-	role.type="text";
+	this.role = document.createElement("INPUT");
+	this.role.type="text";
 	this.div.appendChild(this.category);
 	this.div.appendChild(this.osmId);
-	this.div.appendChild(role);
+	this.div.appendChild(this.role);
 	this.category.value = memberData.category;
 	this.osmId.value = memberData.id;
-	role.value = memberData.role;
+	this.role.value = memberData.role;
 	root.div.appendChild(this.div);
 }
 RelationMember.prototype.getPair = function()
 {
-	return {category: this.category.options[this.category.selectedIndex].value, id: this.osmId.value};
+	return {category: this.category.options[this.category.selectedIndex].value, id: this.osmId.value, role: this.role.value};
 }
 
 
@@ -346,7 +346,6 @@ var Relation = function(root, relation)
 	this.relLink.onclick = function()
 	{
 		this.root.addTrack();
-		console.log(JSON.stringify(this.root.getJSON()));
 	}	
 	this.div.appendChild(this.relLink);
 	
@@ -410,11 +409,28 @@ Relation.prototype.addTrack = function()
 	this.podswietl();
 	aktRelacja = this.relacja;
 }
+var wszystkieRelacje = [];
+var allJSON = function()
+{
+	var wynik = [];
+	for(var i=0; i<wszystkieRelacje.length; i++)
+	{
+		wynik[i]=wszystkieRelacje[i].getJSON();
+	}
+	return wynik;
+}
 for(var i=0; i<tablica.length; i++)
 {
 	var gowno = new Relation({div : document.body}, tablica[i]);
+	wszystkieRelacje [i] = gowno;
 	gowno.addTrack();
 }
+$(document).ready(function(){
+var but = document.getElementById("generalbutton");
+but.onclick=function()
+{
+		console.log(JSON.stringify(allJSON()));
+}});
 /*
 $(function() {
   $( "#map0" ).resizable({
