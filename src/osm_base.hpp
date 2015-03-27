@@ -238,6 +238,7 @@ struct osm_base
 
 			}
 		}
+		cout<<"ok partit"<<endl;
 		if(partial.size()>1)
 		{
 			for(int i=0; i<partial.size(); i++)
@@ -413,19 +414,42 @@ struct osm_base
 		}
 		*/
 	}
-	osm_base(vector <long long> nodes, string apiAddr)
+	osm_base(set <long long> nodes, set<pair<long long, long long> > pary)
 	{
+		map <long long, int> odwiedzone;
+		for(auto it1 : nodes)
+		{
+			odwiedzone[it1]=2;
+		}
+		string apiAddr = "api.openstreetmap.org/api/";
 		set <long long> nodes_potrzebne;
 		string path = "/tmp/wgetosm.txt";
-		for(int i=0; i<nodes.size(); i++)
+		cout<<"start!"<<endl;
+		for(auto it1 : nodes)
 		{
-			string nd;
-			stringstream xd;
-			xd<<nodes[i];
-			xd>>nd;
-			string pol ="wget http://"+apiAddr+"0.6/node/"+nd+"/ways -O "+path;
-			system(pol.c_str());
-			load_ways(path, nodes_potrzebne);
+			if(odwiedzone[it1]>0)
+			{
+				string nd;
+				stringstream xd;
+				xd<<it1;
+				xd>>nd;
+				string pol ="wget http://"+apiAddr+"0.6/node/"+nd+"/ways -O "+path;
+				system(pol.c_str());
+				vector <long long> ndd = load_ways(path, nodes_potrzebne);
+				for(int j=0; j<ndd.size(); j++)
+				{
+					vector <long long> nodes2 = ways[ndd[j]].nodes;
+					for(int g=0; g<nodes2.size()-1; g++)
+					{
+						if(pary.find(make_pair(nodes2[g], nodes2[g+1]))!=pary.end())
+						{
+							pary.erase(pary.find(make_pair(nodes2[g], nodes2[g+1])));
+							odwiedzone[nodes2[g]]--;
+							odwiedzone[nodes2[g+1]]--;
+						}
+					}
+				}
+			}
 		}
 		for(auto it1 : ways)
 		{
@@ -433,22 +457,13 @@ struct osm_base
 			stringstream xd;
 			xd<<it1.first;
 			xd>>nd;
-			string pol ="wget http://"+apiAddr+"0.6/way/"+nd+"/relations -O "+path;
+			string pol ="wget http://"+apiAddr+"0.6/way/"+nd+"/full -O "+path;
+			system(pol.c_str());
+			load_nodes(path, nodes_potrzebne);
+			pol ="wget http://"+apiAddr+"0.6/way/"+nd+"/relations -O "+path;
 			system(pol.c_str());
 			load_relations(path);
 		}
-		bool ok=0;
-		stringstream potrzebne;
-		for(auto it1 : nodes_potrzebne)
-		{
-			if(ok)
-				potrzebne<<",";
-			potrzebne<<it1;
-			ok=1;
-		}
-		string pol ="wget http://"+apiAddr+"0.6/nodes?nodes="+potrzebne.str()+" -O "+path;
-		system(pol.c_str());
-		load_nodes(path, nodes_potrzebne);
 	}
 	
 	private:
@@ -596,8 +611,9 @@ struct osm_base
 				foo.lon=fromstring<double>(ins.GetAttributeAt(i).Value);
 		}
 	}
-	void load_ways(string sciezka, set <long long>& nodes_potrzebne)
+	vector <long long> load_ways(string sciezka, set <long long>& nodes_potrzebne)
 	{
+		vector <long long> wynik;
 		Xml::Inspector<Xml::Encoding::Utf8Writer> inspector(sciezka.c_str());
 		while (inspector.Inspect())
 		{
@@ -626,6 +642,7 @@ struct osm_base
 								if(dodaj)
 								{
 									foo.setTags(tags);
+									wynik.push_back(foo.id);
 									ways[foo.id]=foo;
 									for(int i=0; i<foo.nodes.size(); i++)
 									{
@@ -645,6 +662,7 @@ struct osm_base
 				}
 			}
 		}
+		return wynik;
 	}
 	void load_nodes(string sciezka, set <long long>& nodes_potrzebne)
 	{
