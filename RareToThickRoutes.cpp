@@ -1,9 +1,21 @@
+#include "src/sciezka1.hpp"
 #include "src/dij_data.hpp"
 #include "src/dijkstra.hpp"
 #include "fcgi_stdio.h"
 void wypisz(stringstream& lol)
 {
 	printf("%s", lol.str().c_str());
+}
+string lel()
+{
+	string wynik;
+	int alfa=FCGI_fgetc(FCGI_stdin);
+	while(alfa>0)
+	{
+		wynik+=(char)(alfa);
+		alfa=FCGI_fgetc(FCGI_stdin);
+	}
+	return wynik;
 }
 map <string, string> mapaenv()
 {
@@ -38,11 +50,28 @@ int main(int argc, char** argv)
 	dij.laduj_dijkstra_from_base(&bazaOsm);
 	while(FCGI_Accept() >= 0)
 	{
-		cout<<"elo"<<endl;
 		stringstream wyp;
 		wyp.precision(9);
-		wyp<<"Content-type: application/json\n\n";
 		map<string, string>env=mapaenv();
+		if(env.size()==0)
+		{
+			wyp<<"Content-type: application/txt\n\n";
+			int t =time(NULL);
+			stringstream xyz;
+			xyz<<t;
+			string sp="";
+			string scie = SCIEZKA1+sp+"/www/"+xyz.str()+".json";
+			fstream plik(scie, ios::out | ios::trunc);
+			plik<<lel()<<endl;
+			plik.close();
+			wyp<<time(NULL)<<endl;
+			wypisz(wyp);
+			string pol  = SCIEZKA1+sp+"/testparse "+xyz.str();
+			system(pol.c_str());
+		}
+		else
+		{
+		wyp<<"Content-type: application/json\n\n";
 		if(env.find("y")!=env.end() || env.find("val")!=env.end())
 		{
 			double wynik=1000000;
@@ -90,6 +119,7 @@ int main(int argc, char** argv)
 			}
 			wyp<<"]";
 			wypisz(wyp);
+		}
 		}
 	}
 }

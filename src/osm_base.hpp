@@ -759,6 +759,20 @@ struct osm_base
 		system(pol.c_str());
 		load_relations(path);
 	}
+	public:
+	void load_relation(long long relation_id)
+	{
+		stringstream ddd;
+		ddd<<relation_id;
+		string nd;
+		ddd>>nd;
+		string path = "/tmp/wgetosm.txt";
+		string apiAddr = "api.openstreetmap.org/api/";
+		string pol ="wget http://"+apiAddr+"0.6/relation/"+nd+" -O "+path;
+		system(pol.c_str());
+		load_relations(path);
+	}
+	private:
 	void load_relations(string sciezka)
 	{
 		Xml::Inspector<Xml::Encoding::Utf8Writer> inspector(sciezka.c_str());

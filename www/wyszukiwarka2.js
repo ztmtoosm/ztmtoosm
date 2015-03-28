@@ -437,7 +437,21 @@ $(document).ready(function(){
 var but = document.getElementById("generalbutton");
 but.onclick=function()
 {
-		console.log(JSON.stringify(allJSON()));
+		$.post("/dijkstra", JSON.stringify(allJSON()), function(data, status, xhr){
+	var ndiv = document.createElement("DIV");
+	var a1 = document.createElement("A");
+	var a2 = document.createElement("A");
+	a1.href="/wyszuk/"+data+".osm";
+	a1.innerHTML="PLIK JOSM";
+	a2.innerHTML="ZALADUJ JOSM BEZPOSREDNIO";
+	a2.href="localhost:8111/import?url=http%3A%2F%2Fvps134914.ovh.net%2Fwyszuk%2F"+data+".osm";
+	ndiv.appendChild(a1);
+	ndiv.innerHTML+="<br>";
+	ndiv.appendChild(a2);
+	document.body.appendChild(ndiv);
+	console.log(data);	
+		});
+	this.value = "CZEKAJ";
 }});
 /*
 $(function() {

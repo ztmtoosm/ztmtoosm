@@ -1,3 +1,4 @@
+#include"src/sciezka1.hpp"
 #include<sys/types.h>
 #include<dirent.h>
 #include<unistd.h>
@@ -87,7 +88,7 @@ vector <relation_member> getMembers (Value& members)
 
 struct Generator
 {
-	Generator(Value& v)
+	Generator(Value& v, string tim)
 	{
 		set<pair<long long, long long> > pary;
 		map <long long, relation> tempRel;
@@ -124,6 +125,11 @@ struct Generator
 		Szkielet szkielet(&baza);
 		for(auto& it1 : tempRel)
 		{
+			if(it1.first>0)
+			{
+				baza.load_relation(it1.first);
+				it1.second.version=baza.relations[it1.first].version;
+			}
 			baza.relations[it1.first] = it1.second;
 		}
 		for(auto& it1 : tempTracks)
@@ -138,18 +144,19 @@ struct Generator
 				baza.relations[it1.first].members.push_back(foo);
 			}
 		}
-		baza.wypisz("www/nxx.osm");
+		stringstream pagename;
+		pagename<<SCIEZKA1<<"/www/"<<tim<<".osm";
+		baza.wypisz(pagename.str());
 	}
 };
 
-int main()
+int main(int argc, char** argv)
 {
 	string lol;
 	stringstream pagename;
-	pagename<<"xdd.txt";
+	pagename<<SCIEZKA1<<"/www/"<<argv[1]<<".json";
 	std::ifstream t(pagename.str().c_str());
 	std::string str;
-
 	t.seekg(0, std::ios::end);   
 	lol.reserve(t.tellg());
 	t.seekg(0, std::ios::beg);
@@ -161,5 +168,6 @@ int main()
 	IStreamWrapper is(stt);
 	Document d;
 	d.ParseStream(is);
-	Generator gen(d);
+	string tim =argv[1];
+	Generator gen(d, tim);
 }
