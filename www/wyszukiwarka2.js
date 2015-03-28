@@ -333,7 +333,12 @@ var Relation = function(root, relation)
 	}
 	this.posrednieHeader.innerHTML = "XXX";
 	this.posrednie.innerHTML = "";
-	this.relId.innerHTML = "Relacja id: "+relation.id;
+	var textDe ="";
+	if(relation.todelete==true)
+	{
+		textDe = "DO USUNIĘCIA ";
+	}
+	this.relId.innerHTML = "Relacja "+textDe+"id: "+relation.id;
 	this.div.appendChild(this.relId);
 	this.div.appendChild(this.posrednieHeader);
 	this.div.appendChild(this.posrednie);
@@ -357,7 +362,10 @@ Relation.prototype.getJSON = function()
 {
 	var tags = this.tags.getTags();
 	var members = this.members.getTags();
-	return {id : this.relation.id, finaltrack : this.relacja.getTrackPoints(), tags: tags, members: members};
+	var todelete = false;
+	if(this.relation.todelete==true)
+		todelete=true;
+	return {todelete : todelete, id : this.relation.id, finaltrack : this.relacja.getTrackPoints(), tags: tags, members: members};
 }
 Relation.prototype.updatePosrednie = function()
 {

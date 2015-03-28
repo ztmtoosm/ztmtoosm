@@ -55,11 +55,13 @@ map <string, string> getTags(Value& tags)
 
 vector <long long> getFinalTrack (Value& track)
 {
+	cout<<"--x"<<endl;
 	vector <long long> wynik;
 	for(int i=0; i<track[0].Size(); i++)
 	{
 		wynik.push_back(track[0][i].GetInt64());
 	}
+	cout<<wynik.size()<<endl;
 	return wynik;
 }
 
@@ -96,6 +98,8 @@ struct Generator
 			long long id = v[i]["id"].GetInt64();
 			cout<<"uuu"<<endl;
 			relation rel;
+			rel.id = id;
+			rel.version = 0;
 			rel.modify = true;
 			rel.setTags(getTags(v[i]["tags"]));
 			cout<<"xxx"<<endl;
@@ -104,12 +108,16 @@ struct Generator
 			tempTracks[id]=getFinalTrack(v[i]["finaltrack"]);
 			cout<<"zzz"<<endl;
 			vector <long long> dupa=getFinalTrack(v[i]["finaltrack"]);
-			for(int j=0; j<dupa.size()-1; j++)
+			cout<<(dupa.size()-1)<<endl;
+			for(int j=0; j<(signed long long)(dupa.size()-1); j++)
 			{
+				cout<<"$"<<j<<" "<<dupa.size()<<endl;
 				pary.insert(make_pair(dupa[j], dupa[j+1]));
 			}
+			cout<<"@"<<endl;
 			cout<<dupa.size()<<endl;
-			allNodes.insert(dupa.begin(), dupa.end());
+			if(dupa.size()>0)
+				allNodes.insert(dupa.begin(), dupa.end());
 			cout<<"xxxx"<<endl;
 		}
 		osm_base baza(allNodes, pary);
@@ -126,11 +134,11 @@ struct Generator
 				relation_member foo;
 				foo.member_id = xD[i];
 				foo.member_type = WAY;
-				foo.role = "route";
+				foo.role = "";
 				baza.relations[it1.first].members.push_back(foo);
 			}
 		}
-		baza.wypisz("ngal.osm");
+		baza.wypisz("www/nxx.osm");
 	}
 };
 

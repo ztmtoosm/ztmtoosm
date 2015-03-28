@@ -27,7 +27,7 @@ set <long long> pustyGen()
 	pusty.insert(4656333);
 	return pusty;
 }
-
+/*
 set <long long> merge(vector <dijkstra* > dij)
 {
 	set <long long> wynik;
@@ -37,7 +37,7 @@ set <long long> merge(vector <dijkstra* > dij)
 	}
 	return wynik;
 }
-
+*/
 /*
 struct WariantTrasy
 {
@@ -434,7 +434,7 @@ struct galk
 			if(i>0)
 				plik<<",";
 			plik<<"{ \"id\":"<<wariantOsmRelId<<","<<endl;
-			plik<<"\"track_type\":"<<nazwa_mala(nazwa)<<","<<endl;
+			plik<<"\"track_type\":\""<<nazwa_mala(nazwa)<<"\","<<endl;
 			tags["ref"]=nazwa;
 			tags["type"]="route";
 			tags["network"]="ZTM Warszawa";
@@ -451,10 +451,10 @@ struct galk
 				if(i<(miasta.size()-2))
 					via+=", ";
 			}*/
-			if(via!="")
+			/*if(via!="")
 			{
 				tags["via"]=via;
-			}
+			}*/
 			addTags(tags, plik);
 			plik<<"\"track\":[";
 			for(int j=0; j<wariant.size(); j++)
@@ -490,7 +490,7 @@ struct galk
 		{
 			for(int i=s1; i<stareRelacje.size(); i++)
 			{
-				plik<<",{\"track\":[],\"members\":[], \"id\":"<<stareRelacje[i]<<"\"tags\":[]}";
+				plik<<",{\"track\":[],\"members\":[], \"id\":"<<stareRelacje[i]<<"\"tags\":[], \"todelete\":true}";
 			}
 		}
 		map <string, string> tags;

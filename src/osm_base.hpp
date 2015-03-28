@@ -241,6 +241,10 @@ struct osm_base
 		cout<<"ok partit"<<endl;
 		if(partial.size()>1)
 		{
+			if(id>0)
+			{
+				load_relations(id);
+			}
 			for(int i=0; i<partial.size(); i++)
 			{
 				way nowa=akt_way;
@@ -416,6 +420,8 @@ struct osm_base
 	}
 	osm_base(set <long long> nodes, set<pair<long long, long long> > pary)
 	{
+		auto pary2 = pary;
+		new_ways=-1;
 		map <long long, int> odwiedzone;
 		for(auto it1 : nodes)
 		{
@@ -423,6 +429,7 @@ struct osm_base
 		}
 		string apiAddr = "api.openstreetmap.org/api/";
 		set <long long> nodes_potrzebne;
+		set <long long> drogi_uwaga;
 		string path = "/tmp/wgetosm.txt";
 		cout<<"start!"<<endl;
 		for(auto it1 : nodes)
@@ -439,11 +446,19 @@ struct osm_base
 				for(int j=0; j<ndd.size(); j++)
 				{
 					vector <long long> nodes2 = ways[ndd[j]].nodes;
-					for(int g=0; g<nodes2.size()-1; g++)
+					for(int g=0; g<(unsigned int)(nodes2.size()-1); g++)
 					{
-						if(pary.find(make_pair(nodes2[g], nodes2[g+1]))!=pary.end())
+						if(pary2.find(make_pair(nodes2[g], nodes2[g+1]))!=pary2.end() || pary2.find(make_pair(nodes2[g+1], nodes2[g]))!=pary2.end())
 						{
-							pary.erase(pary.find(make_pair(nodes2[g], nodes2[g+1])));
+
+							cout<<"ifin4"<<endl;
+							drogi_uwaga.insert(ndd[j]);
+							auto it1=pary.find(make_pair(nodes2[g], nodes2[g+1]));
+							auto it2=pary.find(make_pair(nodes2[g+1], nodes2[g]));
+							if(it1!=pary.end())
+								pary.erase(it1);
+							if(it2!=pary.end())
+								pary.erase(it2);
 							odwiedzone[nodes2[g]]--;
 							odwiedzone[nodes2[g+1]]--;
 						}
@@ -453,16 +468,16 @@ struct osm_base
 		}
 		for(auto it1 : ways)
 		{
-			string nd;
-			stringstream xd;
-			xd<<it1.first;
-			xd>>nd;
-			string pol ="wget http://"+apiAddr+"0.6/way/"+nd+"/full -O "+path;
-			system(pol.c_str());
-			load_nodes(path, nodes_potrzebne);
-			pol ="wget http://"+apiAddr+"0.6/way/"+nd+"/relations -O "+path;
-			system(pol.c_str());
-			load_relations(path);
+			if(drogi_uwaga.find(it1.first)!=drogi_uwaga.end())
+			{
+				string nd;
+				stringstream xd;
+				xd<<it1.first;
+				xd>>nd;
+				string pol ="wget http://"+apiAddr+"0.6/way/"+nd+"/full -O "+path;
+				system(pol.c_str());
+				load_nodes(path, nodes_potrzebne);
+			}
 		}
 	}
 	
@@ -732,6 +747,18 @@ struct osm_base
 			}
 		}
 	}
+	void load_relations(long long way_id)
+	{
+		stringstream ddd;
+		ddd<<way_id;
+		string nd;
+		ddd>>nd;
+		string path = "/tmp/wgetosm.txt";
+		string apiAddr = "api.openstreetmap.org/api/";
+		string pol ="wget http://"+apiAddr+"0.6/way/"+nd+"/relations -O "+path;
+		system(pol.c_str());
+		load_relations(path);
+	}
 	void load_relations(string sciezka)
 	{
 		Xml::Inspector<Xml::Encoding::Utf8Writer> inspector(sciezka.c_str());
@@ -756,7 +783,8 @@ struct osm_base
 								if(dodaj)
 								{
 									foo.setTags(tags);
-									relations[foo.id]=foo;
+									if(relations.find(foo.id)==relations.end())
+										relations[foo.id]=foo;
 								}
 							}
 						}

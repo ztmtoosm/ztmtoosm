@@ -1,43 +1,19 @@
 #include "osm_base.hpp"
+#include "dijkstra.hpp"
 
 struct PunktSzkieletowy
 {
-	//pary way-id, next node-id
-	vector <pair<long long, long long> > wychodzace;
-	vector <pair<long long, long long> > wchodzace;
-	void wypisz (ostream& out)
-	{
-		for(auto it1 : wychodzace)
-		{
-			out<<it1.first<<" "<<it1.second<<endl;
-		}
-		out<<endl;
-		for(auto it1 : wchodzace)
-		{
-			out<<it1.first<<" "<<it1.second<<endl;
-		}
-	}
+	map<long long, long long> wychodzace;
 	void podmien(long long destination, long long new_way)
 	{
-		for(int i=0; i<wychodzace.size(); i++)
-		{
-			if(wychodzace[i].second==destination)
-				wychodzace[i].first=new_way;
-		}
-		for(int i=0; i<wchodzace.size(); i++)
-		{
-			if(wchodzace[i].second==destination)
-				wchodzace[i].first=new_way;
-		}
+		wychodzace[destination]=new_way;
 	}
 	long long getWay(long long destination)
 	{
-		for(auto it1 : wychodzace)
-			if(it1.second==destination)
-				return it1.first;
-		for(auto it1 : wchodzace)
-			if(it1.second==destination)
-				return it1.first;
+		if(wychodzace.find(destination)!=wychodzace.end())
+		{
+			return wychodzace[destination];
+		}
 		return 0;
 	}
 };
@@ -47,17 +23,23 @@ class Szkielet
 	public:
 	map <long long, PunktSzkieletowy> punkty;
 	osm_base* baza;
+	dijkstra dij;
 	Szkielet(osm_base* baza)
 	{
 		this->baza = baza;
 		for(auto& it1 : baza->ways)
 		{
 			long long id = it1.first;
+			auto tags = it1.second.getTags();
+			double wartosc = dij.getPrzelicznikWagiDrog(0, tags);
 			vector <long long> nodes = it1.second.nodes;
-			for(int i=0; i<nodes.size()-1; i++)
+			if(wartosc>0)
 			{
-				punkty[nodes[i]].wychodzace.push_back(make_pair(id, nodes[i+1]));
-				punkty[nodes[i+1]].wchodzace.push_back(make_pair(id, nodes[i]));
+				for(int i=0; i<(nodes.size()-1); i++)
+				{
+					punkty[nodes[i]].wychodzace[nodes[i+1]]=id;
+					punkty[nodes[i+1]].wychodzace[nodes[i]]=id;
+				}
 			}
 		}
 	}
@@ -68,7 +50,7 @@ class Szkielet
 		bool ok = 1;
 		long long aktWay = 0;
 		long long punktStart = 0;
-		for(int i=0; i<posrednie.size()-1 && ok; i++)
+		for(int i=0; i<(signed int)(posrednie.size()-1) && ok; i++)
 		{
 			cout<<"kolejneDrogi - nextWay start"<<endl;
 			long long nextWay = punkty[posrednie[i]].getWay(posrednie[i+1]);
@@ -100,7 +82,7 @@ class Szkielet
 		bool ok = 1;
 		vector <long long> wynik;
 		long long aktWay = 0;
-		for(int i=0; i<posrednie.size()-1 && ok; i++)
+		for(int i=0; i<(signed int)(posrednie.size()-1) && ok; i++)
 		{
 			long long nextWay = punkty[posrednie[i]].getWay(posrednie[i+1]);
 			if(nextWay == 0)
@@ -125,11 +107,17 @@ class Szkielet
 		auto posr1 = kolejneDrogi(posrednie);
 		for(auto& it1 : posr1)
 		{
+			for(auto& it2 : it1.second)
+			{
+				cout<<it2<<" xD ";
+			}
+			cout<<endl;
 			auto posr2 = baza->rozdziel_way(it1.first, it1.second);
 			for(int i=0; i<posr2.size(); i++)
 			{
 				long long id = posr2[i].first;
-				for(int j=0; j<posr2[i].second.size()-1; j++)
+				cout<<"ROZDZIEL ID "<<id<<endl;
+				for(int j=0; j<(signed int)(posr2[i].second.size()-1); j++)
 				{
 					long long f1 = posr2[i].second[j];
 					long long f2 = posr2[i].second[j+1];
@@ -137,15 +125,8 @@ class Szkielet
 					punkty[f2].podmien(f1, id);
 				}
 			}
+			cout<<"$$$$"<<endl;
 		}
 		return kolejneDrogi2(posrednie);
-	}
-	void wypisz(ostream& out)
-	{
-		for(auto& it1 : punkty)
-		{
-			out<<it1.first<<"------"<<endl;
-			it1.second.wypisz(out);
-		}
 	}
 };
