@@ -175,20 +175,30 @@ var addOption = function (root, value, selected)
 	}
 }
 
+var addSelect = function (root, values, selected)
+{
+	var cat = document.createElement("SELECT");
+	root.appendChild(cat);
+	for(var i=0; i<values.length; i++)
+	{
+		addOption(cat, values[i], (values[i]==selected));
+	}
+	return cat;
+}
+
 var RelationMember = function (root, memberData)
 {
 	this.div = document.createElement("DIV");
 	this.div.className="relationmember";
-	this.category = document.createElement("SELECT");
+	this.category = addSelect(this.div, ["N", "W", "R"], memberData.category);
 	this.category.className="membercategory";
-	addOption(this.category, "N", ("N"==memberData.category));
-	addOption(this.category, "W", ("W"==memberData.category));
-	addOption(this.category, "R", ("R"==memberData.category));
+	//addOption(this.category, "N", ("N"==memberData.category));
+	//addOption(this.category, "W", ("W"==memberData.category));
+//	addOption(this.category, "R", ("R"==memberData.category));
 	this.osmId = document.createElement("INPUT");
 	this.osmId.type="text";
 	this.role = document.createElement("INPUT");
 	this.role.type="text";
-	this.div.appendChild(this.category);
 	this.div.appendChild(this.osmId);
 	this.div.appendChild(this.role);
 	this.category.value = memberData.category;
@@ -239,7 +249,7 @@ var Members = function (root, members)
 {
 	this.divCore = document.createElement("DIV");
 	this.showMore = document.createElement("A");
-	this.showMore.innerHTML = "Dodadkowi członkowie - pokaż";
+	this.showMore.innerHTML = "Dodatkowi członkowie - pokaż";
 	this.showMore.showed = false;
 	this.showMore.href="javascript:void(0)";
 	this.showMore.root=this;
@@ -311,6 +321,7 @@ var Relation = function(root, relation)
 	this.relation = relation;
 	this.div = document.createElement("DIV");
 	this.div.className="relation";
+	this.track_type = addSelect(this.div, ["bus"], relation.track_type);
 	this.relId = document.createElement("DIV");
 	this.posrednie = document.createElement("DIV");
 	$(this.posrednie).hide();
@@ -340,23 +351,24 @@ var Relation = function(root, relation)
 	}
 	this.relId.innerHTML = "Relacja "+textDe+"id: "+relation.id;
 	this.div.appendChild(this.relId);
-	this.div.appendChild(this.posrednieHeader);
+	//this.div.appendChild(this.posrednieHeader);
 	this.div.appendChild(this.posrednie);
 	this.relacja = null;
 	this.relLink = document.createElement("A");
 	this.relLink.root = this;
-	this.relLink.innerHTML="pokaż trasę";
-// - punkty pośrednie: "+relation.track.length;
-	this.relLink.href="javascript:void(0)";
-	this.relLink.onclick = function()
+	if(relation.todelete!=true)
 	{
-		this.root.addTrack();
-	}	
-	this.div.appendChild(this.relLink);
-	
+		this.relLink.innerHTML="pokaż trasę";
+		this.relLink.href="javascript:void(0)";
+		this.relLink.onclick = function()
+		{	
+			this.root.addTrack();
+		}	
+		this.div.appendChild(this.relLink);
+		this.tags = new Tags(this, relation.tags);
+		this.members = new Members(this, relation.members);
+	}
 	root.div.appendChild(this.div);
-	this.tags = new Tags(this, relation.tags);
-	this.members = new Members(this, relation.members);
 }
 Relation.prototype.getJSON = function()
 {
@@ -443,8 +455,10 @@ but.onclick=function()
 	var a2 = document.createElement("A");
 	a1.href="/wyszuk/"+data+".osm";
 	a1.innerHTML="PLIK JOSM";
+	a1.target="_blank";
 	a2.innerHTML="ZALADUJ JOSM BEZPOSREDNIO";
 	a2.href="localhost:8111/import?url=http%3A%2F%2Fvps134914.ovh.net%2Fwyszuk%2F"+data+".osm";
+	a2.target="_blank";
 	ndiv.appendChild(a1);
 	ndiv.innerHTML+="<br>";
 	ndiv.appendChild(a2);

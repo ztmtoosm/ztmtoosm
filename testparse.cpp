@@ -94,32 +94,33 @@ struct Generator
 		map <long long, relation> tempRel;
 		map <long long, vector <long long> > tempTracks;
 		set <long long> allNodes;
+		set <long long> toDel;
 		for(int i=0; i<v.Size(); i++)
 		{
-			long long id = v[i]["id"].GetInt64();
-			cout<<"uuu"<<endl;
-			relation rel;
-			rel.id = id;
-			rel.version = 0;
-			rel.modify = true;
-			rel.setTags(getTags(v[i]["tags"]));
-			cout<<"xxx"<<endl;
-			rel.members = getMembers(v[i]["members"]);
-			tempRel[id]=rel;
-			tempTracks[id]=getFinalTrack(v[i]["finaltrack"]);
-			cout<<"zzz"<<endl;
-			vector <long long> dupa=getFinalTrack(v[i]["finaltrack"]);
-			cout<<(dupa.size()-1)<<endl;
-			for(int j=0; j<(signed long long)(dupa.size()-1); j++)
+			if(v[i]["todelete"]!=NULL && v[i]["todelete"].GetBool())
 			{
-				cout<<"$"<<j<<" "<<dupa.size()<<endl;
-				pary.insert(make_pair(dupa[j], dupa[j+1]));
+				toDel.insert(v[i]["id"].GetInt64());	
 			}
-			cout<<"@"<<endl;
-			cout<<dupa.size()<<endl;
-			if(dupa.size()>0)
-				allNodes.insert(dupa.begin(), dupa.end());
-			cout<<"xxxx"<<endl;
+			else
+			{
+				long long id = v[i]["id"].GetInt64();
+				relation rel;
+				rel.id = id;
+				rel.version = 0;
+				rel.modify = true;
+				rel.setTags(getTags(v[i]["tags"]));
+				rel.members = getMembers(v[i]["members"]);
+				tempRel[id]=rel;
+				tempTracks[id]=getFinalTrack(v[i]["finaltrack"]);
+				vector <long long> dupa=getFinalTrack(v[i]["finaltrack"]);
+				cout<<(dupa.size()-1)<<endl;
+				for(int j=0; j<(signed long long)(dupa.size()-1); j++)
+				{
+					pary.insert(make_pair(dupa[j], dupa[j+1]));
+				}
+				if(dupa.size()>0)
+					allNodes.insert(dupa.begin(), dupa.end());
+			}
 		}
 		osm_base baza(allNodes, pary);
 		Szkielet szkielet(&baza);
@@ -131,6 +132,11 @@ struct Generator
 				it1.second.version=baza.relations[it1.first].version;
 			}
 			baza.relations[it1.first] = it1.second;
+		}
+		for(auto& it1 : toDel)
+		{
+			baza.load_relation(it1);
+			baza.relations[it1].todelete=true;
 		}
 		for(auto& it1 : tempTracks)
 		{

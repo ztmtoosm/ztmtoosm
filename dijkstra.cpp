@@ -490,7 +490,7 @@ struct galk
 		{
 			for(int i=s1; i<stareRelacje.size(); i++)
 			{
-				plik<<",{\"track\":[],\"members\":[], \"id\":"<<stareRelacje[i]<<"\"tags\":[], \"todelete\":true}";
+				plik<<",{\"track\":[],\"members\":[], \"id\":"<<stareRelacje[i]<<",\"tags\":[], \"todelete\":true}";
 			}
 		}
 		map <string, string> tags;

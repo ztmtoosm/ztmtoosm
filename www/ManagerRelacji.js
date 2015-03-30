@@ -20,7 +20,7 @@ var ManagerRelacji = function ()
         target: 'map',
         layers: [
           new ol.layer.Tile({
-            source: new ol.source.OSM({url: " http://a.tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", crossOrigin: null})
+            source: new ol.source.OSM({url: "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png", crossOrigin: null})
           }), these.layerLines, these.layerLines2, these.layerLines3],
         view: new ol.View({
           center: ol.proj.transform([21.05, 52.23], 'EPSG:4326', 'EPSG:3857'),
