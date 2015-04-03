@@ -183,6 +183,15 @@ struct relation : every_member
 	relation() : every_member()
 	{
 	}
+	bool szukajRel(long long id)
+	{
+		for(auto& it1 : members)
+		{
+			if(it1.member_type==RELATION && it1.member_id==id)
+				return true;
+		}
+		return false;
+	}
 };
 
 struct osm_base
@@ -226,16 +235,19 @@ struct osm_base
 		int s1=akt_way.nodes.size();
 		for(int i=0; i<s1; i++)
 		{
-			partial[partial.size()-1].second.push_back(akt_way.nodes[i]);
-			if(i!=0 && i!=s1-1)
+			if(partial.size()>0)
 			{
-				if(rozdzielacze.find(akt_way.nodes[i])!=rozdzielacze.end())
+				partial[partial.size()-1].second.push_back(akt_way.nodes[i]);
+				if(i!=0 && i!=s1-1)
 				{
-					partial.push_back(pair<long long, vector<long long> >(new_ways, pusty));
-					partial[partial.size()-1].second.push_back(akt_way.nodes[i]);
-					new_ways--;
-				}
+					if(rozdzielacze.find(akt_way.nodes[i])!=rozdzielacze.end())
+					{
+						partial.push_back(pair<long long, vector<long long> >(new_ways, pusty));
+						partial[partial.size()-1].second.push_back(akt_way.nodes[i]);
+						new_ways--;
+					}
 
+				}
 			}
 		}
 		cout<<"ok partit"<<endl;
@@ -418,21 +430,41 @@ struct osm_base
 		}
 		*/
 	}
-	osm_base(set <long long> nodes, set<pair<long long, long long> > pary)
+	void osmpush(vector <long long> nodes)
 	{
-		auto pary2 = pary;
-		new_ways=-1;
-		map <long long, int> odwiedzone;
+		string path2 = "/tmp/wpushosm.txt";
+		fstream plik(path2.c_str(), ios::out | ios::trunc);
+		plik<<"<osm-script><union>";
 		for(auto it1 : nodes)
 		{
-			odwiedzone[it1]=2;
+			plik<<"<id-query type=\"node\" ref=\""<<it1<<"\"></id-query>"<<endl;
 		}
+		plik<<"</union><recurse type=\"node-way\"/><print mode=\"meta\"/></osm-script>";
+		plik.close();
+	}
+	osm_base(vector <long long> nodes, set<pair<long long, long long> > pary, bool all)
+	{
+		new_ways=-1;
 		string apiAddr = "api.openstreetmap.org/api/";
 		set <long long> nodes_potrzebne;
 		set <long long> drogi_uwaga;
 		string path = "/tmp/wgetosm.txt";
-		cout<<"start!"<<endl;
-		for(auto it1 : nodes)
+		osmpush(nodes);
+		string pol ="wget -O "+path+" --post-file=/tmp/wpushosm.txt http://overpass-api.de/api/interpreter";
+		system(pol.c_str());
+		vector <long long> ndd = load_ways(path, nodes_potrzebne);
+		for(int j=0; j<ndd.size(); j++)
+		{
+			vector <long long> nodes2 = ways[ndd[j]].nodes;
+			for(int g=0; g<(unsigned int)(nodes2.size()-1); g++)
+			{
+				if(pary.find(make_pair(nodes2[g], nodes2[g+1]))!=pary.end() || pary.find(make_pair(nodes2[g+1], nodes2[g]))!=pary.end())
+				{
+					drogi_uwaga.insert(ndd[j]);
+				}
+			}
+		}
+		/*for(auto it1 : nodes)
 		{
 			if(odwiedzone[it1]>0)
 			{
@@ -440,6 +472,7 @@ struct osm_base
 				stringstream xd;
 				xd<<it1;
 				xd>>nd;
+				cout<<"SIEJBIK "<<nd<<endl;
 				string pol ="wget http://"+apiAddr+"0.6/node/"+nd+"/ways -O "+path;
 				system(pol.c_str());
 				vector <long long> ndd = load_ways(path, nodes_potrzebne);
@@ -448,7 +481,7 @@ struct osm_base
 					vector <long long> nodes2 = ways[ndd[j]].nodes;
 					for(int g=0; g<(unsigned int)(nodes2.size()-1); g++)
 					{
-						if(pary2.find(make_pair(nodes2[g], nodes2[g+1]))!=pary2.end() || pary2.find(make_pair(nodes2[g+1], nodes2[g]))!=pary2.end())
+						if(pary.find(make_pair(nodes2[g], nodes2[g+1]))!=pary.end() || pary.find(make_pair(nodes2[g+1], nodes2[g]))!=pary.end())
 						{
 
 							cout<<"ifin4"<<endl;
@@ -464,8 +497,9 @@ struct osm_base
 						}
 					}
 				}
+				odwiedzone[it1] = 0;
 			}
-		}
+		}*/
 		for(auto it1 : ways)
 		{
 			if(drogi_uwaga.find(it1.first)!=drogi_uwaga.end())

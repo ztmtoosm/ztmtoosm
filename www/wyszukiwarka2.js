@@ -132,37 +132,27 @@ var managerRelacji = new ManagerRelacji();
 
 var parFff = getQueryParams(document.location.search);
 console.log(parFff.linia);
-var tablica;
+var tablica = [];
 if(parFff.linia!=undefined)
 {
-	console.log(punktId(parFff.linia));
-	tablica = loadJSON(lineRou(parFff.linia));
-	//rrr = new Relacja(managerRelacji, tablica);
+	var tablicatmp = loadJSON(lineRou(parFff.linia));
+	for(var i=0; i<tablicatmp.length; i++)
+		tablica[tablica.length]=tablicatmp[i];
 }
-else
+if(parFff.linia1!=undefined)
 {
-//	rrr = new Relacja(managerRelacji);
+	var tablicatmp = loadJSON(lineRou(parFff.linia1));
+	for(var i=0; i<tablicatmp.length; i++)
+		tablica[tablica.length]=tablicatmp[i];
+}
+if(parFff.linia2!=undefined)
+{
+	var tablicatmp = loadJSON(lineRou(parFff.linia2));
+	for(var i=0; i<tablicatmp.length; i++)
+		tablica[tablica.length]=tablicatmp[i];
 }
 
 console.log(tablica);
-var KeyValue = function (root, kv)
-{
-	this.div = document.createElement("DIV");
-	this.div.className="keyvalue";
-	this.key = document.createElement("INPUT");
-	this.key.type="text";
-	this.value = document.createElement("INPUT");
-	this.value.type="text";
-	this.div.appendChild(this.key);
-	this.div.appendChild(this.value);
-	this.key.value = kv.key;
-	this.value.value = kv.value;
-	root.div.appendChild(this.div);
-}
-KeyValue.prototype.getPair = function()
-{
-	return {key: this.key.value, value : this.value.value};
-}
 var addOption = function (root, value, selected)
 {
 	var option = document.createElement("OPTION");
@@ -183,9 +173,49 @@ var addSelect = function (root, values, selected)
 	{
 		addOption(cat, values[i], (values[i]==selected));
 	}
+	cat.getVal=function()
+	{
+		return this.options[this.selectedIndex].value;
+	}
 	return cat;
 }
+function typeOf (obj) {
+  return {}.toString.call(obj).split(' ')[1].slice(0, -1).toLowerCase();
+}
+var KeyValue = function (root, kv, types)
+{
+	this.div = document.createElement("DIV");
+	this.div.className="keyvalue";
+	this.vals = [];
+	for(var i=0; i<kv.length; i++)
+	{
+		if(typeOf(types[i])=="array")
+		{
+			this.vals[i]=addSelect(this.div, types[i], kv[i]);
+		}
+		else
+		{
+			var nowy = document.createElement("INPUT");
+			nowy.type="text";
+			nowy.getVal=function(){return this.value;};
+			this.div.appendChild(nowy);
+			nowy.value = kv[i];
+			this.vals[i]=nowy;
+		}
+	}
+	root.div.appendChild(this.div);
+}
+KeyValue.prototype.getPair = function()
+{
+	var wyniki = [];
+	for(var i=0; i<this.vals.length; i++)
+	{
+		wyniki[i]=this.vals[i].getVal();
+	}
+	return wyniki;
+}
 
+/*
 var RelationMember = function (root, memberData)
 {
 	this.div = document.createElement("DIV");
@@ -210,7 +240,7 @@ RelationMember.prototype.getPair = function()
 {
 	return {category: this.category.options[this.category.selectedIndex].value, id: this.osmId.value, role: this.role.value};
 }
-
+*/
 
 var Tags = function (root, tags)
 {
@@ -224,7 +254,50 @@ var Tags = function (root, tags)
 	addTag.root=this;
 	addTag.onclick=function()
 	{
-		this.root.keyValues[this.root.keyValues.length] = new KeyValue(this.root, {key:"", value:""});
+		this.root.keyValues[this.root.keyValues.length] = new KeyValue(this.root, ["", ""], ["", ""]);
+	}
+	this.keyValues = [];
+	this.div.appendChild(addTag);
+	for(var i=0; i<tags.length; i++)
+	{
+		var tmp = new KeyValue(this, [tags[i].key, tags[i].value], ["", ""]);
+		this.keyValues[i] = tmp;
+	}
+}
+Tags.prototype.getTags = function()
+{
+	var wynik = [];
+	for(var i=0; i<this.keyValues.length; i++)
+	{
+		var w1=this.keyValues[i].getPair();
+		wynik[i]={key: w1[0], value: w1[1]};
+	}
+	return wynik;
+}
+/*
+var ParentRelations = function (root, rels)
+{
+	this.div = document.createElement("DIV");
+	root.div.appendChild(this.div);
+	this.parentRel = [];
+	for(var i=0; i<rels.length; i++)
+	{
+		var addTag = document.createElement("INPUT");
+		addTag.type="text";
+		addTag.value=rels[i];
+		this.div.appendChild(addTag);
+		this.parentRel[i]=addTag;
+	}
+	this.but = document.createElement("INPUT");
+	this.but.type = "submit";
+	this.but.root=this;
+	this.but.onclick=function()
+	{
+		var addTag = document.createElement("INPUT");
+		addTag.type="text";
+		addTag.value=rels[i];
+		this.div.appendChild(addTag);
+		this.root.parentRel[this.root.parentRel.length]=addTag;
 	}
 	this.keyValues = [];
 	this.div.appendChild(addTag);
@@ -234,7 +307,7 @@ var Tags = function (root, tags)
 		this.keyValues[i] = tmp;
 	}
 }
-Tags.prototype.getTags = function()
+ParentRelations.prototype.getTags = function()
 {
 	var wynik = [];
 	for(var i=0; i<this.keyValues.length; i++)
@@ -243,14 +316,18 @@ Tags.prototype.getTags = function()
 	}
 	return wynik;
 }
-
-
-var Members = function (root, members)
+*/
+var Members = function (root, text, text2, show)
 {
+	this.text = text;
+	this.text2 = text2;
 	this.divCore = document.createElement("DIV");
 	this.showMore = document.createElement("A");
-	this.showMore.innerHTML = "Dodatkowi członkowie - pokaż";
-	this.showMore.showed = false;
+	if(show)
+		this.showMore.innerHTML = text+" - ukruj";
+	else
+		this.showMore.innerHTML = text+" - pokaż";
+	this.showMore.showed = show;
 	this.showMore.href="javascript:void(0)";
 	this.showMore.root=this;
 	this.divDoUkrycia = document.createElement("DIV");
@@ -262,28 +339,29 @@ var Members = function (root, members)
 	this.divCore.appendChild(this.divDoUkrycia);
 	this.div.appendChild(header);
 	this.divDoUkrycia.appendChild(this.div);
-	$(this.divDoUkrycia).hide();
+	if(!show)
+		$(this.divDoUkrycia).hide();
 	var addMember = document.createElement("INPUT");
 	addMember.type="submit";
 	addMember.id="nowytag";
-	addMember.value="nowy członek";
+	addMember.value=text2;
 	addMember.root=this;
 	addMember.onclick=function()
 	{
-		this.root.memberValues[this.root.memberValues.length] = new RelationMember(this.root, {role:"", category:"", id:""});
+		this.root.memberValues[this.root.memberValues.length] = new KeyValue(this.root,["N","",""], [["N", "W", "R"],"", ""]);
 	}
 	this.showMore.onclick=function()
 	{
 		if(this.showed)
 		{
 			this.showed = false;
-			this.innerHTML = "Dodadkowi członkowie - pokaż";
+			this.innerHTML = this.root.text+" - pokaż";
 			$(this.root.divDoUkrycia).hide(1000);
 		}
 		else
 		{
 			this.showed = true;
-			this.innerHTML = "Dodadkowi członkowie - ukryj";
+			this.innerHTML = this.root.text+" - ukryj";
 			$(this.root.divDoUkrycia).show(1000);
 		}
 	}
@@ -298,18 +376,18 @@ var Members = function (root, members)
 	header.appendChild(headerrole);
 	this.memberValues = [];
 	this.divDoUkrycia.appendChild(addMember);
-	for(var i=0; i<members.length; i++)
-	{
-		var tmp = new RelationMember(this, members[i]);
-		this.memberValues[i] = tmp;
-	}
 }
-Members.prototype.getTags = function()
+Members.prototype.addMember = function(member, val)
+{
+	this.memberValues[this.memberValues.length] = new KeyValue(this, member, val);
+}
+Members.prototype.getTags = function(fun)
 {
 	var wynik = [];
 	for(var i=0; i<this.memberValues.length; i++)
 	{
-		wynik[i] = this.memberValues[i].getPair();
+		var ww = this.memberValues[i].getPair();
+		wynik[i] = fun(ww);
 	}
 	return wynik;
 }
@@ -365,19 +443,27 @@ var Relation = function(root, relation)
 			this.root.addTrack();
 		}	
 		this.div.appendChild(this.relLink);
-		this.tags = new Tags(this, relation.tags);
-		this.members = new Members(this, relation.members);
+		this.tags = new Members(this, "tagi", "nowy tag", true);
+		for(var i=0; i<relation.tags.length; i++)
+		{
+			this.tags.addMember([relation.tags[i].key, relation.tags[i].value], ["", ""]);
+		}
+		this.members = new Members(this, "dodatkowi członkowie", "nowy członek", false);
+		for(var i=0; i<relation.members.length; i++)
+		{
+			this.members.addMember([relation.members[i].category, relation.members[i].id, relation.members[i].role], [["N", "W", "R"], "", ""]);
+		}
 	}
 	root.div.appendChild(this.div);
 }
 Relation.prototype.getJSON = function()
 {
-	var tags = this.tags.getTags();
-	var members = this.members.getTags();
+	var tags = this.tags.getTags(function(obj){return {key: obj[0], value: obj[1]}});
+	var members = this.members.getTags(function(obj){return {category: obj[0], id: obj[1], role: obj[2]}});
 	var todelete = false;
 	if(this.relation.todelete==true)
 		todelete=true;
-	return {todelete : todelete, id : this.relation.id, finaltrack : this.relacja.getTrackPoints(), tags: tags, members: members};
+	return {parentrel : this.relation.parentrel, todelete : todelete, id : this.relation.id, finaltrack : this.relacja.getTrackPoints(), tags: tags, members: members};
 }
 Relation.prototype.updatePosrednie = function()
 {
@@ -449,23 +535,26 @@ $(document).ready(function(){
 var but = document.getElementById("generalbutton");
 but.onclick=function()
 {
+	if(this.value != "CZEKAJ około 15s")
+	{
 		$.post("/dijkstra", JSON.stringify(allJSON()), function(data, status, xhr){
-	var ndiv = document.createElement("DIV");
-	var a1 = document.createElement("A");
-	var a2 = document.createElement("A");
-	a1.href="/wyszuk/"+data+".osm";
-	a1.innerHTML="PLIK JOSM";
-	a1.target="_blank";
-	a2.innerHTML="ZALADUJ JOSM BEZPOSREDNIO";
-	a2.href="localhost:8111/import?url=http%3A%2F%2Fvps134914.ovh.net%2Fwyszuk%2F"+data+".osm";
-	a2.target="_blank";
-	ndiv.appendChild(a1);
-	ndiv.innerHTML+="<br>";
-	ndiv.appendChild(a2);
-	document.body.appendChild(ndiv);
-	console.log(data);	
-		});
-	this.value = "CZEKAJ";
+		var ndiv = document.createElement("DIV");
+		var a1 = document.createElement("A");
+		var a2 = document.createElement("A");
+		a1.href="/wyszuk/"+data+".osm";
+		a1.innerHTML="PLIK JOSM";
+		a1.target="_blank";
+		a2.innerHTML="ZALADUJ JOSM BEZPOSREDNIO";
+		a2.href="http://localhost:8111/import?url=http%3A%2F%2Fvps134914.ovh.net%2Fwyszuk%2F"+data+".osm";
+		a2.target="_blank";
+		ndiv.appendChild(a1);
+		ndiv.innerHTML+="<br>";
+		ndiv.appendChild(a2);
+		document.body.appendChild(ndiv);
+		console.log(data);	
+			});
+		this.value = "CZEKAJ około 15s";
+	}
 }});
 /*
 $(function() {

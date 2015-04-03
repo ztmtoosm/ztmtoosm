@@ -312,6 +312,22 @@ string zeraWiodace (string jeden)
 	wynik+=jeden;
 	return wynik;
 }
+long long getParentRelation (string name)
+{
+	if(name[0]=='1' || name[0]=='2')
+		return 3651331;
+	if(name[0]=='3')
+		return 3651332;
+	if(name[0]=='4')
+		return 3651328;
+	if(name[0]=='5' || name[0]=='E')
+		return 3651327;
+	if(name[0]=='7' || name[0]=='8')
+		return 3651329;
+	if(name[0]=='N')
+		return 3651326;
+	return 4656333;
+}
 struct galk
 {
 	osm_base* bazaOsm;
@@ -434,7 +450,7 @@ struct galk
 			if(i>0)
 				plik<<",";
 			plik<<"{ \"id\":"<<wariantOsmRelId<<","<<endl;
-			plik<<"\"track_type\":\""<<nazwa_mala(nazwa)<<"\","<<endl;
+			plik<<"\"track_type\":\""<<nazwa_mala(nazwa)<<"\",\"parentrel\":[],"<<endl;
 			tags["ref"]=nazwa;
 			tags["type"]="route";
 			tags["network"]="ZTM Warszawa";
@@ -502,7 +518,7 @@ struct galk
 		tags["url"] = "http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+nazwa;
 		tags["route_master"] = nazwa_mala(nazwa);
 		tags["network"] = "ZTM Warszawa";
-		plik<<",{\"id\":"<<stareId<<","<<endl;
+		plik<<",{\"id\":"<<stareId<<",\"parentrel\":["<<getParentRelation(nazwa)<<"],"<<endl;
 		addTags(tags, plik);
 		plik<<"\"track\":[],\"members\":[";
 		for(int i=0; i<noweRelacje.size(); i++)

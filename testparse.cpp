@@ -66,6 +66,15 @@ vector <long long> getFinalTrack (Value& track)
 	return wynik;
 }
 
+vector <long long> getParentRels (Value& members)
+{
+	vector <long long> wynik;
+	for(int i=0; i<members.Size(); i++)
+	{
+		wynik.push_back(members[i].GetInt64());
+	}
+	return wynik;
+}
 vector <relation_member> getMembers (Value& members)
 {
 	vector <relation_member> wynik;
@@ -88,13 +97,17 @@ vector <relation_member> getMembers (Value& members)
 
 struct Generator
 {
+	bool ok;
 	Generator(Value& v, string tim)
 	{
+		ok=1;
 		set<pair<long long, long long> > pary;
 		map <long long, relation> tempRel;
 		map <long long, vector <long long> > tempTracks;
-		set <long long> allNodes;
+		vector <long long> allNodes;
 		set <long long> toDel;
+		set <long long> parRels;
+		map <long long, vector <long long> > parRels2;
 		for(int i=0; i<v.Size(); i++)
 		{
 			if(v[i]["todelete"]!=NULL && v[i]["todelete"].GetBool())
@@ -111,6 +124,9 @@ struct Generator
 				rel.setTags(getTags(v[i]["tags"]));
 				rel.members = getMembers(v[i]["members"]);
 				tempRel[id]=rel;
+				auto tmp5=getParentRels(v[i]["parentrel"]);
+				parRels.insert(tmp5.begin(), tmp5.end());
+				parRels2[id]=tmp5;
 				tempTracks[id]=getFinalTrack(v[i]["finaltrack"]);
 				vector <long long> dupa=getFinalTrack(v[i]["finaltrack"]);
 				cout<<(dupa.size()-1)<<endl;
@@ -119,11 +135,18 @@ struct Generator
 					pary.insert(make_pair(dupa[j], dupa[j+1]));
 				}
 				if(dupa.size()>0)
-					allNodes.insert(dupa.begin(), dupa.end());
+					allNodes.insert(allNodes.end(), dupa.begin(), dupa.end());
 			}
 		}
-		osm_base baza(allNodes, pary);
+		osm_base baza(allNodes, pary, false);
 		Szkielet szkielet(&baza);
+		for(auto& it1 : parRels)
+		{
+			if(it1>0 && baza.relations.find(it1)==baza.relations.end())
+			{
+				baza.load_relation(it1);
+			}
+		}
 		for(auto& it1 : tempRel)
 		{
 			if(it1.first>0)
@@ -132,6 +155,18 @@ struct Generator
 				it1.second.version=baza.relations[it1.first].version;
 			}
 			baza.relations[it1.first] = it1.second;
+			for(auto& it2 : parRels2[it1.first])
+			{
+				if(!baza.relations[it2].szukajRel(it1.first))
+				{
+					relation_member foo;
+					foo.member_id = it1.first;
+					foo.member_type = RELATION;
+					foo.role = "";
+					baza.relations[it2].members.push_back(foo);
+					baza.relations[it2].modify=true;
+				}
+			}
 		}
 		for(auto& it1 : toDel)
 		{
@@ -153,6 +188,7 @@ struct Generator
 		stringstream pagename;
 		pagename<<SCIEZKA1<<"/www/"<<tim<<".osm";
 		baza.wypisz(pagename.str());
+		ok = szkielet.ok;
 	}
 };
 
@@ -176,4 +212,5 @@ int main(int argc, char** argv)
 	d.ParseStream(is);
 	string tim =argv[1];
 	Generator gen(d, tim);
+	return (int)(gen.ok);
 }

@@ -64,10 +64,13 @@ int main(int argc, char** argv)
 			fstream plik(scie, ios::out | ios::trunc);
 			plik<<lel()<<endl;
 			plik.close();
-			wyp<<time(NULL)<<endl;
-			wypisz(wyp);
 			string pol  = SCIEZKA1+sp+"/testparse "+xyz.str();
-			system(pol.c_str());
+			int wyn=system(pol.c_str());
+			if(wyn!=-1)
+				wyp<<t<<endl;
+			else
+				wyp<<-1<<endl;
+			wypisz(wyp);
 		}
 		else
 		{

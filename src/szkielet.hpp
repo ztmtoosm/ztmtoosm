@@ -21,11 +21,13 @@ struct PunktSzkieletowy
 class Szkielet
 {
 	public:
+	bool ok;
 	map <long long, PunktSzkieletowy> punkty;
 	osm_base* baza;
 	dijkstra dij;
 	Szkielet(osm_base* baza)
 	{
+		ok=1;
 		this->baza = baza;
 		for(auto& it1 : baza->ways)
 		{
@@ -47,7 +49,6 @@ class Szkielet
 	{
 		cout<<"kolejneDrogi - start"<<endl;
 		map <long long, set <long long> > wynik;
-		bool ok = 1;
 		long long aktWay = 0;
 		long long punktStart = 0;
 		for(int i=0; i<(signed int)(posrednie.size()-1) && ok; i++)
@@ -55,7 +56,16 @@ class Szkielet
 			cout<<"kolejneDrogi - nextWay start"<<endl;
 			long long nextWay = punkty[posrednie[i]].getWay(posrednie[i+1]);
 			if(nextWay == 0)
+			{
+				cout<<posrednie[i]<<" "<<punkty[posrednie[i]].wychodzace.size()<<endl;
+				cout<<posrednie[i+1]<<endl;
+				for(auto g : punkty[posrednie[i]].wychodzace)
+				{
+					cout<<g.first<<";"<<g.second<<" ";
+				}
+				cout<<endl;
 				ok = 0;
+			}
 			cout<<"kolejneDrogi - nextWay stop"<<endl;
 			if(nextWay != aktWay)
 			{
@@ -68,7 +78,7 @@ class Szkielet
 				aktWay = nextWay;
 			}
 		}
-		cout<<"kolejneDrogi - pętla stop"<<endl;
+		cout<<"kolejneDrogi - pętla stop "<<ok<<endl;
 		if(aktWay != 0 )
 		{
 			wynik[aktWay].insert(punktStart);
@@ -79,7 +89,6 @@ class Szkielet
 	}
 	vector <long long> kolejneDrogi2 (vector <long long> posrednie)
 	{
-		bool ok = 1;
 		vector <long long> wynik;
 		long long aktWay = 0;
 		for(int i=0; i<(signed int)(posrednie.size()-1) && ok; i++)
