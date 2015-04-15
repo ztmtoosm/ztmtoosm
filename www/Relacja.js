@@ -1,5 +1,8 @@
-var Relacja = function (manager, podstawa)
+var Relacja = function (manager, podstawa, track_type)
 {
+	this.track_type_id = 0;
+	if(track_type == 'tram')
+		this.track_type_id = 1;
 	this.manager = manager;
 	this.tablicaZnacznikow = [];
 	this.tablicaZnacznikowFeatures = [];
@@ -74,7 +77,7 @@ Relacja.prototype.reopen = function() {
 }
 
 Relacja.prototype.wezPolaczenia = function (osmId1, osmId2) {
-	var lacznik = loadJSON(punktySciezka(osmId1, osmId2));
+	var lacznik = loadJSON(punktySciezka(osmId1, osmId2, this.track_type_id));
 	return lacznik;
 }
 

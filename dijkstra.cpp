@@ -314,6 +314,8 @@ string zeraWiodace (string jeden)
 }
 long long getParentRelation (string name)
 {
+	if(name.length()==2)
+		return 3651333;
 	if(name[0]=='1' || name[0]=='2')
 		return 3651331;
 	if(name[0]=='3')
@@ -387,24 +389,24 @@ struct galk
 		}
 
 	}
-	void loadAlgorithms()
+	string jsonEnc (string k)
 	{
-		dijkstra* dijBus = new dijkstra();
-		dijBus->load_permisions();
-		dijBus->laduj_dijkstra_from_base(bazaOsm);
-		DijkstraTram* dijTram = new DijkstraTram();
-		dijTram->laduj_dijkstra_from_base(bazaOsm);
-		DijkstraRail* dijRail = new DijkstraRail();
-		dijRail->laduj_dijkstra_from_base(bazaOsm);
-		algorytmy.push_back(dijBus);
-		algorytmy.push_back(dijTram);
-		algorytmy.push_back(dijRail);
+		string wynik;
+		for(int i=0; i<k.length(); i++)
+		{
+			if(wynik[i]=='"')
+			{
+				wynik+="\\";
+			}
+			wynik+=k[i];
+		}
+		return wynik;
 	}
 	void addTag(int i, string key, string value, fstream& plik)
 	{
 		if(i>0)
 			plik<<",";
-		plik<<"{\"key\":\""<<key<<"\",\"value\":\""<<value<<"\"}";
+		plik<<"{\"key\":\""<<jsonEnc(key)<<"\",\"value\":\""<<jsonEnc(value)<<"\"}";
 	}
 	void addMember(int i, string category, long long id, string role, fstream& plik)
 	{
@@ -602,7 +604,6 @@ struct galk
 		readInput();
 		bazaOsm = new osm_base(osmBasePath);
 		osmStopData = loadOsmStopData(bazaOsm);
-		loadAlgorithms();
 		bazaZtm = new ztmread_for_html (ztmBasePath);
 		if(czyWszystkie)
 			linieDoPrzerobienia=wszystkieLinie(bazaZtm);

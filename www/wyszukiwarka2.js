@@ -34,11 +34,12 @@ function punktId (id)
 	sciezka+='\?val\='+id;
 	return sciezka;
 }
-function punktySciezka (from, to)
+function punktySciezka (from, to, type)
 {
 	var sciezka="/dijkstra";
 	sciezka+='\?from\='+from;
 	sciezka+='\&to\='+to;
+	sciezka+='\&przelicznik\='+type;
 	return sciezka;
 }
 
@@ -399,7 +400,7 @@ var Relation = function(root, relation)
 	this.relation = relation;
 	this.div = document.createElement("DIV");
 	this.div.className="relation";
-	this.track_type = addSelect(this.div, ["bus"], relation.track_type);
+	this.track_type = addSelect(this.div, ["bus", 'tram'], relation.track_type);
 	this.relId = document.createElement("DIV");
 	this.posrednie = document.createElement("DIV");
 	$(this.posrednie).hide();
@@ -463,7 +464,9 @@ Relation.prototype.getJSON = function()
 	var todelete = false;
 	if(this.relation.todelete==true)
 		todelete=true;
-	return {parentrel : this.relation.parentrel, todelete : todelete, id : this.relation.id, finaltrack : this.relacja.getTrackPoints(), tags: tags, members: members};
+	if(this.relation.track_type==undefined)
+		this.relation.track_type="bus";
+	return {track_type: this.relation.track_type, parentrel : this.relation.parentrel, todelete : todelete, id : this.relation.id, finaltrack : this.relacja.getTrackPoints(), tags: tags, members: members};
 }
 Relation.prototype.updatePosrednie = function()
 {
@@ -496,7 +499,7 @@ Relation.prototype.addTrack = function()
 	}
 	else
 	{
-		this.relacja = new Relacja(managerRelacji, this.relation.track);
+		this.relacja = new Relacja(managerRelacji, this.relation.track, this.relation.track_type);
 		this.relacja.handler = this;
 		this.relacja.onChange = function (these)
 		{

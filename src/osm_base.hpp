@@ -442,6 +442,18 @@ struct osm_base
 		plik<<"</union><recurse type=\"node-way\"/><print mode=\"meta\"/></osm-script>";
 		plik.close();
 	}
+	void osmpushWays(vector <long long> ways)
+	{
+		string path2 = "/tmp/wpushosm.txt";
+		fstream plik(path2.c_str(), ios::out | ios::trunc);
+		plik<<"<osm-script><union>";
+		for(auto it1 : ways)
+		{
+			plik<<"<id-query type=\"way\" ref=\""<<it1<<"\"></id-query>"<<endl;
+		}
+		plik<<"</union><union><recurse into=\"x\" type=\"way-node\"/><recurse type=\"way-relation\"/></union><print mode=\"meta\"/></osm-script>";
+		plik.close();
+	}
 	osm_base(vector <long long> nodes, set<pair<long long, long long> > pary, bool all)
 	{
 		new_ways=-1;
@@ -464,55 +476,18 @@ struct osm_base
 				}
 			}
 		}
-		/*for(auto it1 : nodes)
-		{
-			if(odwiedzone[it1]>0)
-			{
-				string nd;
-				stringstream xd;
-				xd<<it1;
-				xd>>nd;
-				cout<<"SIEJBIK "<<nd<<endl;
-				string pol ="wget http://"+apiAddr+"0.6/node/"+nd+"/ways -O "+path;
-				system(pol.c_str());
-				vector <long long> ndd = load_ways(path, nodes_potrzebne);
-				for(int j=0; j<ndd.size(); j++)
-				{
-					vector <long long> nodes2 = ways[ndd[j]].nodes;
-					for(int g=0; g<(unsigned int)(nodes2.size()-1); g++)
-					{
-						if(pary.find(make_pair(nodes2[g], nodes2[g+1]))!=pary.end() || pary.find(make_pair(nodes2[g+1], nodes2[g]))!=pary.end())
-						{
-
-							cout<<"ifin4"<<endl;
-							drogi_uwaga.insert(ndd[j]);
-							auto it1=pary.find(make_pair(nodes2[g], nodes2[g+1]));
-							auto it2=pary.find(make_pair(nodes2[g+1], nodes2[g]));
-							if(it1!=pary.end())
-								pary.erase(it1);
-							if(it2!=pary.end())
-								pary.erase(it2);
-							odwiedzone[nodes2[g]]--;
-							odwiedzone[nodes2[g+1]]--;
-						}
-					}
-				}
-				odwiedzone[it1] = 0;
-			}
-		}*/
+		vector <long long> ways_przerob;
 		for(auto it1 : ways)
 		{
 			if(drogi_uwaga.find(it1.first)!=drogi_uwaga.end())
 			{
-				string nd;
-				stringstream xd;
-				xd<<it1.first;
-				xd>>nd;
-				string pol ="wget http://"+apiAddr+"0.6/way/"+nd+"/full -O "+path;
-				system(pol.c_str());
-				load_nodes(path, nodes_potrzebne);
+				ways_przerob.push_back(it1.first);
 			}
 		}
+		osmpushWays(ways_przerob);
+		system(pol.c_str());
+		set <long long> emp;
+		load_nodes(path, nodes_potrzebne);
 	}
 	
 	private:
@@ -738,6 +713,8 @@ struct osm_base
 							if(tags.find("railway")!=tags.end())
 								dodaj=1;
 							if(tags.find("public_transport")!=tags.end())
+								dodaj=1;
+							if(nodes_potrzebne.empty())
 								dodaj=1;
 							if(nodes_potrzebne.find(foo.id)!=nodes_potrzebne.end())
 								dodaj=1;

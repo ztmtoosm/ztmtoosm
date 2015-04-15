@@ -46,7 +46,10 @@ int main(int argc, char** argv)
 {
 	string osmBasePath = "/ztmtoosm/data/latest.osm";
 	osm_base bazaOsm(osmBasePath);
-	dijkstra dij;
+	vector <Przelicznik*> przeliczniki;
+	przeliczniki.push_back(new PrzelicznikBus());
+	przeliczniki.push_back(new PrzelicznikTram());
+	dijkstra dij(przeliczniki);
 	dij.laduj_dijkstra_from_base(&bazaOsm);
 	while(FCGI_Accept() >= 0)
 	{
@@ -104,14 +107,20 @@ int main(int argc, char** argv)
 		{
 			vector <long long> rareNodes;
 			stringstream al1;
-			al1<<env["from"]<<" "<<env["to"];
+			string przel = env["przelicznik"];
+			if(przel=="")
+				przel="0";
+			al1<<env["from"]<<" "<<env["to"]<<" "<<przel;
 			long long xxx;
 			al1>>xxx;
 			rareNodes.push_back(xxx);
 			al1>>xxx;
 			rareNodes.push_back(xxx);
-			dij_data out(rareNodes, &dij);
+			int przeli;
+			al1>>przeli;
+			dij_data out(rareNodes, &dij, przeli);
 			vector <long long> out2 = out.all_nodes;
+			cout<<przeli<<endl;
 			wyp<<"[";
 			for(int i=0; i<out2.size(); i++)
 			{

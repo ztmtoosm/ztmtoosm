@@ -21,6 +21,7 @@ var ManagerRelacji = function ()
         layers: [
           new ol.layer.Tile({
             source: new ol.source.OSM({url: "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png", crossOrigin: null})
+ //           source: new ol.source.TileWMS({  params: {VERSION: '1.1.1', LAYERS: 'Raster'}, url: "http://mapy.geoportal.gov.pl/wss/service/img/guest/ORTO/MapServer/WMSServer", crossOrigin: null})
           }), these.layerLines, these.layerLines2, these.layerLines3],
         view: new ol.View({
           center: ol.proj.transform([21.05, 52.23], 'EPSG:4326', 'EPSG:3857'),

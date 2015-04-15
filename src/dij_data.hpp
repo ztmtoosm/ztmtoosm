@@ -35,7 +35,7 @@ struct dij_data
 	vector <long long> all_nodes;
 	vector <long long> all_ways;
 	map<long long, set<long long> > split_data;
-	dij_data(vector <long long> stop_nodes, dijkstra* dij)
+	dij_data(vector <long long> stop_nodes, dijkstra* dij, int przelicznikId)
 	{
 		ok=1;
 		vector <way_part_data> dtt;
@@ -44,7 +44,7 @@ struct dij_data
 		{
 			if(ok)
 			{
-			dij->oblicz(stop_nodes[i], stop_nodes[i+1]);
+			dij->oblicz(stop_nodes[i], stop_nodes[i+1], przelicznikId);
 			cout<<"####"<<endl;	
 			punkt* from = dij->punkty[stop_nodes[i]];
 			punkt* destination = dij->punkty[stop_nodes[i+1]];
@@ -92,7 +92,6 @@ struct dij_data
 			}
 			}
 		}
-		cout<<"nie w"<<endl;
 		if(ok)
 		{
 			long long akt_way=-1;

@@ -100,6 +100,7 @@ struct Generator
 	bool ok;
 	Generator(Value& v, string tim)
 	{
+		Przelicznik* przelicznik = NULL;
 		ok=1;
 		set<pair<long long, long long> > pary;
 		map <long long, relation> tempRel;
@@ -116,6 +117,14 @@ struct Generator
 			}
 			else
 			{
+				if(przelicznik==NULL)
+				{
+					string track_type = v[i]["track_type"].GetString();
+					if(track_type=="bus")
+						przelicznik = new PrzelicznikBus();
+					if(track_type=="tram")
+						przelicznik = new PrzelicznikTram();
+				}
 				long long id = v[i]["id"].GetInt64();
 				relation rel;
 				rel.id = id;
@@ -139,7 +148,7 @@ struct Generator
 			}
 		}
 		osm_base baza(allNodes, pary, false);
-		Szkielet szkielet(&baza);
+		Szkielet szkielet(&baza, przelicznik);
 		for(auto& it1 : parRels)
 		{
 			if(it1>0 && baza.relations.find(it1)==baza.relations.end())
