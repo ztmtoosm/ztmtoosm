@@ -1,10 +1,10 @@
 #ifndef OSMAPI
 #define OSMAPI
-#include "../xml/XmlInspector.hpp"
 #include <vector>
 #include <cstring>
 #include <map>
-#include "stringspecial.hpp"
+#include "../xml/XmlInspector.hpp"
+#include "../stringspecial.hpp"
 using namespace std;
 struct every_member
 {
@@ -19,18 +19,14 @@ struct every_member
 	public:
 	bool modify;
 	bool todelete;
-	map<string, string> getTags() const
-	void setTags (map<string, string> tags)
-every_member()
-	every_member(every_member& foo)
-	every_member(const every_member& foo)
-	every_member& operator=(every_member const& foo)
-	~every_member()
+	map<string, string> getTags() const;
+	void setTags (map<string, string> tags);
+	every_member();
+	every_member(every_member& foo);
+	every_member(const every_member& foo);
+	every_member& operator=(every_member const& foo);
+	~every_member();
 };
-
-map <string, int> every_member::kodyKey;
-vector <string> every_member::kodyKey2;
-	
 struct node : every_member
 {
 	double lat;

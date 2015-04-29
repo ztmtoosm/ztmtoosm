@@ -1,7 +1,7 @@
-#include "src/sciezka1.hpp"
-#include "src/dij_data.hpp"
-#include "src/dijkstra.hpp"
 #include "fcgi_stdio.h"
+#include "../../include/sciezka1.hpp"
+#include "../../include/RareToThickRoutes/dij_data.hpp"
+#include "../../include/RareToThickRoutes/dijkstra.hpp"
 void wypisz(stringstream& lol)
 {
 	printf("%s", lol.str().c_str());
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 			fstream plik(scie, ios::out | ios::trunc);
 			plik<<lel()<<endl;
 			plik.close();
-			string pol  = SCIEZKA1+sp+"/testparse "+xyz.str();
+			string pol  = SCIEZKA1+sp+"/bin/testparse "+xyz.str();
 			int wyn=system(pol.c_str());
 			if(wyn!=-1)
 				wyp<<t<<endl;

@@ -1,31 +1,11 @@
-#ifndef ZTMOSMPOR
-#define ZTMOSMPOR
-#include "stringspecial.hpp"
-#include <iostream>
-#include <map>
-#include <sstream>
-#include <algorithm>
-#include <vector>
-#include <cmath>
-#include <fstream>
-#include "osm_base.hpp"
-#include "readztm.hpp"
-using namespace std;
-struct OsmStopData
+#include "../../include/RouteInfoGenerator/ztmosmpor.hpp"
+OsmStopData::OsmStopData()
 {
-	string name;
-	long long stop_position;
-	long long bus_stop;
-	long long platform;
-	char platform_type;
-	OsmStopData()
-	{
-		stop_position = 0;
-		bus_stop = 0;
-		platform = 0;
-		platform_type = 0;
-	}
-};
+	stop_position = 0;
+	bus_stop = 0;
+	platform = 0;
+	platform_type = 0;
+}
 
 map<string, OsmStopData> loadOsmStopData(osm_base* baza)
 {
@@ -86,25 +66,20 @@ map<string, OsmStopData> loadOsmStopData(osm_base* baza)
 	return wynik;
 }
 
-class ztmread_for_html : public ScheduleHandler
+
+ztmread_for_html::ztmread_for_html (string sciez)
 {
-	public:
-	map<string, przystanek> przystanki;
-	map <string, vector< vector<string> > > dane_linia;
-	ztmread_for_html (string sciez)
-	{
-		ScheduleReaderZtm nowo(sciez, this);
-		nowo.run();
-	}
-	void nowy_przystanek(przystanek nowy)
-	{
-		przystanki[nowy.id]=nowy;
-	}
-	void nowa_linia(string nazwa, vector <vector <string> > trasy)
-	{
-		dane_linia[nazwa]=trasy;
-	}
-};
+	ScheduleReaderZtm nowo(sciez, this);
+	nowo.run();
+}
+void ztmread_for_html::nowy_przystanek(przystanek nowy)
+{
+	przystanki[nowy.id]=nowy;
+}
+void ztmread_for_html::nowa_linia(string nazwa, vector <vector <string> > trasy)
+{
+	dane_linia[nazwa]=trasy;
+}
 
 
 bool todigits(int nasze, string nastepne)
@@ -117,5 +92,3 @@ bool todigits(int nasze, string nastepne)
 		return true;
 	return false;
 }
-
-#endif

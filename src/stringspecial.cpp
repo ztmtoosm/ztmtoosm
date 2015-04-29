@@ -1,4 +1,4 @@
-#include "stringspecial.hpp"
+#include "../include/stringspecial.hpp"
 string avoid_cudzyslow(string slowo)
 	{
 		string wynik;

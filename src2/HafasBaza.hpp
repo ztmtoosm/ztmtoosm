@@ -1,7 +1,7 @@
-#include "readztm.hpp"
-#include "osm_base.hpp"
-#include "starelinie.hpp"
-#include "sql1.hpp"
+#include "../src2/osm_base.hpp"
+#include "../src2/readztm.hpp"
+#include "../src2/sql1.hpp"
+#include "../src2/starelinie.hpp"
 struct wspolrzedne
 {
 	double lon;

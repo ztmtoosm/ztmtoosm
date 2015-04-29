@@ -1,5 +1,7 @@
-#include "src/osm_base.hpp"
-every_member::map<string, string> getTags() const
+#include "../../include/osmbase/osm_base.hpp"
+map <string, int> every_member::kodyKey;
+vector <string> every_member::kodyKey2;
+map<string, string> every_member::getTags() const
 {
 	map <string, string> wynik;
 	for(int i=0; i<tagiSize; i++)
@@ -76,7 +78,7 @@ every_member::every_member(const every_member& foo)
 	map<string,string> tags=foo.getTags();
 	setTags(tags);
 }
-every_member::every_member& operator=(every_member const& foo)
+every_member& every_member::operator=(every_member const& foo)
 {
 	tagi1=NULL;
 	tagi2=NULL;
@@ -89,7 +91,7 @@ every_member::every_member& operator=(every_member const& foo)
 	setTags(tags);
 
 }
-~every_member::every_member()
+every_member::~every_member()
 {
 	if(tagi1!=NULL)
 	{

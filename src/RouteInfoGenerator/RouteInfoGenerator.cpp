@@ -3,15 +3,24 @@
 #include <vector>
 #include <map>
 #include <sstream>
-#include "src/stringspecial.hpp"
-#include "src/ztmosmpor.hpp"
-#include "src/osm_base.hpp"
-#include "src/dijkstra.hpp"
-#include "src/dij_data.hpp"
-#include "src/htmlgen.hpp"
-#include "src/starelinie.hpp"
+#include <cstring>
+#include "../../include/RouteInfoGenerator/ztmosmpor.hpp"
+#include "../../include/osmbase/osm_base.hpp"
+#include "../../include/RouteInfoGenerator/HTMLHeadersRouteinfo.hpp"
+#include "../../include/RouteInfoGenerator/PrzegladanieCzyPrawidloweStareLinie.hpp"
 using namespace std;
-
+string nazwa_mala(string lineName)
+{
+	if(lineName.length()<3)
+		return "tram";
+	return "bus";
+}
+string nazwa_duza(string lineName)
+{
+	if(lineName.length()<3)
+		return "Tram";
+	return "Bus";
+}
 vector <string> miejscowosci(vector <przystanek> xyz)
 {
 	vector <string> wynik;
@@ -166,7 +175,6 @@ struct galk
 	string pathHTML;
 	string ztmBaseFreshTime;
 	set <string> linieDoPrzerobienia;
-	vector <dijkstra*> algorytmy;
 	map <string, OsmStopData> osmStopData;
 	//map <string, vector <WariantTrasy> > warianty;
 	set <long long> changeNodes;
