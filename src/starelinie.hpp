@@ -51,6 +51,7 @@ pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long roo
 	return wynik;
 }
 
+/*
 set <long long> wszystkie_route (osm_base* roo, long long root)
 {
 	set <long long> wynik;
@@ -76,6 +77,7 @@ set <long long> wszystkie_route (osm_base* roo, long long root)
 	}
 	return wynik;
 }
+*/
 
 set <string> extract_ref(osm_base* baza, long long rel)
 {

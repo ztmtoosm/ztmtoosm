@@ -12,22 +12,6 @@
 #include "src/starelinie.hpp"
 using namespace std;
 
-set <long long> pustyGen()
-{
-	set <long long> pusty;
-	pusty.insert(3651331);
-	pusty.insert(3651332);
-	pusty.insert(3651333);
-	pusty.insert(3651328);
-	pusty.insert(3651327);
-	pusty.insert(3651329);
-	pusty.insert(3651326);
-	pusty.insert(3651335);
-	pusty.insert(3651336);
-	pusty.insert(4656333);
-	return pusty;
-}
-
 vector <string> miejscowosci(vector <przystanek> xyz)
 {
 	vector <string> wynik;
@@ -153,13 +137,32 @@ long long getParentRelation (string name)
 		return 3651326;
 	return 4656333;
 }
+
+/*
+class JSONObjectCore
+{
+	map <string, string> tagsNormal;
+	map <string, JSONObject> tagsObject;
+	void addNumber (string key, int value)
+	{
+		stringstream foo;
+		foo<<value;
+		string value2;
+		foo>>value2;
+		tagsNormal[key]=value2;
+	}
+	virtual string print()
+	{
+	}
+};
+*/
+
 struct galk
 {
 	osm_base* bazaOsm;
 	ztmread_for_html* bazaZtm;
 	string ztmBasePath;
 	string osmBasePath;
-	string outPath;
 	string pathHTML;
 	string ztmBaseFreshTime;
 	set <string> linieDoPrzerobienia;
@@ -169,20 +172,11 @@ struct galk
 	set <long long> changeNodes;
 	set <long long> changeWays;
 	bool czyWszystkie;
-	dijkstra* algorithmForLine(string lineName)
-	{
-		if(lineName=="WKD" || lineName[0]=='K' || lineName[0]=='S')
-			return algorytmy[2];
-		else
-			if(lineName.length()<3)
-				return algorytmy[1];
-		return algorytmy[0];
-	}
 	void readArg(char** argv)
 	{
 		ztmBasePath=argv[1];
 		osmBasePath=argv[2];
-		outPath=argv[3];
+		//outPath=argv[3];
 		pathHTML=argv[4];
 		string czyW=argv[5];
 		if(czyW=="-all")
@@ -437,15 +431,6 @@ struct galk
 		PrzegladanieCzyPrawidloweNoweLinie przegl(&osmStopData, bazaZtm, etap, &infoHTML);
 		linieDoPrzerobienia=przegl.prawidlowe;
 		set <string>::iterator it1=linieDoPrzerobienia.begin();
-		while(it1!=linieDoPrzerobienia.end())
-		{
-			for(int i=0; i<bazaZtm->dane_linia[*it1].size(); i++)
-			{
-				//warianty[*it1].push_back(WariantTrasy(bazaZtm, bazaOsm, algorithmForLine(*it1), *it1, i));
-			}
-			it1++;
-		}
-		//map <string, vector<WariantTrasy> >::iterator it2=warianty.begin();
 		int licznik=1000;
 		string n2=pathHTML+"/openlayers.html";
 		if(!czyWszystkie)
@@ -525,11 +510,6 @@ struct galk
 		}
 		htmlTile(plik5);
 		plik5.close();
-		set <long long> pusty=pustyGen();
-		osm_base bazuka3=bazaOsm->wybrane(changeNodes, changeWays, pusty);
-		osm_base bazuka4=bazaOsm->modified();
-		osm_base bazuka2=osm_base(bazuka4, bazuka3);
-		bazuka2.wypisz(outPath);
 	}
 	~galk()
 	{
