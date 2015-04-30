@@ -432,6 +432,7 @@ struct galk
 		bazaZtm = new ztmread_for_html (ztmBasePath);
 		if(czyWszystkie)
 			linieDoPrzerobienia=wszystkieLinie(bazaZtm);
+		cout<<"xxxxxx"<<endl;
 		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, &infoHTML);
 		set <string> etap=przegl0.nieprawidlowe;
 		if(!czyWszystkie)

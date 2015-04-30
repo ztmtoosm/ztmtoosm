@@ -19,4 +19,4 @@ do
 done
 c=$1"/data/ztm_download1.txt"
 d=$(date +"%Y/%m/%d")
-$1"/bin/"dijkstra $c $1"/data/"latest.osm $1"/data/wyj4.osm" $1"/www" "-all"
+$1"/bin/"RouteInfoGenerator $c $1"/data/"latest.osm $1"/data/wyj4.osm" $1"/www" "-all"

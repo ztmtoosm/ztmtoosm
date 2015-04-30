@@ -148,7 +148,10 @@ string PrzegladanieCzyPrawidloweStareLinie::infoLinie(string linia, osm_base* ba
 	{
 		link_href="http://openstreetmap.org/relation/"+tostring(rels[i]);
 		string nazwa=bazaOsm->relations[rels[i]].getTags()["name"];
-		tmp1+=htmlgen::div("relboczna", "", "route: "+htmlgen::link(link_href, tostring(rels[i])+" "+nazwa));
+		if(!relationCohesion(rels[i], bazaOsm) && rels[i]!=0)
+			tmp1+=htmlgen::div("relboczna_niespojna", "", "route NIESPOJNA: "+htmlgen::link(link_href, tostring(rels[i])+" "+nazwa));
+		else
+			tmp1+=htmlgen::div("relboczna", "", "route: "+htmlgen::link(link_href, tostring(rels[i])+" "+nazwa));
 	}
 	return htmlgen::div("infolinie", "", tmp1);
 }
@@ -164,14 +167,7 @@ void PrzegladanieCzyPrawidloweStareLinie::printRoznice(string linia, osm_base* b
 	for(int i=0; i<rels.size(); i++)
 	{
 		if(!relationCohesion(rels[i], bazaOsm))
-		{
 			prawi=0;
-			stringstream foo;
-			foo<<rels[i];
-			string nazwa;
-			foo>>nazwa;
-			wynik+=htmlgen::div("osm_problem", "", nazwa+" NIESPÓJNA RELACJA");
-		}
 	}
 	while(it1!=osm_list.end())
 	{

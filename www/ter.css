@@ -39,6 +39,10 @@
       {
 	      background-color: silver;
       }
+	div.relboczna_niespojna
+      {
+	      background-color: pink;
+      }
       a:hover
       {
 	      color: navy;

@@ -1,7 +1,7 @@
-#include "fcgi_stdio.h"
 #include "../../include/sciezka1.hpp"
 #include "../../include/RareToThickRoutes/dij_data.hpp"
 #include "../../include/RareToThickRoutes/dijkstra.hpp"
+#include "fcgi_stdio.h"
 void wypisz(stringstream& lol)
 {
 	printf("%s", lol.str().c_str());
