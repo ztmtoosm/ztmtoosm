@@ -158,8 +158,21 @@ void PrzegladanieCzyPrawidloweStareLinie::printRoznice(string linia, osm_base* b
 	set <string> ztm_list=newRelationStops(linia, bazaZtm);
 	set <string>::iterator it1=osm_list.begin();
 	set <string>::iterator it2=ztm_list.begin();
+	vector <long long> rels=relacje_linia(bazaOsm, 3651336, linia).second;
 	bool prawi=1;
 	string wynik;
+	for(int i=0; i<rels.size(); i++)
+	{
+		if(!relationCohesion(rels[i], bazaOsm))
+		{
+			prawi=0;
+			stringstream foo;
+			foo<<rels[i];
+			string nazwa;
+			foo>>nazwa;
+			wynik+=htmlgen::div("osm_problem", "", nazwa+" NIESPÓJNA RELACJA");
+		}
+	}
 	while(it1!=osm_list.end())
 	{
 		if(ztm_list.find(*it1)==ztm_list.end())

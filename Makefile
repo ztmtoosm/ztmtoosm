@@ -1,6 +1,7 @@
 ROUTE_INFO_GEN_OBJECTS_O = src/RouteInfoGenerator/RouteInfoGenerator.o src/RouteInfoGenerator/ztmosmpor.o \
 src/RouteInfoGenerator/PrzeglądanieCzyPrawidloweStareLinie.o src/RouteInfoGenerator/HTMLHeadersRouteInfo.o \
-src/HTMLGenerator/HTMLGenerator.o src/stringspecial.o src/osmbase/osm_base.o src/ScheduleReader/ScheduleReader.o
+src/HTMLGenerator/HTMLGenerator.o src/stringspecial.o src/osmbase/osm_base.o src/ScheduleReader/ScheduleReader.o \
+src/RouteInfoGenerator/RouteCohesion.o
 
 RARE_TO_THICK_O = src/RareToThickRoutes/dijkstra.o src/RareToThickRoutes/dij_data.o src/RareToThickRoutes/RareToThickRoutes.o \
 src/osmbase/osm_base.o src/stringspecial.o
@@ -30,6 +31,8 @@ src/RouteInfoGenerator/RouteInfoGenerator.o : src/RouteInfoGenerator/RouteInfoGe
 	$(CC) $(MRC) -c -o src/RouteInfoGenerator/RouteInfoGenerator.o src/RouteInfoGenerator/RouteInfoGenerator.cpp
 src/RouteInfoGenerator/ztmosmpor.o : src/RouteInfoGenerator/ztmosmpor.cpp include/RouteInfoGenerator/ztmosmpor.hpp
 	$(CC) $(MRC) -c -o src/RouteInfoGenerator/ztmosmpor.o src/RouteInfoGenerator/ztmosmpor.cpp
+src/RouteInfoGenerator/RouteCohesion.o : src/RouteInfoGenerator/RouteCohesion.cpp include/RouteInfoGenerator/RouteCohesion.hpp
+	$(CC) $(MRC) -c -o src/RouteInfoGenerator/RouteCohesion.o src/RouteInfoGenerator/RouteCohesion.cpp
 	
 	
 src/RareToThickRoutes/dijkstra.o : src/RareToThickRoutes/dijkstra.cpp include/RareToThickRoutes/dijkstra.hpp

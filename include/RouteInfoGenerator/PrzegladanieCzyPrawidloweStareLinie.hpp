@@ -5,7 +5,8 @@
 #include <vector>
 #include <map>
 #include <sstream>
-#include "../../include/HTMLGenerator/HTMLGenerator.hpp"
+#include "..//HTMLGenerator/HTMLGenerator.hpp"
+#include "RouteCohesion.hpp"
 #include "../osmbase/osm_base.hpp"
 #include "../stringspecial.hpp"
 #include "ztmosmpor.hpp"
