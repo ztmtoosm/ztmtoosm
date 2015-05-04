@@ -31,8 +31,7 @@ struct przystanek
 	string miejscowosc;
 	double lon;
 	double lat;
-	int dokladnosc_wspolrzednych;
-	vector <string> linie;
+	string stopinfo;
 	
 };
 

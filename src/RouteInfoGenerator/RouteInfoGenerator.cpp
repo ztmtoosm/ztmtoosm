@@ -36,6 +36,17 @@ vector <string> miejscowosci(vector <przystanek> xyz)
 	return wynik;
 }
 
+string znacznikLink(double lon, double lat)
+{
+	stringstream foo;
+	foo<<"http://www.openstreetmap.org/?mlat=";
+	foo<<lon;
+	foo<<"&mlon=";
+	foo<<lat;
+	foo<<"&zoom=18";
+	return htmlgen::link(foo.str(), "X");
+}
+
 class PrzegladanieCzyPrawidloweNoweLinie
 {
 	set <string> doPrzerobienia;
@@ -497,7 +508,10 @@ struct galk
 		plik5<<htmlgen::div("partx", "", "Błędne Przystanki")<<endl;
 		for(string it1 : blednePrzystanki)
 		{
-			plik5<<it1<<"</br>"<<endl;
+			string info = it1 + " " + bazaZtm->przystanki[it1].name;
+			info += " "+bazaZtm->przystanki[it1].stopinfo;
+			info += " "+znacznikLink(bazaZtm->przystanki[it1].lon, bazaZtm->przystanki[it1].lat);
+			plik5<<htmlgen::div("bprzyst", "", info)<<endl;
 		}
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		auto it0prim=slownik0.begin();
