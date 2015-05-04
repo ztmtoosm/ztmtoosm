@@ -265,6 +265,42 @@ struct galk
 		}
 		plik<<"],"<<endl;
 	}
+	string otoczeniePrzystanku(string idPrzystanek, string idLinia, int idWariantu, int idKol)
+	{
+		string poprzedni = "POCZĄTKOWY";
+		string kolejny = "KOŃCOWY";
+		if(idKol>0)
+		{
+			string poprzedniId = bazaZtm->dane_linia[idLinia][idWariantu][idKol-1];
+			poprzedni = bazaZtm->przystanki[poprzedniId].name;
+		}
+		if(bazaZtm->dane_linia[idLinia][idWariantu].size()<idKol)
+		{
+			string kolejnyId = bazaZtm->dane_linia[idLinia][idWariantu][idKol+1];
+			kolejny = bazaZtm->przystanki[kolejnyId].name;
+		}
+		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
+		string ostatni = bazaZtm->przystanki[ostatniId].name;
+		string info = idLinia + " -> "+ostatni+" poprzedni: "+poprzedni+" kolejny: "+kolejny;
+		return htmlgen::div("otoczenieliniaprzystanek", "", info);
+	}
+	string wypiszBlednyPrzystanek(string it1)
+	{
+		string info = it1 + " " + bazaZtm->przystanki[it1].name+" ";
+		info += " "+htmlgen::div("stopinfo", "", bazaZtm->przystanki[it1].stopinfo);
+		info += " "+htmlgen::div("znaczniklink", "", znacznikLink(bazaZtm->przystanki[it1].lat, bazaZtm->przystanki[it1].lon));
+		for(auto& it2 : bazaZtm->dane_linia)
+		{
+			for(int i=0; i<it2.second.size(); i++)
+			{
+				for(int j=0; j<it2.second[i].size(); j++)
+				{
+					info+=otoczeniePrzystanku(it1, it2.first, i, j);
+				}
+			}
+		}
+		return info;
+	}
 	void generujLinie(string nazwa)
 	{
 		cout<<"GENEROWANIE "<<nazwa<<endl;
@@ -508,10 +544,7 @@ struct galk
 		plik5<<htmlgen::div("partx", "", "Błędne Przystanki")<<endl;
 		for(string it1 : blednePrzystanki)
 		{
-			string info = it1 + " " + bazaZtm->przystanki[it1].name;
-			info += " "+bazaZtm->przystanki[it1].stopinfo;
-			info += " "+znacznikLink(bazaZtm->przystanki[it1].lon, bazaZtm->przystanki[it1].lat);
-			plik5<<htmlgen::div("bprzyst", "", info)<<endl;
+			plik5<<htmlgen::div("bprzyst", "", wypiszBlednyPrzystanek(it1))<<endl;
 		}
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		auto it0prim=slownik0.begin();

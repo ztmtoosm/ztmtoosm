@@ -378,7 +378,7 @@ void ScheduleReaderZtm::readpr(string nazwa, fstream& plik, string akt, string a
 			foo.id=lll;
 			foo.lon=x1;
 			foo.lat=y1;
-			foo.stopinfo=alfa+" "+beta;
+			foo.stopinfo="ulica "+alfa+" kierunek"+beta;
 			hand->nowy_przystanek(foo);
 			pominlinie(licz, plik);
 		}
