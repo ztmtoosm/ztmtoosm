@@ -41,7 +41,7 @@ class PrzegladanieCzyPrawidloweNoweLinie
 	set <string> doPrzerobienia;
 	map <string, OsmStopData>* osmStops;
 	ztmread_for_html* bazaZtm;
-	bool sprawdzLinie(string linia, vector <vector <string> > drugi, map <string, OsmStopData>* osmStops, map<string, string>* infoHTML)
+	bool sprawdzLinie(string linia, vector <vector <string> > drugi, map <string, OsmStopData>* osmStops, map<string, string>* infoHTML, set <string>* blednePrzystanki)
 	{
 		string bledy;
 		if(doPrzerobienia.find(linia)==doPrzerobienia.end())
@@ -57,6 +57,7 @@ class PrzegladanieCzyPrawidloweNoweLinie
 				if(data.stop_position==0)
 				{
 					bledy+=htmlgen::div("stop_pos_non", "", bazaZtm->przystanki[drugi[i][j]].name+" "+drugi[i][j]+" brak STOP_POSITION");
+					blednePrzystanki->insert(drugi[i][j]);
 					ok=0;
 				}
 				else
@@ -82,14 +83,14 @@ class PrzegladanieCzyPrawidloweNoweLinie
 	public:
 	set <string> prawidlowe;
 	set <string> nieprawidlowe;
-	PrzegladanieCzyPrawidloweNoweLinie(map<string, OsmStopData>* osmStops, ztmread_for_html* bazaZtmW, set <string> doPrzerobieniaW, map <string, string>* infoHTML)
+	PrzegladanieCzyPrawidloweNoweLinie(map<string, OsmStopData>* osmStops, ztmread_for_html* bazaZtmW, set <string> doPrzerobieniaW, map <string, string>* infoHTML, set<string>* blednePrzystanki)
 	{
 		bazaZtm = bazaZtmW;
 		doPrzerobienia=doPrzerobieniaW;
 		set <string>::iterator it1=doPrzerobienia.begin();
 		while(it1!=doPrzerobienia.end())
 		{
-			if(sprawdzLinie(*it1, bazaZtm->dane_linia[*it1], osmStops, infoHTML))
+			if(sprawdzLinie(*it1, bazaZtm->dane_linia[*it1], osmStops, infoHTML, blednePrzystanki))
 			{
 				prawidlowe.insert(*it1);
 			}
@@ -130,7 +131,7 @@ string zeraWiodace (string jeden)
 }
 long long getParentRelation (string name)
 {
-	if(name.length()==2)
+	if(name.length()<=2)
 		return 3651333;
 	if(name[0]=='1' || name[0]=='2')
 		return 3651331;
@@ -437,7 +438,8 @@ struct galk
 		set <string> etap=przegl0.nieprawidlowe;
 		if(!czyWszystkie)
 			etap=linieDoPrzerobienia;
-		PrzegladanieCzyPrawidloweNoweLinie przegl(&osmStopData, bazaZtm, etap, &infoHTML);
+		set <string> blednePrzystanki;
+		PrzegladanieCzyPrawidloweNoweLinie przegl(&osmStopData, bazaZtm, etap, &infoHTML, &blednePrzystanki);
 		linieDoPrzerobienia=przegl.prawidlowe;
 		set <string>::iterator it1=linieDoPrzerobienia.begin();
 		int licznik=1000;
@@ -492,6 +494,11 @@ struct galk
 			i1prim++;
 		}
 		plik5<<htmlgen::div("spist", "", divX)<<endl;
+		plik5<<htmlgen::div("partx", "", "Błędne Przystanki")<<endl;
+		for(string it1 : blednePrzystanki)
+		{
+			plik5<<it1<<"</br>"<<endl;
+		}
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		auto it0prim=slownik0.begin();
 		while(it0prim!=slownik0.end())

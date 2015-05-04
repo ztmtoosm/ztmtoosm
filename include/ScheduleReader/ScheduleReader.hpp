@@ -31,6 +31,9 @@ struct przystanek
 	string miejscowosc;
 	double lon;
 	double lat;
+	int dokladnosc_wspolrzednych;
+	vector <string> linie;
+	
 };
 
 class ScheduleHandler
@@ -60,8 +63,7 @@ class ScheduleReaderZtm : public ScheduleReader
 	private:
 	string doprzecinka(stringstream& ttt);
 	bool porpolskie(string tekst, int i, string znak);
-	bool polskiznak(string tekst, int i);
-	string znakmale(string tekst, int i);
+	bool polskiznak(string tekst, int i);	string znakmale(string tekst, int i);
 	string duzemale(string skrot);
 	string zaprzecinek(stringstream& ttt);
 	void readobszar(string nazwa, fstream& plik);
