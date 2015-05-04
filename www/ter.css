@@ -96,3 +96,20 @@
       {
 	      color: green;
       }
+	.bprzyst
+{
+padding-left: 20px;
+position: relative;
+margin-top: 10px;
+margin-bottom: 10px;
+}
+.stopinfo, .otoczenieliniaprzystanek
+{
+font-size: 11px;
+}
+.bprzyst a
+{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+}

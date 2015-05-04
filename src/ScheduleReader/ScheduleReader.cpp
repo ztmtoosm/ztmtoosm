@@ -150,7 +150,6 @@ void ScheduleReaderZtm::readka(string nazwa, fstream& plik)
 	{
 		stringstream plt;
 		plt<<data;
-		cout<<plt.str()<<endl;
 		string lll;
 		plt>>lll;
 		if(lll==nazwa)
@@ -166,7 +165,6 @@ void ScheduleReaderZtm::readka(string nazwa, fstream& plik)
 			hand->newkalendar(lll, nowe2);
 		}
 	}
-	cout<<"arritvederci"<<endl;
 }
 void ScheduleReaderZtm::readwk(string nazwa, fstream& plik, string nazwa2)
 {
@@ -211,7 +209,6 @@ void ScheduleReaderZtm::readwk(string nazwa, fstream& plik, string nazwa2)
 					foo.typ=KONCOWY;
 					kurs nowy;
 					nowy.id = lll;
-					cout<<lll<<endl;
 					nowy.postoje=postoje;
 					nowy.dni=type;
 					nowy.linia=nazwa2;
@@ -428,7 +425,6 @@ string ScheduleReaderMetro::readForDelimeter(fstream& alpha, string& out)
 	out=foo2;
 	string wyj;
 	foo>>wyj;
-	cout<<wyj<<endl;
 	return wyj;
 }
 void ScheduleReaderMetro::run()
@@ -440,7 +436,6 @@ void ScheduleReaderMetro::run()
 	plik.open(sciez.c_str());
 	string id;
 	string aktualny;
-	cout<<"ok1"<<endl;
 	while(readForDelimeter(plik, aktualny)!="***")
 	{
 		stringstream foo;
@@ -454,7 +449,6 @@ void ScheduleReaderMetro::run()
 		nowy.miejscowosc="WARSZAWA";
 		hand->nowy_przystanek(nowy);
 	}
-	cout<<"ok2"<<endl;
 	map<pair<string, string>, vector <string> > mapka;
 	map<pair<string, string>, vector <int> > czasy;
 	while(readForDelimeter(plik, aktualny)!="###")
@@ -477,7 +471,6 @@ void ScheduleReaderMetro::run()
 			czasy[make_pair(lineName, lineKierunek)].push_back(czas);
 		}
 	}
-	cout<<"ok3"<<endl;
 	while(readForDelimeter(plik, aktualny)!="***")
 	{
 		kurs nowy;
@@ -500,7 +493,6 @@ void ScheduleReaderMetro::run()
 				postoj foo;
 				foo.stop_id = przystanki[i];
 				foo.time = time2+czasyPrzejazdu[i]*60;
-				cout<<"xD"<<foo.stop_id<<" "<<foo.time<<endl;
 				nowy.postoje.push_back(foo);
 			}
 			if(przystanki[i]==stop)

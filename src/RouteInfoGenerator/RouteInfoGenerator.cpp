@@ -44,6 +44,8 @@ string znacznikLink(double lon, double lat)
 	foo<<"&mlon=";
 	foo<<lat;
 	foo<<"&zoom=18";
+	if(lon==1 || lat<1)
+		return "";
 	return htmlgen::link(foo.str(), "X");
 }
 
