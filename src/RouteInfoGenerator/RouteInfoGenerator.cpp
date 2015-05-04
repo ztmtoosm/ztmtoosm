@@ -274,7 +274,7 @@ struct galk
 			string poprzedniId = bazaZtm->dane_linia[idLinia][idWariantu][idKol-1];
 			poprzedni = bazaZtm->przystanki[poprzedniId].name;
 		}
-		if(bazaZtm->dane_linia[idLinia][idWariantu].size()<idKol)
+		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol)
 		{
 			string kolejnyId = bazaZtm->dane_linia[idLinia][idWariantu][idKol+1];
 			kolejny = bazaZtm->przystanki[kolejnyId].name;
@@ -295,7 +295,8 @@ struct galk
 			{
 				for(int j=0; j<it2.second[i].size(); j++)
 				{
-					info+=otoczeniePrzystanku(it1, it2.first, i, j);
+					if(it2.second[i][j]==it1)
+						info+=otoczeniePrzystanku(it1, it2.first, i, j);
 				}
 			}
 		}
