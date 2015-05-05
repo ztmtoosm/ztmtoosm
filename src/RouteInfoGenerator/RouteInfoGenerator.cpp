@@ -38,15 +38,23 @@ vector <string> miejscowosci(vector <przystanek> xyz)
 
 string znacznikLink(double lon, double lat)
 {
-	stringstream foo;
+	stringstream foo, foo2;
 	foo<<"http://www.openstreetmap.org/?mlat=";
 	foo<<lon;
 	foo<<"&mlon=";
 	foo<<lat;
 	foo<<"&zoom=18";
-	if(lon==1 || lat<1)
+	foo2<<"http://localhost:8111/load_and_zoom?left=";
+	foo2<<lat-0.05;
+	foo2<<"&right=";
+	foo2<<lat+0.05;
+	foo2<<"&top=";
+	foo2<<lon-0.05;
+	foo2<<"&bottom=";
+	foo2<<lat+0.05;
+	if(lon<1 || lat<1)
 		return "";
-	return htmlgen::link(foo.str(), "X");
+	return htmlgen::div("plinki", "", (htmlgen::link(foo.str(), "X")+"</br>"+htmlgen::link(foo2.str(), "J")));
 }
 
 class PrzegladanieCzyPrawidloweNoweLinie
