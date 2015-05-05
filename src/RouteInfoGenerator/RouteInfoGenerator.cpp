@@ -49,9 +49,9 @@ string znacznikLink(double lon, double lat)
 	foo2<<"&right=";
 	foo2<<lat+0.05;
 	foo2<<"&top=";
-	foo2<<lon-0.05;
+	foo2<<lon+0.05;
 	foo2<<"&bottom=";
-	foo2<<lat+0.05;
+	foo2<<lon-0.05;
 	if(lon<1 || lat<1)
 		return "";
 	return htmlgen::div("plinki", "", (htmlgen::link(foo.str(), "X")+"</br>"+htmlgen::link(foo2.str(), "J")));
