@@ -45,13 +45,13 @@ string znacznikLink(double lon, double lat)
 	foo<<lat;
 	foo<<"&zoom=18";
 	foo2<<"http://localhost:8111/load_and_zoom?left=";
-	foo2<<lat-0.05;
+	foo2<<lat-0.002;
 	foo2<<"&right=";
-	foo2<<lat+0.05;
+	foo2<<lat+0.002;
 	foo2<<"&top=";
-	foo2<<lon+0.05;
+	foo2<<lon+0.002;
 	foo2<<"&bottom=";
-	foo2<<lon-0.05;
+	foo2<<lon-0.002;
 	if(lon<1 || lat<1)
 		return "";
 	return htmlgen::div("plinki", "", (htmlgen::link(foo.str(), "X")+"</br>"+htmlgen::link(foo2.str(), "J")));
