@@ -86,6 +86,51 @@ set <string> linieDoUsuniecia(set <string>& istniejace, osm_base* roo, long long
 	return wynik;
 }
 
+set <long long> podpieteRelacje(osm_base* roo, long long root)
+{
+	set <long long> wynik;
+	relation akt=roo->relations[root];
+	map <string, string> tags = akt.getTags();
+	if(tags["type"]=="route_master" || tags["type"]=="route")
+	{
+		wynik.insert(root);
+	}
+	int s1=akt.members.size();
+	for(int i=0; i<s1; i++)
+	{
+		if(akt.members[i].member_type==RELATION)
+		{
+			long long teraz_id=akt.members[i].member_id;
+			if(roo->relations.find(teraz_id)!=roo->relations.end())
+			{
+				relation teraz=roo->relations[teraz_id];
+				auto nowe = podpieteRelacje(roo, teraz_id);
+				wynik.insert(nowe.begin(), nowe.end());
+			}
+		}
+	}
+	return wynik;
+}
+
+set <long long> dziwneRelacje(osm_base* roo, long long root)
+{
+	set <long long> wynik;
+	set <long long> reszta = podpieteRelacje(roo, root);
+	for(auto& it1 : roo->relations)
+	{
+		map<string, string> tagi = it1.second.getTags();
+		if(tagi["route"]=="bus" || tagi["route"]=="tram")
+		{
+			if(reszta.find(it1.first)==reszta.end())
+			{
+				wynik.insert(it1.first);
+			}
+		}
+	}
+	return wynik;
+}
+
+
 set <string> linieDoUsuniecia(ztmread_for_html* baza_ztm, osm_base* roo, long long root)
 {
 	set <string> wsadowy;
@@ -599,6 +644,12 @@ struct galk
 		plik5<<htmlgen::div("partx", "", "Linie do usunięcia")<<endl;
 		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, 3651336);
 		for(auto it1 : doUsuniecia)
+		{
+			plik5<<it1<<"</br>";
+		}
+		plik5<<htmlgen::div("partx", "", "???")<<endl;
+		auto dziwne = dziwneRelacje(bazaOsm, 3651336);
+		for(auto it1 : dziwne)
 		{
 			plik5<<it1<<"</br>";
 		}
