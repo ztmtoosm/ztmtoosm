@@ -57,6 +57,45 @@ string znacznikLink(double lon, double lat)
 	return htmlgen::div("plinki", "", (htmlgen::link(foo.str(), "X")+"</br>"+htmlgen::link(foo2.str(), "J")));
 }
 
+set <string> linieDoUsuniecia(set <string>& istniejace, osm_base* roo, long long root)
+{
+	set <string> wynik;
+	relation akt=roo->relations[root];
+	map <string, string> tags = akt.getTags();
+	if(istniejace.find(tags["ref"])==istniejace.end())
+	{
+		if(tags["type"]=="route_master")
+		{
+			wynik.insert(tags["ref"]);
+		}
+	}
+	int s1=akt.members.size();
+	for(int i=0; i<s1; i++)
+	{
+		if(akt.members[i].member_type==RELATION)
+		{
+			long long teraz_id=akt.members[i].member_id;
+			if(roo->relations.find(teraz_id)!=roo->relations.end())
+			{
+				relation teraz=roo->relations[teraz_id];
+				auto nowe = linieDoUsuniecia(istniejace, roo, teraz_id);
+				wynik.insert(nowe.begin(), nowe.end());
+			}
+		}
+	}
+	return wynik;
+}
+
+set <string> linieDoUsuniecia(ztmread_for_html* baza_ztm, osm_base* roo, long long root)
+{
+	set <string> wsadowy;
+	for(auto& it1 : baza_ztm->dane_linia)
+	{
+		wsadowy.insert(it1.first);
+	}
+	return linieDoUsuniecia(wsadowy, roo, root);
+}
+
 class PrzegladanieCzyPrawidloweNoweLinie
 {
 	set <string> doPrzerobienia;
@@ -556,6 +595,12 @@ struct galk
 		for(string it1 : blednePrzystanki)
 		{
 			plik5<<htmlgen::div("bprzyst", "", wypiszBlednyPrzystanek(it1))<<endl;
+		}
+		plik5<<htmlgen::div("partx", "", "Linie do usunięcia")<<endl;
+		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, 3651336);
+		for(auto it1 : doUsuniecia)
+		{
+			plik5<<it1<<"</br>";
 		}
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		auto it0prim=slownik0.begin();
