@@ -643,15 +643,23 @@ struct galk
 		}
 		plik5<<htmlgen::div("partx", "", "Linie do usunięcia")<<endl;
 		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, 3651336);
-		for(auto it1 : doUsuniecia)
+		for(auto& it1 : doUsuniecia)
 		{
 			plik5<<it1<<"</br>";
 		}
 		plik5<<htmlgen::div("partx", "", "???")<<endl;
 		auto dziwne = dziwneRelacje(bazaOsm, 3651336);
-		for(auto it1 : dziwne)
+		for(auto& it1 : dziwne)
 		{
-			plik5<<it1<<"</br>";
+			stringstream wyn, wyn0;
+			wyn0<<it1;
+			wyn<<htmlgen::div("dziwna_linia_id", "", wyn0.str());
+			auto tags = bazaOsm->relations[it1].getTags();
+			for(auto& it2 : tags)
+			{
+				wyn<<htmlgen::div("dziwna_linia_dup", "", it2.first+"="+it2.second);
+			}
+			plik5<<htmlgen::div("dziwna_linia", "", wyn.str())<<"</br>";
 		}
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		auto it0prim=slownik0.begin();

@@ -459,8 +459,13 @@ var Relation = function(root, relation)
 }
 Relation.prototype.getJSON = function()
 {
-	var tags = this.tags.getTags(function(obj){return {key: obj[0], value: obj[1]}});
-	var members = this.members.getTags(function(obj){return {category: obj[0], id: obj[1], role: obj[2]}});
+	var tags = {};
+	var members = {};
+	if(this.tags!=undefined)
+	{
+		tags = this.tags.getTags(function(obj){return {key: obj[0], value: obj[1]}});
+		members = this.members.getTags(function(obj){return {category: obj[0], id: obj[1], role: obj[2]}});
+	}
 	var todelete = false;
 	if(this.relation.todelete==true)
 		todelete=true;
