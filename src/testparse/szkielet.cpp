@@ -1,4 +1,4 @@
-#include "../../include/testparse/szkielet.hpp"
+#include "szkielet.hpp"
 void PunktSzkieletowy::podmien(long long destination, long long new_way)
 {
 	wychodzace[destination]=new_way;

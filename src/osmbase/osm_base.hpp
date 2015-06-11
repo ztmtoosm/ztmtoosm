@@ -3,8 +3,8 @@
 #include <vector>
 #include <cstring>
 #include <map>
-#include "../xml/XmlInspector.hpp"
-#include "../stringspecial.hpp"
+#include "XmlInspector.hpp"
+#include "stringspecial.hpp"
 using namespace std;
 struct every_member
 {

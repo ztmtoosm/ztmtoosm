@@ -1,5 +1,5 @@
-#include "../../include/RareToThickRoutes/dijkstra.hpp"
-#include "../../include/stringspecial.hpp"
+#include "dijkstra.hpp"
+#include "stringspecial.hpp"
 double Przelicznik::getPrzelicznikWagiDrog(int id, map <string, string> akt_tags)
 {
 	return 0;

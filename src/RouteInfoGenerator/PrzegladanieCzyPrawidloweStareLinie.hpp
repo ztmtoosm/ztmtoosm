@@ -5,10 +5,10 @@
 #include <vector>
 #include <map>
 #include <sstream>
-#include "..//HTMLGenerator/HTMLGenerator.hpp"
+#include "HTMLGenerator.hpp"
 #include "RouteCohesion.hpp"
-#include "../osmbase/osm_base.hpp"
-#include "../stringspecial.hpp"
+#include "osm_base.hpp"
+#include "stringspecial.hpp"
 #include "ztmosmpor.hpp"
 using namespace std;
 pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long root, string linia);

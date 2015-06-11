@@ -1,6 +1,6 @@
 #ifndef HTMLGEN
 #define HTMLGEN
-#include "../../include/HTMLGenerator/HTMLGenerator.hpp"
+#include "HTMLGenerator.hpp"
 string htmlgen::zlozTabele(string tableclass, string lineclass, string cellclass, vector <vector <string> > tabela)
 {
 	string wynik;

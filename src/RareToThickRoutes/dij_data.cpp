@@ -1,4 +1,4 @@
-#include "../../include/RareToThickRoutes/dij_data.hpp"
+#include "dij_data.hpp"
 dij_data::dij_data(vector <long long> stop_nodes, dijkstra* dij, int przelicznikId)
 {
 	ok=1;

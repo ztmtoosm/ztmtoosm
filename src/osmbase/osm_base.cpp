@@ -1,4 +1,4 @@
-#include "../../include/osmbase/osm_base.hpp"
+#include "osm_base.hpp"
 map <string, int> every_member::kodyKey;
 vector <string> every_member::kodyKey2;
 map<string, string> every_member::getTags() const

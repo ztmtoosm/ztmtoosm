@@ -1,0 +1,10 @@
+
+#ifndef __CONF_H__
+#define __CONF_H__
+
+
+#define CONF_PATH "@CONF_PATH@"
+#define MYPROJECT_DIR "@MYPROJECT_DIR@"
+
+
+#endif /* __CONF_H__ */

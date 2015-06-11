@@ -10,12 +10,12 @@
 #include <ctime>
 #include <set>
 #include <sstream>
-#include "../../include/rapidjson/document.h"
-#include "../../include/rapidjson/writer.h"
-#include "../../include/rapidjson/stringbuffer.h"
-#include "../../include/rapidjson/rapidjson.h"
-#include"../../include/sciezka1.hpp"
-#include "../../include/testparse/szkielet.hpp"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/rapidjson.h"
+#include"sciezka1.hpp"
+#include "szkielet.hpp"
 using namespace rapidjson;
 using namespace std;
 class IStreamWrapper {

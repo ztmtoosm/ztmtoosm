@@ -1,4 +1,4 @@
-#include "../../include/RouteInfoGenerator/RouteCohesion.hpp"
+#include "RouteCohesion.hpp"
 void dfs(long long start, map<long long, set <long long> >& graph, set <long long>& odwiedzone)
 {
 	odwiedzone.insert(start);

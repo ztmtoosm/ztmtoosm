@@ -1,4 +1,4 @@
-#include "../../include/RouteInfoGenerator/ztmosmpor.hpp"
+#include "ztmosmpor.hpp"
 OsmStopData::OsmStopData()
 {
 	stop_position = 0;

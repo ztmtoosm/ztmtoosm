@@ -5,7 +5,7 @@
 #include <vector>
 #include <cstring>
 #include <sstream>
-#include "../stringspecial.hpp"
+#include "stringspecial.hpp"
 using namespace std;
 enum typ_postoju
 {

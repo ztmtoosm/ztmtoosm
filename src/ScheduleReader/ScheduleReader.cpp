@@ -1,4 +1,4 @@
-#include "../../include/ScheduleReader/ScheduleReader.hpp"
+#include "ScheduleReader.hpp"
 void ScheduleReaderZtm::run()
 {
 	fstream plik;

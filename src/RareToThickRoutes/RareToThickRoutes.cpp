@@ -1,6 +1,6 @@
-#include "../../include/sciezka1.hpp"
-#include "../../include/RareToThickRoutes/dij_data.hpp"
-#include "../../include/RareToThickRoutes/dijkstra.hpp"
+#include "sciezka1.hpp"
+#include "dij_data.hpp"
+#include "dijkstra.hpp"
 #include "fcgi_stdio.h"
 void wypisz(stringstream& lol)
 {

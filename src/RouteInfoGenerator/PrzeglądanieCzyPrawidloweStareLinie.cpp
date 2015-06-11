@@ -1,4 +1,4 @@
-#include "../../include/RouteInfoGenerator/PrzegladanieCzyPrawidloweStareLinie.hpp"
+#include "PrzegladanieCzyPrawidloweStareLinie.hpp"
 using namespace std;
 pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long root, string linia)
 {

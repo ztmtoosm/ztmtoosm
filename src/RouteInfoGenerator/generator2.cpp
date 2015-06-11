@@ -86,127 +86,6 @@ set <string> linieDoUsuniecia(set <string>& istniejace, osm_base* roo, long long
 	return wynik;
 }
 
-set <long long> podpieteRelacje(osm_base* roo, long long root)
-{
-	set <long long> wynik;
-	relation akt=roo->relations[root];
-	map <string, string> tags = akt.getTags();
-	if(tags["type"]=="route_master" || tags["type"]=="route")
-	{
-		wynik.insert(root);
-	}
-	int s1=akt.members.size();
-	for(int i=0; i<s1; i++)
-	{
-		if(akt.members[i].member_type==RELATION)
-		{
-			long long teraz_id=akt.members[i].member_id;
-			if(roo->relations.find(teraz_id)!=roo->relations.end())
-			{
-				relation teraz=roo->relations[teraz_id];
-				auto nowe = podpieteRelacje(roo, teraz_id);
-				wynik.insert(nowe.begin(), nowe.end());
-			}
-		}
-	}
-	return wynik;
-}
-
-set <long long> dziwneRelacje(osm_base* roo, long long root)
-{
-	set <long long> wynik;
-	set <long long> reszta = podpieteRelacje(roo, root);
-	for(auto& it1 : roo->relations)
-	{
-		map<string, string> tagi = it1.second.getTags();
-		if(tagi["route"]=="bus" || tagi["route"]=="tram")
-		{
-			if(reszta.find(it1.first)==reszta.end())
-			{
-				wynik.insert(it1.first);
-			}
-		}
-	}
-	return wynik;
-}
-
-
-set <string> linieDoUsuniecia(ztmread_for_html* baza_ztm, osm_base* roo, long long root)
-{
-	set <string> wsadowy;
-	for(auto& it1 : baza_ztm->dane_linia)
-	{
-		wsadowy.insert(it1.first);
-	}
-	return linieDoUsuniecia(wsadowy, roo, root);
-}
-
-class PrzegladanieCzyPrawidloweNoweLinie
-{
-	set <string> doPrzerobienia;
-	map <string, OsmStopData>* osmStops;
-	ztmread_for_html* bazaZtm;
-	bool sprawdzLinie(string linia, vector <vector <string> > drugi, map <string, OsmStopData>* osmStops, map<string, string>* infoHTML, set <string>* blednePrzystanki)
-	{
-		string bledy;
-		if(doPrzerobienia.find(linia)==doPrzerobienia.end())
-			return false;
-		int s9=drugi.size();
-		bool ok=1;
-		for(int i=0; i<s9; i++)
-		{
-			int s8=(drugi)[i].size();
-			for(int j=0; j<s8; j++)
-			{
-				OsmStopData data=(*osmStops)[drugi[i][j]];
-				if(data.stop_position==0)
-				{
-					bledy+=htmlgen::div("stop_pos_non", "", bazaZtm->przystanki[drugi[i][j]].name+" "+drugi[i][j]+" brak STOP_POSITION");
-					blednePrzystanki->insert(drugi[i][j]);
-					ok=0;
-				}
-				else
-				{
-				/*	
-					TODO BRAK STOP POSITION NA DRODZE
-					if(data.pos_error)
-					{
-						bledy+=htmlgen::div("stop_pos_way", "", data.name+" "+data.id+" STOP_POSITION nie leży na drodze");
-						ok=0;
-					}*/
-				}
-			}
-		}
-		if(!ok)
-		{
-			bledy=htmlgen::div("bledy2", "", "Nie można wygenerować nowej trasy, ponieważ: "+bledy);
-			(*infoHTML)[linia]+=bledy;
-			return false;
-		}
-		return true;
-	}
-	public:
-	set <string> prawidlowe;
-	set <string> nieprawidlowe;
-	PrzegladanieCzyPrawidloweNoweLinie(map<string, OsmStopData>* osmStops, ztmread_for_html* bazaZtmW, set <string> doPrzerobieniaW, map <string, string>* infoHTML, set<string>* blednePrzystanki)
-	{
-		bazaZtm = bazaZtmW;
-		doPrzerobienia=doPrzerobieniaW;
-		set <string>::iterator it1=doPrzerobienia.begin();
-		while(it1!=doPrzerobienia.end())
-		{
-			if(sprawdzLinie(*it1, bazaZtm->dane_linia[*it1], osmStops, infoHTML, blednePrzystanki))
-			{
-				prawidlowe.insert(*it1);
-			}
-			else
-			{
-				nieprawidlowe.insert(*it1);
-			}
-			it1++;
-		}
-	}
-};
 set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
 {
 	set <string> wynik;
@@ -252,25 +131,6 @@ long long getParentRelation (string name)
 		return 3651326;
 	return 4656333;
 }
-
-/*
-class JSONObjectCore
-{
-	map <string, string> tagsNormal;
-	map <string, JSONObject> tagsObject;
-	void addNumber (string key, int value)
-	{
-		stringstream foo;
-		foo<<value;
-		string value2;
-		foo>>value2;
-		tagsNormal[key]=value2;
-	}
-	virtual string print()
-	{
-	}
-};
-*/
 
 struct galk
 {
@@ -496,61 +356,6 @@ struct galk
 			addMember(i, "R", noweRelacje[i], "", plik);
 		}
 		plik<<"]}]";
-		/*
-		for(int i=0; i<warianty[nazwa].size(); i++)
-		{
-			warianty[nazwa][i].generateGPX(plik5);
-			relation nowa;
-			warianty[nazwa][i].generateRelationWithoutIdVersion(changeNodes, changeWays, nowa);
-			//GENERUJ ID I WERSJĘ
-			if(i<stareRelacje.size())
-			{
-				nowa.id=stareRelacje[i];
-				nowa.version=bazaOsm->relations[stareRelacje[i]].version;
-			}
-			else
-			{
-				nowa.id=(i*-1)-linia_licznik*100;
-				nowa.version=-1;
-			}
-			noweRelacje.push_back(nowa.id);
-			bazaOsm->relations[nowa.id]=nowa;
-		}
-		for(int i=warianty[nazwa].size(); i<stareRelacje.size(); i++)
-		{
-			bazaOsm->relations[stareRelacje[i]].todelete=true;
-		}
-		string typ_maly=nazwa_mala(nazwa);
-		string typ_duzy=nazwa_duza(nazwa);
-		relation rel;
-		rel.modify=1;
-		rel.id=(-50)-linia_licznik*100;
-		if(stareId!=0)
-			rel.id=stareId;
-		map<string,string> tags;
-		tags["network"]="ZTM Warszawa";
-		tags["type"]="route_master";
-		tags["route_master"]=typ_maly;
-		tags["ref"]=nazwa;
-		tags["url"]="http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+nazwa;
-		tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
-		tags["name"]=typ_duzy+" "+nazwa;
-		for(int g=0; g<noweRelacje.size(); g++)
-		{
-				relation_member foo;
-				foo.member_type=RELATION;
-				foo.member_id=noweRelacje[g];
-				foo.role="";
-				rel.members.push_back(foo);
-		}
-		if(rel.id>0)
-			rel.version=bazaOsm->relations[rel.id].version;
-		rel.setTags(tags);
-		bazaOsm->relations[rel.id]=rel;
-		plik5<<"</gpx>"<<endl;
-		plik5.close();
-		return true;
-		*/
 	}
 
 	map <string, string> infoHTML;
@@ -573,20 +378,7 @@ struct galk
 		bazaOsm = new osm_base(osmBasePath);
 		osmStopData = loadOsmStopData(bazaOsm);
 		bazaZtm = new ztmread_for_html (ztmBasePath);
-		if(czyWszystkie)
-			linieDoPrzerobienia=wszystkieLinie(bazaZtm);
-		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, &infoHTML);
-		set <string> etap=przegl0.nieprawidlowe;
-		if(!czyWszystkie)
-			etap=linieDoPrzerobienia;
-		set <string> blednePrzystanki;
-		PrzegladanieCzyPrawidloweNoweLinie przegl(&osmStopData, bazaZtm, etap, &infoHTML, &blednePrzystanki);
-		linieDoPrzerobienia=przegl.prawidlowe;
-		set <string>::iterator it1=linieDoPrzerobienia.begin();
-		int licznik=1000;
-		string n2=pathHTML+"/openlayers.html";
-		if(!czyWszystkie)
-			n2=pathHTML+"/openlayers2.html";
+		string n2=pathHTML+"/zbb.html";
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
 		htmlHead(plik5);
@@ -595,95 +387,11 @@ struct galk
 		strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
 		string buff2=buff;
 		plik5<<htmlgen::div("gentime", "", "Wygenerowano: "+buff2)<<endl;
-		map <string, string> slownik0;
-		map <string, pair<string, int> > slownikX;
-		auto it2=linieDoPrzerobienia.begin();
-		while(it2!=linieDoPrzerobienia.end())
+		for(auto& it1 : osmStopData)
 		{
-			generujLinie(*it2);
-			slownik0[zeraWiodace(*it2)]=*it2;
-			slownikX[zeraWiodace(*it2)]=make_pair(*it2, 1);
-			it2++;
-			licznik++;
-		}
-		map <string, string> slownik1;
-		auto it3prim=przegl.nieprawidlowe.begin();
-		while(it3prim!=przegl.nieprawidlowe.end())
-		{
-			slownik1[zeraWiodace(*it3prim)]=*it3prim;
-			slownikX[zeraWiodace(*it3prim)]=make_pair(*it3prim, 2);
-			it3prim++;
-		}
-		map <string, string> slownik2;
-		auto it4prim=przegl0.prawidlowe.begin();
-		while(it4prim!=przegl0.prawidlowe.end())
-		{
-			slownik2[zeraWiodace(*it4prim)]=*it4prim;
-			slownikX[zeraWiodace(*it4prim)]=make_pair(*it4prim, 3);
-			it4prim++;
-		}
-		string divX;
-		auto i1prim = slownikX.begin();
-		while(i1prim != slownikX.end())
-		{
-			string znak="tryb_niebieski";
-			if(i1prim->second.second==1)
-				znak="tryb_zielony";
-			if(i1prim->second.second==2)
-				znak="tryb_czerwony";
-			divX+=htmlgen::div(znak, "", htmlgen::link( "#poczatek"+i1prim->second.first,  i1prim->second.first));
-			i1prim++;
-		}
-		plik5<<htmlgen::div("spist", "", divX)<<endl;
-		plik5<<htmlgen::div("partx", "", "Błędne Przystanki")<<endl;
-		for(string it1 : blednePrzystanki)
-		{
-			plik5<<htmlgen::div("bprzyst", "", wypiszBlednyPrzystanek(it1))<<endl;
-		}
-		plik5<<htmlgen::div("partx", "", "Linie do usunięcia")<<endl;
-		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, 3651336);
-		for(auto& it1 : doUsuniecia)
-		{
-			plik5<<it1<<"</br>";
-		}
-		plik5<<htmlgen::div("partx", "", "???")<<endl;
-		auto dziwne = dziwneRelacje(bazaOsm, 3651336);
-		for(auto& it1 : dziwne)
-		{
-			stringstream wyn, wyn0;
-			wyn0<<it1;
-			wyn<<htmlgen::div("dziwna_linia_id", "", wyn0.str());
-			auto tags = bazaOsm->relations[it1].getTags();
-			for(auto& it2 : tags)
-			{
-				wyn<<htmlgen::div("dziwna_linia_dup", "", it2.first+"="+it2.second);
-			}
-			plik5<<htmlgen::div("dziwna_linia", "", wyn.str())<<"</br>";
-		}
-		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
-		auto it0prim=slownik0.begin();
-		while(it0prim!=slownik0.end())
-		{
-			plik5<<htmlgen::div("linia_green", "", infoHTML[it0prim->second]+oklink(it0prim->second))<<endl;
-			it0prim++;
-		}
-		plik5<<htmlgen::div("partx", "", "Trasy niewygenerowane...")<<endl;
-		
-		auto it3=slownik1.begin();
-		while(it3!=slownik1.end())
-		{
-			plik5<<htmlgen::div("linia_red", "", infoHTML[it3->second])<<endl;
-			it3++;
-		}
-		if(czyWszystkie)
-		{
-			plik5<<htmlgen::div("partx", "", "Trasy bez zmian...")<<endl;
-			auto it4=slownik2.begin();
-			while(it4!=slownik2.end())
-			{
-				plik5<<htmlgen::div("linia_blue", "", infoHTML[it4->second])<<endl;
-				it4++;
-			}
+			stringstream foo;
+			foo<<it1.second.name<<" "<<it1.second.bus_stop<<" "<<it1.second.platform<<" "<<it1.second.stop_position<<endl;
+			plik5<<htmlgen::div("fas", "", "TUPLA SPENCER: "+foo.str())<<endl;
 		}
 		htmlTile(plik5);
 		plik5.close();

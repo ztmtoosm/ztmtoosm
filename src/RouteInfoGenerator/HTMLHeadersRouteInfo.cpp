@@ -1,4 +1,4 @@
-#include "../../include/RouteInfoGenerator/HTMLHeadersRouteinfo.hpp"
+#include "HTMLHeadersRouteinfo.hpp"
 void htmlHead(fstream& plik5)
 {
 	plik5<<"<!doctype html>"<<endl;
