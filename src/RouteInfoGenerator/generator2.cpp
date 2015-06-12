@@ -180,196 +180,29 @@ struct galk
 		}
 
 	}
-	string jsonEnc (string k)
+	string divOsmLink(long long id, string type)
 	{
-		string wynik;
-		for(int i=0; i<k.length(); i++)
+		stringstream foo;
+		foo<<"<a href=\"http://openstreepmap.org/"<<type<<"/"<<id<<"\">"<<type<<" "<<id<<"</a>";
+		return htmlgen::div("komorka", "", foo.str());
+	}
+	string divOsmRow(int arraySize, string* elem)
+	{
+		stringstream foo;
+		for(int i=0; i<arraySize; i++)
 		{
-			if(wynik[i]=='"')
-			{
-				wynik+="\\";
-			}
-			wynik+=k[i];
+			foo<<elem[i];
 		}
-		return wynik;
+		return htmlgen::div("wiersz", "", foo.str());
 	}
-	void addTag(int i, string key, string value, fstream& plik)
+	string divOsmTable(vector <string> elem)
 	{
-		if(i>0)
-			plik<<",";
-		plik<<"{\"key\":\""<<jsonEnc(key)<<"\",\"value\":\""<<jsonEnc(value)<<"\"}";
-	}
-	void addMember(int i, string category, long long id, string role, fstream& plik)
-	{
-		if(i>0)
-			plik<<",";
-		plik<<"{\"category\":\""<<category<<"\",\"id\":\""<<id<<"\",\"role\":\""<<role<<"\"}";
-	}
-	void addTags(map<string, string> k, fstream& plik)
-	{
-		plik<<"\"tags\":[";
-		auto it1 = k.begin();
-		while(it1!=k.end())
+		stringstream foo;
+		for(int i=0; i<elem.size(); i++)
 		{
-			int id = 1;
-			if(it1 == k.begin())
-				id = 0;
-			addTag(id, it1->first, it1->second, plik);
-			it1++;
+			foo<<elem[i];
 		}
-		plik<<"],"<<endl;
-	}
-	string otoczeniePrzystanku(string idPrzystanek, string idLinia, int idWariantu, int idKol)
-	{
-		string poprzedni = "POCZĄTKOWY";
-		string kolejny = "KOŃCOWY";
-		if(idKol>0)
-		{
-			string poprzedniId = bazaZtm->dane_linia[idLinia][idWariantu][idKol-1];
-			poprzedni = bazaZtm->przystanki[poprzedniId].name;
-		}
-		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+1)
-		{
-			string kolejnyId = bazaZtm->dane_linia[idLinia][idWariantu][idKol+1];
-			kolejny = bazaZtm->przystanki[kolejnyId].name;
-		}
-		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
-		string ostatni = bazaZtm->przystanki[ostatniId].name;
-		string info = idLinia + " -> "+ostatni+" poprzedni: "+poprzedni+" kolejny: "+kolejny;
-		return htmlgen::div("otoczenieliniaprzystanek", "", info);
-	}
-	string wypiszBlednyPrzystanek(string it1)
-	{
-		string info = it1 + " " + bazaZtm->przystanki[it1].name+" ";
-		info += " "+htmlgen::div("stopinfo", "", bazaZtm->przystanki[it1].stopinfo);
-		info += " "+htmlgen::div("znaczniklink", "", znacznikLink(bazaZtm->przystanki[it1].lat, bazaZtm->przystanki[it1].lon));
-		for(auto& it2 : bazaZtm->dane_linia)
-		{
-			for(int i=0; i<it2.second.size(); i++)
-			{
-				for(int j=0; j<it2.second[i].size(); j++)
-				{
-					if(it2.second[i][j]==it1)
-						info+=otoczeniePrzystanku(it1, it2.first, i, j);
-				}
-			}
-		}
-		return info;
-	}
-	void generujLinie(string nazwa)
-	{
-		cout<<"GENEROWANIE "<<nazwa<<endl;
-		vector <long long> stareRelacje=relacje_linia(bazaOsm, 3651336, nazwa).second;
-		long long stareId=relacje_linia(bazaOsm, 3651336, nazwa).first;
-		if(stareId==0)
-			stareId=-1;
-		string nazwaGEN=pathHTML+"/js"+nazwa+".json";
-		fstream plik(nazwaGEN.c_str(), ios::out | ios::trunc);
-		vector <long long> noweRelacje;
-		int s1 = bazaZtm -> dane_linia[nazwa].size();
-		plik<<"[";
-		for(int i=0; i<s1; i++)
-		{
-			vector <string> wariant = bazaZtm -> dane_linia[nazwa][i];
-			string from = substituteWhiteCharsBySpace(osmStopData[wariant[0]].name);
-			string to = substituteWhiteCharsBySpace(osmStopData[wariant[wariant.size()-1]].name);
-			int wariantOsmRelId = i-100;
-			if(i<stareRelacje.size())
-				wariantOsmRelId = stareRelacje[i];
-			map <string, string> tags;
-			if(i>0)
-				plik<<",";
-			plik<<"{ \"id\":"<<wariantOsmRelId<<","<<endl;
-			plik<<"\"track_type\":\""<<nazwa_mala(nazwa)<<"\",\"parentrel\":[],"<<endl;
-			tags["ref"]=nazwa;
-			tags["type"]="route";
-			tags["network"]="ZTM Warszawa";
-			tags["route"]=nazwa_mala(nazwa);
-			tags["from"]=from;
-			tags["to"]=to;
-			tags["name"]=nazwa_duza(nazwa)+" "+nazwa+": "+from+" => "+to;
-			tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
-			/*vector <string> miasta = miejscowosci(bazaZtm->dane_linia[nazwa][i];
-			string via;
-			for(int i=1; i<(miasta.size()-1); i++)
-			{
-				via+=miasta[i];
-				if(i<(miasta.size()-2))
-					via+=", ";
-			}*/
-			/*if(via!="")
-			{
-				tags["via"]=via;
-			}*/
-			addTags(tags, plik);
-			plik<<"\"track\":[";
-			for(int j=0; j<wariant.size(); j++)
-			{
-				if(j>0)
-					plik<<",";
-				plik<<osmStopData[wariant[j]].stop_position;
-			}
-			plik<<"]";
-			plik<<",\"members\":[";
-			for(int j=0; j<wariant.size(); j++)
-			{
-				string dopisek="";
-				if(j==0)
-					dopisek="_entry_only";
-				if(j==wariant.size()-1)
-					dopisek="_exit_only";
-				if(osmStopData[wariant[j]].bus_stop!=0)
-					addMember(j, "N", osmStopData[wariant[j]].bus_stop, "stop"+dopisek, plik);
-				else if(osmStopData[wariant[j]].stop_position!=0)
-					addMember(j, "N", osmStopData[wariant[j]].stop_position, "stop"+dopisek, plik);
-				if(osmStopData[wariant[j]].platform!=0)
-				{
-					string type="";
-					type+=osmStopData[wariant[j]].platform_type;
-					addMember(1, type, osmStopData[wariant[j]].platform, "platform"+dopisek, plik);
-				}
-			}
-			plik<<"]}";
-			noweRelacje.push_back(wariantOsmRelId);
-		}
-		if(s1<stareRelacje.size())
-		{
-			for(int i=s1; i<stareRelacje.size(); i++)
-			{
-				plik<<",{\"track\":[],\"members\":[], \"id\":"<<stareRelacje[i]<<",\"tags\":[], \"todelete\":true}";
-			}
-		}
-		map <string, string> tags;
-		tags["type"] = "route_master";
-		tags["ref"] = nazwa;
-		tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
-		tags["name"] = nazwa_duza(nazwa)+" "+nazwa;
-		tags["type"] = "route_master";
-		tags["url"] = "http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+nazwa;
-		tags["route_master"] = nazwa_mala(nazwa);
-		tags["network"] = "ZTM Warszawa";
-		plik<<",{\"id\":"<<stareId<<",\"parentrel\":["<<getParentRelation(nazwa)<<"],"<<endl;
-		addTags(tags, plik);
-		plik<<"\"track\":[],\"members\":[";
-		for(int i=0; i<noweRelacje.size(); i++)
-		{
-			addMember(i, "R", noweRelacje[i], "", plik);
-		}
-		plik<<"]}]";
-	}
-
-	map <string, string> infoHTML;
-	string ok_route(string cos)
-	{
-		return htmlgen::div("ok_route", cos, "Trasa "+cos+" wygenerowana, pokaż...");
-	}
-	string oklink(string linia)
-	{
-		return "<a href=\"wyszukiwarka2.html?linia="+linia+"\" target=\"_blank\">Pokaż wygenerowany zestaw</a>";
-	}
-	void wypiszRaport()
-	{
-
+		return htmlgen::div("tabela", "", foo.str());
 	}
 	galk(char** argv)
 	{
@@ -387,12 +220,23 @@ struct galk
 		strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
 		string buff2=buff;
 		plik5<<htmlgen::div("gentime", "", "Wygenerowano: "+buff2)<<endl;
+		vector <string> tabela;
 		for(auto& it1 : osmStopData)
 		{
-			stringstream foo;
-			foo<<it1.second.name<<" "<<it1.second.bus_stop<<" "<<it1.second.platform<<" "<<it1.second.stop_position<<endl;
-			plik5<<htmlgen::div("fas", "", "TUPLA SPENCER: "+foo.str())<<endl;
+			string row[] = {divOsmLink(it1.second.bus_stop, "node"), divOsmLink(it1.second.stop_position, "node"), divOsmLink(it1.second.platform, "")};
+			tabela.push_back(divOsmRow(3, row));
 		}
+		/*
+		for(auto& it1 : bazaZtm->przystanki)
+		{
+			if(osmStopData.find(it1.first)==osmStopData.end())
+			{
+				stringstream foo;
+				foo<<it1.second.name<<" "<<it1.second.bus_stop<<" "<<it1.second.platform<<" "<<it1.second.stop_position<<endl;
+				plik5<<htmlgen::div("fas", "", foo.str())<<endl;
+			}
+		}*/
+		plik5<<divOsmTable(tabela);
 		htmlTile(plik5);
 		plik5.close();
 	}

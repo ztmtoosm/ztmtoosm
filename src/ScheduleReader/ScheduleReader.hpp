@@ -32,7 +32,6 @@ struct przystanek
 	double lon;
 	double lat;
 	string stopinfo;
-	
 };
 
 class ScheduleHandler
