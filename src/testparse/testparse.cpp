@@ -14,8 +14,8 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/rapidjson.h"
-#include"sciezka1.hpp"
 #include "szkielet.hpp"
+#include "conf.h"
 using namespace rapidjson;
 using namespace std;
 class IStreamWrapper {
@@ -195,7 +195,7 @@ struct Generator
 			}
 		}
 		stringstream pagename;
-		pagename<<SCIEZKA1<<"/www/"<<tim<<".osm";
+		pagename<<MYPROJECT_DIR<<"/www/"<<tim<<".osm";
 		baza.wypisz(pagename.str());
 		ok = szkielet.ok;
 	}
@@ -205,7 +205,7 @@ int main(int argc, char** argv)
 {
 	string lol;
 	stringstream pagename;
-	pagename<<SCIEZKA1<<"/www/"<<argv[1]<<".json";
+	pagename<<MYPROJECT_DIR<<"/www/"<<argv[1]<<".json";
 	std::ifstream t(pagename.str().c_str());
 	std::string str;
 	t.seekg(0, std::ios::end);   

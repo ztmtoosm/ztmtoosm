@@ -1,4 +1,4 @@
-#include "sciezka1.hpp"
+#include "conf.h"
 #include "dij_data.hpp"
 #include "dijkstra.hpp"
 #include "fcgi_stdio.h"
@@ -63,11 +63,11 @@ int main(int argc, char** argv)
 			stringstream xyz;
 			xyz<<t;
 			string sp="";
-			string scie = SCIEZKA1+sp+"/www/"+xyz.str()+".json";
+			string scie = MYPROJECT_DIR+sp+"/www/"+xyz.str()+".json";
 			fstream plik(scie, ios::out | ios::trunc);
 			plik<<lel()<<endl;
 			plik.close();
-			string pol  = SCIEZKA1+sp+"/bin/testparse "+xyz.str();
+			string pol  = MYPROJECT_DIR+sp+"/bin/testparse "+xyz.str();
 			int wyn=system(pol.c_str());
 			if(wyn!=-1)
 				wyp<<t<<endl;

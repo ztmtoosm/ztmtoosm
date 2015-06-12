@@ -3,7 +3,6 @@
 #define __CONF_H__
 
 
-#define CONF_PATH "@CONF_PATH@"
 #define MYPROJECT_DIR "@MYPROJECT_DIR@"
 
 

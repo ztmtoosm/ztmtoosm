@@ -5,7 +5,6 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 include_directories (xml rapidjson stringspecial osmbase HTMLGenerator ${CMAKE_BINARY_DIR})
 
 
-set(CONF_PATH $ENV{HOME}/.dictionary.rc)
 get_filename_component(MYPROJECT_DIR ${CMAKE_BINARY_DIR} PATH)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MYPROJECT_DIR}/bin)
 configure_file(${CMAKE_SOURCE_DIR}/conf.h.in ${CMAKE_BINARY_DIR}/conf.h)

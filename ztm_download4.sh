@@ -33,6 +33,6 @@ rm $1"/data/ztm_download0.7z"
 mv $1"/data/"$today2 $1"/data/ztm_download1.txt"
 iconv -f windows-1250 -t utf-8 $1"/data/"ztm_download1.txt > $1"/data/"ztm_downloade.txt
 mv $1"/data/"ztm_downloade.txt $1"/data/"ztm_download1.txt
-$1"/bin/ztm_download5" $1"/data/ztm_download1.txt" $1"/data/ztm_download2.txt" $1"/data/metro.txt"
+$1"/bin/RouteInfoGenerator" $1"/data/ztm_download1.txt" $1"/data/ztm_download2.txt" $1"/data/metro.txt"
 chmod -R 777 $1"/data"
 mysql -u root --local-infile < $1"/ztm_download/"ztm_download3.txt
