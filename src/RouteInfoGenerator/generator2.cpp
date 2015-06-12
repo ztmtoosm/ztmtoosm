@@ -221,7 +221,7 @@ struct galk
 		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
 		string ostatni = bazaZtm->przystanki[ostatniId].name;
 		string info = idLinia + " -> "+ostatni;
-		return htmlgen::div("otoczenieliniaprzystanek", "", info);
+		return info;
 	}
 	vector <string> przystanekKierunki(string p)
 	{
@@ -263,25 +263,31 @@ struct galk
 		vector <string> tabela;
 		for(auto& it1 : osmStopData)
 		{
-			vector <string> kierunki=przystanekKierunki(it1.first);
-			string refDiv = htmlgen::div("komorka", "", it1.first);
-			string refName = htmlgen::div("komorka", "", it1.second.name);
-			string k1 = htmlgen::div("komorka", "", kierunki[0]);
-			string k2 = htmlgen::div("komorka", "", kierunki[1]);
-			string k3 = htmlgen::div("komorka", "", kierunki[2]);
-			string row[] = {refDiv, refName, divOsmLink(it1.second.bus_stop, "node"), divOsmLink(it1.second.stop_position, "node"), divOsmLink(it1.second.platform, ""), k1, k2, k3};
-			tabela.push_back(divOsmRow(8, row));
+			if(bazaZtm->przystanki.find(it1.first)==bazaZtm->przystanki.end())
+			{
+				vector <string> kierunki=przystanekKierunki(it1.first);
+				string refDiv = htmlgen::div("komorka", "", it1.first);
+				string refName = htmlgen::div("komorka", "", it1.second.name);
+				string k1 = htmlgen::div("komorka", "", kierunki[0]);
+				string k2 = htmlgen::div("komorka", "", kierunki[1]);
+				string k3 = htmlgen::div("komorka", "", kierunki[2]);
+				string row[] = {refDiv, refName, divOsmLink(it1.second.bus_stop, "node"), divOsmLink(it1.second.stop_position, "node"), divOsmLink(it1.second.platform, ""), k1, k2, k3};
+				tabela.push_back(divOsmRow(8, row));
+			}
 		}
 		for(auto& it1 : bazaZtm->przystanki)
 		{
-			vector <string> kierunki=przystanekKierunki(it1.first);
-			string refDiv = htmlgen::div("komorka", "", it1.first);
-			string refName = htmlgen::div("komorka", "", it1.second.name);
-			string k1 = htmlgen::div("komorka", "", kierunki[0]);
-			string k2 = htmlgen::div("komorka", "", kierunki[1]);
-			string k3 = htmlgen::div("komorka", "", kierunki[2]);
-			string row[] = {refDiv, refName, divOsmLink(0, "node"), divOsmLink(0, "node"), divOsmLink(0, ""), k1, k2, k3};
-			tabela.push_back(divOsmRow(8, row));
+			if(osmStopData.find(it1.first)==osmStopData.end())
+			{
+				vector <string> kierunki=przystanekKierunki(it1.first);
+				string refDiv = htmlgen::div("komorka", "", it1.first);
+				string refName = htmlgen::div("komorka", "", it1.second.name);
+				string k1 = htmlgen::div("komorka", "", kierunki[0]);
+				string k2 = htmlgen::div("komorka", "", kierunki[1]);
+				string k3 = htmlgen::div("komorka", "", kierunki[2]);
+				string row[] = {refDiv, refName, divOsmLink(0, "node"), divOsmLink(0, "node"), divOsmLink(0, ""), k1, k2, k3};
+				tabela.push_back(divOsmRow(8, row));
+			}
 		}
 		plik5<<divOsmTable(tabela);
 		htmlTile(plik5);
