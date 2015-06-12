@@ -318,16 +318,16 @@ ParentRelations.prototype.getTags = function()
 	return wynik;
 }
 */
-var Members = function (root, text, text2, show)
+var Members = function (root, text, text2, show, headers)
 {
 	this.text = text;
 	this.text2 = text2;
 	this.divCore = document.createElement("DIV");
 	this.showMore = document.createElement("A");
 	if(show)
-		this.showMore.innerHTML = text+" - ukruj";
+		this.showMore.innerHTML = text+" - hide";
 	else
-		this.showMore.innerHTML = text+" - pokaż";
+		this.showMore.innerHTML = text+" - show";
 	this.showMore.showed = show;
 	this.showMore.href="javascript:void(0)";
 	this.showMore.root=this;
@@ -347,34 +347,42 @@ var Members = function (root, text, text2, show)
 	addMember.id="nowytag";
 	addMember.value=text2;
 	addMember.root=this;
-	addMember.onclick=function()
+	
+	if(show)
 	{
-		this.root.memberValues[this.root.memberValues.length] = new KeyValue(this.root,["N","",""], [["N", "W", "R"],"", ""]);
+		addMember.onclick=function()
+		{
+			this.root.memberValues[this.root.memberValues.length] = new KeyValue(this.root,["",""], ["", ""]);
+		}
+	}
+	else
+	{
+		addMember.onclick=function()
+		{
+			this.root.memberValues[this.root.memberValues.length] = new KeyValue(this.root,["N","",""], [["N", "W", "R"],"", ""]);
+		}
 	}
 	this.showMore.onclick=function()
 	{
 		if(this.showed)
 		{
 			this.showed = false;
-			this.innerHTML = this.root.text+" - pokaż";
+			this.innerHTML = this.root.text+" - show";
 			$(this.root.divDoUkrycia).hide(1000);
 		}
 		else
 		{
 			this.showed = true;
-			this.innerHTML = this.root.text+" - ukryj";
+			this.innerHTML = this.root.text+" - hide";
 			$(this.root.divDoUkrycia).show(1000);
 		}
 	}
-	var headercategory = document.createElement("DIV");
-	header.appendChild(headercategory);
-	headercategory.innerHTML="member type";
-	var headerid = document.createElement("DIV");
-	headerid.innerHTML="id";
-	header.appendChild(headerid);
-	var headerrole = document.createElement("DIV");
-	headerrole.innerHTML="role";
-	header.appendChild(headerrole);
+	for(var i=0; i<headers.length; i++)
+	{
+		var headercategory = document.createElement("DIV");
+		header.appendChild(headercategory);
+		headercategory.innerHTML=headers[i];
+	}
 	this.memberValues = [];
 	this.divDoUkrycia.appendChild(addMember);
 }
@@ -426,9 +434,9 @@ var Relation = function(root, relation)
 	var textDe ="";
 	if(relation.todelete==true)
 	{
-		textDe = "DO USUNIĘCIA ";
+		textDe = "TO DELETE ";
 	}
-	this.relId.innerHTML = "Relacja "+textDe+"id: "+relation.id;
+	this.relId.innerHTML = "Relation "+textDe+"id: "+relation.id;
 	this.div.appendChild(this.relId);
 	//this.div.appendChild(this.posrednieHeader);
 	this.div.appendChild(this.posrednie);
@@ -437,19 +445,19 @@ var Relation = function(root, relation)
 	this.relLink.root = this;
 	if(relation.todelete!=true)
 	{
-		this.relLink.innerHTML="pokaż trasę";
+		this.relLink.innerHTML="show route on map";
 		this.relLink.href="javascript:void(0)";
 		this.relLink.onclick = function()
 		{	
 			this.root.addTrack();
 		}	
 		this.div.appendChild(this.relLink);
-		this.tags = new Members(this, "tagi", "nowy tag", true);
+		this.tags = new Members(this, "tags", "new tag", true, ["key", "value"]);
 		for(var i=0; i<relation.tags.length; i++)
 		{
 			this.tags.addMember([relation.tags[i].key, relation.tags[i].value], ["", ""]);
 		}
-		this.members = new Members(this, "dodatkowi członkowie", "nowy członek", false);
+		this.members = new Members(this, "additional members", "new member", false, ["type","member id", "role"]);
 		for(var i=0; i<relation.members.length; i++)
 		{
 			this.members.addMember([relation.members[i].category, relation.members[i].id, relation.members[i].role], [["N", "W", "R"], "", ""]);
@@ -550,9 +558,9 @@ but.onclick=function()
 		var a1 = document.createElement("A");
 		var a2 = document.createElement("A");
 		a1.href="/wyszuk/"+data+".osm";
-		a1.innerHTML="PLIK JOSM";
+		a1.innerHTML="SHOW GENERATED *.osm FILE";
 		a1.target="_blank";
-		a2.innerHTML="ZALADUJ JOSM BEZPOSREDNIO";
+		a2.innerHTML="LOAD FILE TO JOSM";
 		a2.href="http://localhost:8111/import?url=http%3A%2F%2Fvps134914.ovh.net%2Fwyszuk%2F"+data+".osm";
 		a2.target="_blank";
 		ndiv.appendChild(a1);
@@ -561,9 +569,19 @@ but.onclick=function()
 		document.body.appendChild(ndiv);
 		console.log(data);	
 			});
-		this.value = "CZEKAJ około 15s";
+		this.value = "PLEASE WAIT";
 	}
-}});
+}
+var neurel = document.getElementById("neurel");
+neurel.onclick=function()
+{
+	var prepared_tab={"id": wszystkieRelacje.length-999, "track_type":"bus", "parentrel":[], "tags":[], "track":[], "members":[]};
+	var gowno = new Relation({div : document.body}, prepared_tab);
+	wszystkieRelacje [wszystkieRelacje.length] = gowno;
+	gowno.addTrack();
+};
+
+});
 /*
 $(function() {
   $( "#map0" ).resizable({
