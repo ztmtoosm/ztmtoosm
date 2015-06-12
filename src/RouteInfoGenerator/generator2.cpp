@@ -204,6 +204,46 @@ struct galk
 		}
 		return htmlgen::div("tabela", "", foo.str());
 	}
+	string dokladnePrzystanki(string idPrzystanek, string idLinia, int idWariantu, int idKol)
+	{
+		string poprzedni = "POCZĄTKOWY";
+		string kolejny = "KOŃCOWY";
+		if(idKol>0)
+		{
+			string poprzedniId = bazaZtm->dane_linia[idLinia][idWariantu][idKol-1];
+			poprzedni = bazaZtm->przystanki[poprzedniId].name;
+		}
+		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+1)
+		{
+			string kolejnyId = bazaZtm->dane_linia[idLinia][idWariantu][idKol+1];
+			kolejny = bazaZtm->przystanki[kolejnyId].name;
+		}
+		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
+		string ostatni = bazaZtm->przystanki[ostatniId].name;
+		string info = idLinia + " -> "+ostatni;
+		return htmlgen::div("otoczenieliniaprzystanek", "", info);
+	}
+	vector <string> przystanekKierunki(string p)
+	{
+		vector <string> wynik;
+		for(auto& it2 : bazaZtm->dane_linia)
+		{
+			for(int i=0; i<it2.second.size(); i++)
+			{
+				for(int j=0; j<it2.second[i].size(); j++)
+				{
+					if(it2.second[i][j]==p)
+						wynik.push_back(dokladnePrzystanki(p, it2.first, i, j));
+				}
+			}
+		}
+		if(wynik.size()<3)
+		{
+			for(int i=wynik.size(); i<3; i++)
+				wynik.push_back("-");
+		}
+		return wynik;
+	}
 	galk(char** argv)
 	{
 		readArg(argv);
@@ -223,19 +263,26 @@ struct galk
 		vector <string> tabela;
 		for(auto& it1 : osmStopData)
 		{
-			string row[] = {divOsmLink(it1.second.bus_stop, "node"), divOsmLink(it1.second.stop_position, "node"), divOsmLink(it1.second.platform, "")};
-			tabela.push_back(divOsmRow(3, row));
+			vector <string> kierunki=przystanekKierunki(it1.first);
+			string refDiv = htmlgen::div("komorka", "", it1.first);
+			string refName = htmlgen::div("komorka", "", it1.second.name);
+			string k1 = htmlgen::div("komorka", "", kierunki[0]);
+			string k2 = htmlgen::div("komorka", "", kierunki[1]);
+			string k3 = htmlgen::div("komorka", "", kierunki[2]);
+			string row[] = {refDiv, refName, divOsmLink(it1.second.bus_stop, "node"), divOsmLink(it1.second.stop_position, "node"), divOsmLink(it1.second.platform, ""), k1, k2, k3};
+			tabela.push_back(divOsmRow(8, row));
 		}
-		/*
 		for(auto& it1 : bazaZtm->przystanki)
 		{
-			if(osmStopData.find(it1.first)==osmStopData.end())
-			{
-				stringstream foo;
-				foo<<it1.second.name<<" "<<it1.second.bus_stop<<" "<<it1.second.platform<<" "<<it1.second.stop_position<<endl;
-				plik5<<htmlgen::div("fas", "", foo.str())<<endl;
-			}
-		}*/
+			vector <string> kierunki=przystanekKierunki(it1.first);
+			string refDiv = htmlgen::div("komorka", "", it1.first);
+			string refName = htmlgen::div("komorka", "", it1.second.name);
+			string k1 = htmlgen::div("komorka", "", kierunki[0]);
+			string k2 = htmlgen::div("komorka", "", kierunki[1]);
+			string k3 = htmlgen::div("komorka", "", kierunki[2]);
+			string row[] = {refDiv, refName, divOsmLink(0, "node"), divOsmLink(0, "node"), divOsmLink(0, ""), k1, k2, k3};
+			tabela.push_back(divOsmRow(8, row));
+		}
 		plik5<<divOsmTable(tabela);
 		htmlTile(plik5);
 		plik5.close();
