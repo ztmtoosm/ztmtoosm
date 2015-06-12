@@ -113,3 +113,23 @@ font-size: 11px;
 	top: 0px;
 	left: 0px;
 }
+
+
+.tabela{
+  display:table;         
+  width:auto;         
+  background-color:#eee;         
+  border:1px solid  #666666;         
+  border-spacing:5px;/*cellspacing:poor IE support for  this*/
+}
+.wiersz{
+  display:table-row;
+  width:auto;
+  clear:both;
+}
+.komorka{
+  float:left;/*fix for  buggy browsers*/
+  display:table-column;         
+  width:200px;         
+  background-color:#ccc;  
+}
