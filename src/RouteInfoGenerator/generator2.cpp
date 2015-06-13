@@ -183,7 +183,7 @@ struct galk
 	string divOsmLink(long long id, string type)
 	{
 		if(id==0)
-			return "-";
+			htmlgen::div("komorka", "", "-");
 		stringstream foo;
 		foo<<"<a href=\"http://openstreepmap.org/"<<type<<"/"<<id<<"\">"<<type<<" "<<id<<"</a>";
 		return htmlgen::div("komorka", "", foo.str());
