@@ -116,11 +116,9 @@ font-size: 11px;
 
 
 .tabela{
+font-family: monospace;
   display:table;         
-  width:auto;         
-  background-color:#eee;         
   border:1px solid  #666666;         
-  border-spacing:5px;/*cellspacing:poor IE support for  this*/
 }
 .wiersz{
   display:table-row;
@@ -128,8 +126,9 @@ font-size: 11px;
   clear:both;
 }
 .komorka{
-  float:left;/*fix for  buggy browsers*/
-  display:table-column;         
-  width:200px;         
-  background-color:#ccc;  
+  border:1px solid  #666666;         
+white-space: nowrap;
+  display:table-cell;
+text-align: left;
+padding: 10px 5px 10px 5px;
 }
