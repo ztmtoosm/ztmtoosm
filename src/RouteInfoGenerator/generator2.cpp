@@ -182,6 +182,8 @@ struct galk
 	}
 	string divOsmLink(long long id, string type)
 	{
+		if(id==0)
+			return "-";
 		stringstream foo;
 		foo<<"<a href=\"http://openstreepmap.org/"<<type<<"/"<<id<<"\">"<<type<<" "<<id<<"</a>";
 		return htmlgen::div("komorka", "", foo.str());
@@ -263,7 +265,7 @@ struct galk
 		vector <string> tabela;
 		for(auto& it1 : osmStopData)
 		{
-			if(bazaZtm->przystanki.find(it1.first)==bazaZtm->przystanki.end())
+			if(bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end())
 			{
 				vector <string> kierunki=przystanekKierunki(it1.first);
 				string refDiv = htmlgen::div("komorka", "", it1.first);
