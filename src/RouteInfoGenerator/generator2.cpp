@@ -180,12 +180,19 @@ struct galk
 		}
 
 	}
-	string divOsmLink(long long id, string type)
+	string divOsmLink(long long id, char t)
 	{
+		string type;
+		if(t=='N')
+			type="node";
+		if(t=='W')
+			type="way";
+		if(t=='R')
+			type="relaton";
 		if(id==0)
 			htmlgen::div("komorka", "", "-");
 		stringstream foo;
-		foo<<"<a href=\"http://openstreepmap.org/"<<type<<"/"<<id<<"\">"<<type<<" "<<id<<"</a>";
+		foo<<"<a href=\"http://openstreetmap.org/"<<type<<"/"<<id<<"\">"<<type<<" "<<id<<"</a>";
 		return htmlgen::div("komorka", "", foo.str());
 	}
 	string divOsmRow(int arraySize, string* elem)
@@ -273,7 +280,7 @@ struct galk
 				string k1 = htmlgen::div("komorka", "", kierunki[0]);
 				string k2 = htmlgen::div("komorka", "", kierunki[1]);
 				string k3 = htmlgen::div("komorka", "", kierunki[2]);
-				string row[] = {refDiv, refName, divOsmLink(it1.second.bus_stop, "node"), divOsmLink(it1.second.stop_position, "node"), divOsmLink(it1.second.platform, ""), k1, k2, k3};
+				string row[] = {refDiv, refName, divOsmLink(it1.second.bus_stop, 'N'), divOsmLink(it1.second.stop_position, 'N'), divOsmLink(it1.second.platform, it1.second.platform_type), k1, k2, k3};
 				tabela.push_back(divOsmRow(8, row));
 			}
 		}
@@ -287,7 +294,7 @@ struct galk
 				string k1 = htmlgen::div("komorka", "", kierunki[0]);
 				string k2 = htmlgen::div("komorka", "", kierunki[1]);
 				string k3 = htmlgen::div("komorka", "", kierunki[2]);
-				string row[] = {refDiv, refName, divOsmLink(0, "node"), divOsmLink(0, "node"), divOsmLink(0, ""), k1, k2, k3};
+				string row[] = {refDiv, refName, divOsmLink(0, 'N'), divOsmLink(0, 'N'), divOsmLink(0, 'N'), k1, k2, k3};
 				tabela.push_back(divOsmRow(8, row));
 			}
 		}

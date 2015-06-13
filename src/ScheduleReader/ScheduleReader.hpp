@@ -53,10 +53,10 @@ class ScheduleReader
 	ScheduleReader (string sciezka, ScheduleHandler* handler) : hand(handler), sciez(sciezka) {}
 };
 
-class ScheduleReaderZtm : public ScheduleReader
+class ScheduleReaderWarszawa : public ScheduleReader
 {
 	public:
-	ScheduleReaderZtm (string sciezka, ScheduleHandler* handler) : ScheduleReader(sciezka, handler) {}
+	ScheduleReaderWarszawa (string sciezka, ScheduleHandler* handler) : ScheduleReader(sciezka, handler) {}
 	void run();
 	private:
 	string doprzecinka(stringstream& ttt);
@@ -88,5 +88,98 @@ class ScheduleReaderMetro : public ScheduleReader
 	void run();
 };
 
+class ScheduleReaderGdansk : public ScheduleReader
+{
+	map <string, string> przystankiTmp;
+	map <string, vector <vector <string> > > linieTmp;
+	string ref(string komorka)
+	{
+		int i=0;
+		bool ok=0;
+		while(!ok && i<komorka.length()-1)
+		{
+			if(komorka[i]=='P')
+				if(komorka[i+1]=='(')
+					ok=1;
+			i++;
+		}
+		i++;
+		string wyn;
+		while(komorka[i]!=')' && i<komorka.length())
+		{
+			wyn+=komorka[i];
+			i++;
+		}
+		return wyn;
+	}
+	void uzupelnij(string sciezka2)
+	{
+		vector <vector <string> > tabela;
+		fstream plik;
+		plik.open(sciezka2.c_str());
+		string foo;
+		while(getline(plik, foo))
+		{
+			vector <string> row;
+			stringstream foo2;
+			foo2<<foo;
+			string foo3;
+			while(getline(foo2, foo3, ';'))
+				row.push_back(foo3);
+			tabela.push_back(row);
+		}
+		plik.close();
+		for(int i=1; i<tabela.size(); i++)
+		{
+			przystankiTmp[ref(tabela[i][1])]=tabela[i][3];
+		}
+		string idLinii=tabela[0][0];
+		for(int i=4; i<tabela[0].size(); i++)
+		{
+			cout<<"#"<<endl;
+			vector <string> posrednie;
+			for(int j=1; j<tabela.size(); j++)
+			{
+				if(tabela[j][i]!="")
+					posrednie.push_back(tabela[j][1]);
+			}
+			linieTmp[idLinii].push_back(posrednie);
+		}
+	}
+	vector <string> szerokaLista(string path)
+	{
+		vector <string> wynik;
+		string pol="ls "+path+"/*/*warianty*.csv";
+		FILE* file = popen(pol.c_str(), "r");
+		char buffer[256];
+		while(fscanf(file, "%100s", buffer) !=EOF)
+		{
+			wynik.push_back(buffer);
+		}
+		pclose(file);
+		return wynik;
+	}
+	public:
+	ScheduleReaderGdansk (string sciezka, ScheduleHandler* handler) : ScheduleReader(sciezka, handler) {}
+	void run()
+	{
+		vector <string> lplik = szerokaLista(sciez);
+		for(int i=0; i<lplik.size(); i++)
+		{
+			uzupelnij(lplik[i]);
+		}
+		for(auto& it1 : przystankiTmp)
+		{
+			przystanek przyst;
+			przyst.id=it1.first;
+			przyst.name=it1.second;
+			hand->nowy_przystanek(przyst);
+		}
+		for(auto& it1 : linieTmp)
+		{
+			hand->nowa_linia(it1.first, it1.second);
+		}
+	}
+};
 
 #endif

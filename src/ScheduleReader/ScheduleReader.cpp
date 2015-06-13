@@ -1,5 +1,5 @@
 #include "ScheduleReader.hpp"
-void ScheduleReaderZtm::run()
+void ScheduleReaderWarszawa::run()
 {
 	fstream plik;
 	plik.open(sciez.c_str());
@@ -37,7 +37,7 @@ void ScheduleReaderZtm::run()
 	}
 	plik.close();
 }
-string ScheduleReaderZtm::doprzecinka(stringstream& ttt)
+string ScheduleReaderWarszawa::doprzecinka(stringstream& ttt)
 {
 	bool ok=1;
 	string lol;
@@ -58,7 +58,7 @@ string ScheduleReaderZtm::doprzecinka(stringstream& ttt)
 		wynik2+=wynik[i];
 	return wynik2;
 }
-bool ScheduleReaderZtm::porpolskie(string tekst, int i, string znak)
+bool ScheduleReaderWarszawa::porpolskie(string tekst, int i, string znak)
 {
 	if(i>tekst.length()-1)
 		return false;
@@ -69,7 +69,7 @@ bool ScheduleReaderZtm::porpolskie(string tekst, int i, string znak)
 		return true;
 	return false;
 }
-bool ScheduleReaderZtm::polskiznak(string tekst, int i)
+bool ScheduleReaderWarszawa::polskiznak(string tekst, int i)
 {
 	if(porpolskie(tekst, i, "Ą")) return true;
 	if(porpolskie(tekst, i, "Ć")) return true;
@@ -82,7 +82,7 @@ bool ScheduleReaderZtm::polskiznak(string tekst, int i)
 	if(porpolskie(tekst, i, "Ż")) return true;
 	return false;
 }
-string ScheduleReaderZtm::znakmale(string tekst, int i)
+string ScheduleReaderWarszawa::znakmale(string tekst, int i)
 {
 	if(porpolskie(tekst, i, "Ą")) return "ą";
 	if(porpolskie(tekst, i, "Ć")) return "ć";
@@ -95,7 +95,7 @@ string ScheduleReaderZtm::znakmale(string tekst, int i)
 	if(porpolskie(tekst, i, "Ż")) return "ż";
 	return "";
 }
-string ScheduleReaderZtm::duzemale(string skrot)
+string ScheduleReaderWarszawa::duzemale(string skrot)
 {
 	string wynik;
 	if(skrot.size()==0)
@@ -115,7 +115,7 @@ string ScheduleReaderZtm::duzemale(string skrot)
 	}
 	return wynik;
 }
-string ScheduleReaderZtm::zaprzecinek(stringstream& ttt)
+string ScheduleReaderWarszawa::zaprzecinek(stringstream& ttt)
 {
 	string skrot;
 	ttt>>skrot;
@@ -126,7 +126,7 @@ string ScheduleReaderZtm::zaprzecinek(stringstream& ttt)
 	}
 	return wynik.substr(0, max(0, (int)wynik.length()-1));
 }
-void ScheduleReaderZtm::readobszar(string nazwa, fstream& plik)
+void ScheduleReaderWarszawa::readobszar(string nazwa, fstream& plik)
 {
 	nazwa="#"+nazwa;
 	char data[100000];
@@ -141,7 +141,7 @@ void ScheduleReaderZtm::readobszar(string nazwa, fstream& plik)
 			ok=0;
 	}
 }
-void ScheduleReaderZtm::readka(string nazwa, fstream& plik)
+void ScheduleReaderWarszawa::readka(string nazwa, fstream& plik)
 {
 	nazwa="#"+nazwa;
 	char data[100000];
@@ -166,7 +166,7 @@ void ScheduleReaderZtm::readka(string nazwa, fstream& plik)
 		}
 	}
 }
-void ScheduleReaderZtm::readwk(string nazwa, fstream& plik, string nazwa2)
+void ScheduleReaderWarszawa::readwk(string nazwa, fstream& plik, string nazwa2)
 {
 	vector <postoj> postoje;
 	nazwa="#"+nazwa;
@@ -220,7 +220,7 @@ void ScheduleReaderZtm::readwk(string nazwa, fstream& plik, string nazwa2)
 	}
 }
 
-void ScheduleReaderZtm::pominlinie(int liczba, fstream& plik)
+void ScheduleReaderWarszawa::pominlinie(int liczba, fstream& plik)
 {
 	char data[100000];
 	for(int i=0; i<liczba; i++)
@@ -228,7 +228,7 @@ void ScheduleReaderZtm::pominlinie(int liczba, fstream& plik)
 		plik.getline(data, 100000);
 	}
 }
-string ScheduleReaderZtm::podkr(char* data)
+string ScheduleReaderWarszawa::podkr(char* data)
 {
 	stringstream zonk;
 	zonk<<data;
@@ -244,7 +244,7 @@ string ScheduleReaderZtm::podkr(char* data)
 	}
 	return wynik;
 }
-void ScheduleReaderZtm::readll(string nazwa, fstream& plik)
+void ScheduleReaderWarszawa::readll(string nazwa, fstream& plik)
 {
 	vector <vector <string> > trasy;
 	nazwa="#"+nazwa;
@@ -277,7 +277,7 @@ void ScheduleReaderZtm::readll(string nazwa, fstream& plik)
 		}
 	}
 }
-string ScheduleReaderZtm::searchdigits(string data2)
+string ScheduleReaderWarszawa::searchdigits(string data2)
 {
 	for(int i=0; i<data2.length()-6; i++)
 	{
@@ -297,7 +297,7 @@ string ScheduleReaderZtm::searchdigits(string data2)
 	}
 	return "";
 }
-vector <string> ScheduleReaderZtm::readlw(string nazwa, fstream& plik)
+vector <string> ScheduleReaderWarszawa::readlw(string nazwa, fstream& plik)
 {
 	vector <string> lista_przystankow;
 	nazwa="#"+nazwa;
@@ -325,7 +325,7 @@ vector <string> ScheduleReaderZtm::readlw(string nazwa, fstream& plik)
 	}
 	return lista_przystankow;
 }
-void ScheduleReaderZtm::readpr(string nazwa, fstream& plik, string akt, string aktmiasto)
+void ScheduleReaderWarszawa::readpr(string nazwa, fstream& plik, string akt, string aktmiasto)
 {
 	nazwa="#"+nazwa;
 	char data[100000];
@@ -382,7 +382,7 @@ void ScheduleReaderZtm::readpr(string nazwa, fstream& plik, string akt, string a
 	}
 }
 
-void ScheduleReaderZtm::readzp(string nazwa, fstream& plik)
+void ScheduleReaderWarszawa::readzp(string nazwa, fstream& plik)
 {
 	nazwa="#"+nazwa;
 	char data[100000];

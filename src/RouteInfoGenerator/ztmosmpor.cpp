@@ -69,7 +69,7 @@ map<string, OsmStopData> loadOsmStopData(osm_base* baza)
 
 ztmread_for_html::ztmread_for_html (string sciez)
 {
-	ScheduleReaderZtm nowo(sciez, this);
+	ScheduleReaderWarszawa nowo(sciez, this);
 	nowo.run();
 }
 void ztmread_for_html::nowy_przystanek(przystanek nowy)
