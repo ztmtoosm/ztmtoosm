@@ -572,7 +572,7 @@ struct galk
 		readInput();
 		bazaOsm = new osm_base(osmBasePath);
 		osmStopData = loadOsmStopData(bazaOsm);
-		bazaZtm = new ztmread_for_html (ztmBasePath);
+		bazaZtm = new ztmread_for_html (ztmBasePath, "Warszawa");
 		if(czyWszystkie)
 			linieDoPrzerobienia=wszystkieLinie(bazaZtm);
 		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, &infoHTML);

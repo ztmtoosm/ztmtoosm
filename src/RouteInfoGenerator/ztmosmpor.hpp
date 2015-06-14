@@ -20,14 +20,14 @@ struct OsmStopData
 	OsmStopData();
 };
 
-map<string, OsmStopData> loadOsmStopData(osm_base* baza);
+map<string, OsmStopData> loadOsmStopData(osm_base* baza, string ref_key="ref");
 
 class ztmread_for_html : public ScheduleHandler
 {
 	public:
 	map<string, przystanek> przystanki;
 	map <string, vector< vector<string> > > dane_linia;
-	ztmread_for_html (string sciez);
+	ztmread_for_html (string sciez, string type);
 	void nowy_przystanek(przystanek nowy);
 	void nowa_linia(string nazwa, vector <vector <string> > trasy);
 };

@@ -145,40 +145,14 @@ struct galk
 	//map <string, vector <WariantTrasy> > warianty;
 	set <long long> changeNodes;
 	set <long long> changeWays;
-	bool czyWszystkie;
+	string miasto, ref_key;
 	void readArg(char** argv)
 	{
 		ztmBasePath=argv[1];
 		osmBasePath=argv[2];
-		//outPath=argv[3];
-		pathHTML=argv[4];
-		string czyW=argv[5];
-		if(czyW=="-all")
-		{
-			czyWszystkie=1;
-		}
-		else
-		{
-			czyWszystkie=0;
-		}
-	}
-	void readInput()
-	{
-		if(czyWszystkie)
-		{
-			return;
-		}
-		cout<<"PODAJ LINIE"<<endl;
-		char data[10000];
-		cin.getline(data, 10000);
-		stringstream linki1;
-		linki1<<data;
-		string linki2;
-		while(linki1>>linki2)
-		{
-			linieDoPrzerobienia.insert(linki2);
-		}
-
+		pathHTML=argv[3];
+		miasto=argv[4];
+		ref_key=argv[5];
 	}
 	string divOsmLink(long long id, char t)
 	{
@@ -190,19 +164,19 @@ struct galk
 		if(t=='R')
 			type="relaton";
 		if(id==0)
-			htmlgen::div("komorka", "", "-");
+			return htmlgen::div("komorka", "", "-");
 		stringstream foo;
 		foo<<"<a href=\"http://openstreetmap.org/"<<type<<"/"<<id<<"\">"<<type<<" "<<id<<"</a>";
 		return htmlgen::div("komorka", "", foo.str());
 	}
-	string divOsmRow(int arraySize, string* elem)
+	string divOsmRow(int arraySize, string* elem, string additional="")
 	{
 		stringstream foo;
 		for(int i=0; i<arraySize; i++)
 		{
 			foo<<elem[i];
 		}
-		return htmlgen::div("wiersz", "", foo.str());
+		return htmlgen::div("wiersz "+additional, "", foo.str());
 	}
 	string divOsmTable(vector <string> elem)
 	{
@@ -253,13 +227,29 @@ struct galk
 		}
 		return wynik;
 	}
+	vector<pair<string, long long> > busStops(osm_base* baza)
+	{
+		vector <pair<string, long long> > wynik;
+		map<long long, node>::iterator it1=baza->nodes.begin();
+		while(it1!=baza->nodes.end())
+		{
+			map <string, string> tags=it1->second.getTags();
+			if(tags["highway"]=="bus_stop" || tags["railway"]=="tram_stop")
+			{
+				cout<<tags["name"]<<"	"<<it1->first<<endl;
+				wynik.push_back(make_pair(tags["name"],it1->first));
+			}
+			it1++;
+		}
+		return wynik;
+	}
 	galk(char** argv)
 	{
 		readArg(argv);
-		readInput();
 		bazaOsm = new osm_base(osmBasePath);
-		osmStopData = loadOsmStopData(bazaOsm);
-		bazaZtm = new ztmread_for_html (ztmBasePath);
+		busStops(bazaOsm);
+		osmStopData = loadOsmStopData(bazaOsm, ref_key);
+		bazaZtm = new ztmread_for_html (ztmBasePath, miasto);
 		string n2=pathHTML+"/zbb.html";
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
@@ -270,6 +260,11 @@ struct galk
 		string buff2=buff;
 		plik5<<htmlgen::div("gentime", "", "Wygenerowano: "+buff2)<<endl;
 		vector <string> tabela;
+		string row[] = {htmlgen::div("komorka", "", "id"), htmlgen::div("komorka", "", "nazwa"),\
+					   htmlgen::div("komorka", "", "bus/tram_stop"), htmlgen::div("komorka", "", "stop_position"),\
+					   htmlgen::div("komorka", "", "platform"), htmlgen::div("komorka", "", "linia1"),\
+					   htmlgen::div("komorka", "", "linia2"), htmlgen::div("komorka", "", "linia3")};
+		tabela.push_back(divOsmRow(8, row, "czolo"));
 		for(auto& it1 : osmStopData)
 		{
 			if(bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end())
@@ -294,6 +289,7 @@ struct galk
 				string k1 = htmlgen::div("komorka", "", kierunki[0]);
 				string k2 = htmlgen::div("komorka", "", kierunki[1]);
 				string k3 = htmlgen::div("komorka", "", kierunki[2]);
+				cout<<it1.first<<"	"<<it1.second.name<<endl;
 				string row[] = {refDiv, refName, divOsmLink(0, 'N'), divOsmLink(0, 'N'), divOsmLink(0, 'N'), k1, k2, k3};
 				tabela.push_back(divOsmRow(8, row));
 			}

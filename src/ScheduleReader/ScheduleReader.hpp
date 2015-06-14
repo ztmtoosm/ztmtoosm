@@ -112,6 +112,36 @@ class ScheduleReaderGdansk : public ScheduleReader
 		}
 		return wyn;
 	}
+	bool cmp(vector <vector <string> >& in, vector <string>& in2)
+	{
+		for(auto& it1 : in)
+		{
+			bool ok=1;
+			if(it1.size()==in2.size())
+			{
+				for(int j=0; j<in2.size(); j++)
+				{
+					if(in2[j]!=it1[j])
+						ok=0;
+				}
+			}
+			else
+			{
+				ok=0;
+			}
+			if(ok)
+				return true;
+		}
+		return false;
+	}
+	bool notempty(string foo)
+	{
+		for(int i=0; i<foo.length(); i++)
+			if(isalnum(foo[i]))
+				return true;
+		return false;
+	}
+
 	void uzupelnij(string sciezka2)
 	{
 		vector <vector <string> > tabela;
@@ -136,14 +166,14 @@ class ScheduleReaderGdansk : public ScheduleReader
 		string idLinii=tabela[0][0];
 		for(int i=4; i<tabela[0].size(); i++)
 		{
-			cout<<"#"<<endl;
 			vector <string> posrednie;
 			for(int j=1; j<tabela.size(); j++)
 			{
-				if(tabela[j][i]!="")
-					posrednie.push_back(tabela[j][1]);
+				if(notempty(tabela[j][i]))
+					posrednie.push_back(ref(tabela[j][1]));
 			}
-			linieTmp[idLinii].push_back(posrednie);
+			if(!cmp(linieTmp[idLinii], posrednie))
+				linieTmp[idLinii].push_back(posrednie);
 		}
 	}
 	vector <string> szerokaLista(string path)
@@ -154,7 +184,9 @@ class ScheduleReaderGdansk : public ScheduleReader
 		char buffer[256];
 		while(fscanf(file, "%100s", buffer) !=EOF)
 		{
-			wynik.push_back(buffer);
+			string pol2 = "iconv -f windows-1250 -t utf-8 < "+(string)(buffer)+" > "+(string)(buffer)+"2";
+			system(pol2.c_str());
+			wynik.push_back((string)(buffer)+"2");
 		}
 		pclose(file);
 		return wynik;
@@ -163,6 +195,7 @@ class ScheduleReaderGdansk : public ScheduleReader
 	ScheduleReaderGdansk (string sciezka, ScheduleHandler* handler) : ScheduleReader(sciezka, handler) {}
 	void run()
 	{
+		cout<<"start..."<<endl;
 		vector <string> lplik = szerokaLista(sciez);
 		for(int i=0; i<lplik.size(); i++)
 		{
