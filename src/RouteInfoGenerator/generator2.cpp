@@ -250,7 +250,7 @@ struct galk
 		busStops(bazaOsm);
 		osmStopData = loadOsmStopData(bazaOsm, ref_key);
 		bazaZtm = new ztmread_for_html (ztmBasePath, miasto);
-		string n2=pathHTML+"/zbb.html";
+		string n2=pathHTML+"/"+argv[4]+".html";
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
 		htmlHead(plik5);

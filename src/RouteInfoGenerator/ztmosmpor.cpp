@@ -19,7 +19,7 @@ map<string, OsmStopData> loadOsmStopData(osm_base* baza, string ref_key)
 		{
 			if(tags[ref_key]!="")
 			{
-				string ref = tags["ref"];
+				string ref = tags[ref_key];
 				if(tags.find("name")!=tags.end())
 					wynik[ref].name=tags["name"];
 				if(tags["highway"]=="bus_stop")
@@ -39,9 +39,9 @@ map<string, OsmStopData> loadOsmStopData(osm_base* baza, string ref_key)
 		map <string, string> tags=it2->second.getTags();
 		if(tags["public_transport"]=="platform" || tags["highway"]=="platform" || tags["railway"]=="platform")
 		{
-			if(tags["ref"]!="")
+			if(tags[ref_key]!="")
 			{
-				string ref = tags["ref"];
+				string ref = tags[ref_key];
 				wynik[ref].platform=it2->first;
 				wynik[ref].platform_type='W';
 			}
@@ -54,9 +54,9 @@ map<string, OsmStopData> loadOsmStopData(osm_base* baza, string ref_key)
 		map <string, string> tags=it3->second.getTags();
 		if(tags["public_transport"]=="platform" || tags["highway"]=="platform" || tags["railway"]=="platform")
 		{
-			if(tags["ref"]!="")
+			if(tags[ref_key]!="")
 			{
-				string ref = tags["ref"];
+				string ref = tags[ref_key];
 				wynik[ref].platform=it3->first;
 				wynik[ref].platform_type='R';
 			}
@@ -77,6 +77,10 @@ ztmread_for_html::ztmread_for_html (string sciez, string type="Warszawa")
 	{
 		cout<<type<<endl;
 		nowo = new ScheduleReaderGdansk (sciez, this);
+	}
+	if(type=="Szczecin")
+	{
+		nowo = new ScheduleReaderSzczecin (sciez, this);
 	}
 	nowo->run();
 }
