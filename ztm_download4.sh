@@ -36,7 +36,7 @@ mv $1"/data/"ztm_downloade.txt $1"/data/"ztm_download1.txt
 
 # SZCZECIN
 
-rm $1"/data/szczecin"
+rm -r $1"/data/szczecin"
 wget http://zditm.szczecin.pl/rozklady/GTFS/latest/google_gtfs.zip -O $1"/data/szczecin.zip"
 unzip $1"/data/szczecin.zip" -d $1"/data/szczecin"
 
