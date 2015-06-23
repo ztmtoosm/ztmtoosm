@@ -21,7 +21,9 @@ for i in "${a[@]}"
 do
 	rm $1"/data/test"${i}".osm"
 done
+
 c=$1"/data/ztm_download1.txt"
-d=$(date +"%Y/%m/%d")
 $1"/bin/"RouteInfoGenerator $c $1"/data/"latest.osm $1"/data/wyj4.osm" $1"/www" "-all"
+$1"/bin/"Generator2 $1"/data/"szczecin $1"/data/"szczecin.osm $1"/www" Szczecin ref
 $1"/bin/"Generator2 $1"/data/"gdansk $1"/data/"gdansk.osm $1"/www" Gdańsk ref:ztm
+# $1"/bin/"Generator2 $1"/data/"ztm_download1.txt $1"/data/"warszawa.osm $1"/www" Warszawa ref
