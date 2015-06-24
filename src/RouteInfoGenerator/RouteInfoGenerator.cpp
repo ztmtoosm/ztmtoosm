@@ -647,9 +647,10 @@ struct galk
 		bazaOsm = new osm_base(osmBasePath);
 		osmStopData = loadOsmStopData(bazaOsm);
 		bazaZtm = new ztmread_for_html (ztmBasePath, miasto);
+		cerr<<"Załadowano dane"<<endl;
 		if(czyWszystkie)
 			linieDoPrzerobienia=wlasciwosci->wszystkieLinie(bazaZtm);
-		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, &infoHTML);
+		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, &infoHTML, wlasciwosci->getRootRelation());
 		set <string> etap=przegl0.nieprawidlowe;
 		if(!czyWszystkie)
 			etap=linieDoPrzerobienia;
@@ -658,7 +659,7 @@ struct galk
 		linieDoPrzerobienia=przegl.prawidlowe;
 		set <string>::iterator it1=linieDoPrzerobienia.begin();
 		int licznik=1000;
-		string n2=pathHTML+"/Pełne"+miasto+".html";
+		string n2=pathHTML+"/Pelne"+miasto+".html";
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
 		htmlHead(plik5);

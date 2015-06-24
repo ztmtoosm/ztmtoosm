@@ -114,7 +114,7 @@ map <long long, string> szukaj_na_drogach(osm_base& baza, long long rel, map<lon
 set <string> PrzegladanieCzyPrawidloweStareLinie::oldRelationStops(string linia, osm_base* baza)
 {
 	set <string> wynik0;
-	vector <long long> rels=relacje_linia(baza, 3651336, linia).second;
+	vector <long long> rels=relacje_linia(baza, rootRel, linia).second;
 	for(int i=0; i<rels.size(); i++)
 	{
 		set <string> tmp1=extract_ref(baza, rels[i]);
@@ -138,8 +138,8 @@ set <string> PrzegladanieCzyPrawidloweStareLinie::newRelationStops(string linia,
 }
 string PrzegladanieCzyPrawidloweStareLinie::infoLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm)
 {
-	vector <long long> rels=relacje_linia(bazaOsm, 3651336, linia).second;
-	long long rel_head=relacje_linia(bazaOsm, 3651336, linia).first;
+	vector <long long> rels=relacje_linia(bazaOsm, rootRel, linia).second;
+	long long rel_head=relacje_linia(bazaOsm, rootRel, linia).first;
 	string link_href="http://openstreetmap.org/relation/"+tostring(rel_head);
 	string tmp1;
 	tmp1+=htmlgen::div("linia_head", "poczatek"+linia, htmlgen::div("humer_linii", "", linia)+htmlgen::link("http://www.ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+linia, "pokaż rozkład"));
@@ -161,7 +161,7 @@ void PrzegladanieCzyPrawidloweStareLinie::printRoznice(string linia, osm_base* b
 	set <string> ztm_list=newRelationStops(linia, bazaZtm);
 	set <string>::iterator it1=osm_list.begin();
 	set <string>::iterator it2=ztm_list.begin();
-	vector <long long> rels=relacje_linia(bazaOsm, 3651336, linia).second;
+	vector <long long> rels=relacje_linia(bazaOsm, rootRel, linia).second;
 	bool prawi=1;
 	string wynik;
 	for(int i=0; i<rels.size(); i++)
@@ -200,8 +200,9 @@ void PrzegladanieCzyPrawidloweStareLinie::printRoznice(string linia, osm_base* b
 		nieprawidlowe.insert(linia);
 	}
 }
-PrzegladanieCzyPrawidloweStareLinie::PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW, map<string, string>* infoHTML)
+PrzegladanieCzyPrawidloweStareLinie::PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW, map<string, string>* infoHTML, long long rootRelW)
 {
+	rootRel = rootRelW;
 	doPrzerobienia=doPrzerobieniaW;
 	set <string>::iterator it1=doPrzerobienia.begin();
 	while(it1!=doPrzerobienia.end())
