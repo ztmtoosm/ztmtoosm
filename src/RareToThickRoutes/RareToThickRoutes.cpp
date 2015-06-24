@@ -44,7 +44,7 @@ map <string, string> mapaenv()
 }
 int main(int argc, char** argv)
 {
-	string osmBasePath = "/ztmtoosm/data/latest.osm";
+	string osmBasePath = "/ztmtoosm/data/warszawa.osm";
 	osm_base bazaOsm(osmBasePath);
 	vector <Przelicznik*> przeliczniki;
 	przeliczniki.push_back(new PrzelicznikBus());
