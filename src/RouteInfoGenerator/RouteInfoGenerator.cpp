@@ -9,18 +9,119 @@
 #include "HTMLHeadersRouteinfo.hpp"
 #include "PrzegladanieCzyPrawidloweStareLinie.hpp"
 using namespace std;
-string nazwa_mala(string lineName)
+
+class WlasciwosciLokalne
 {
-	if(lineName.length()<3)
-		return "tram";
-	return "bus";
-}
-string nazwa_duza(string lineName)
+	public:
+	virtual string nazwaMala(string lineName) = 0;
+	virtual string nazwaDuza(string lineName) = 0;
+	virtual long long getParentRelation (string name) = 0;
+	virtual set <string> wszystkieLinie(ztmread_for_html* bazaZtm) = 0;
+	virtual long long getRootRelation() = 0;
+	virtual string getNazwaMiasta() = 0;
+};
+
+class WlasciwosciLokalneWarszawa : public WlasciwosciLokalne
 {
-	if(lineName.length()<3)
-		return "Tram";
-	return "Bus";
-}
+	public:
+	string nazwaMala(string lineName)
+	{
+		if(lineName.length()<3)
+			return "tram";
+		return "bus";
+	}
+	string nazwaDuza(string lineName)
+	{
+		if(lineName.length()<3)
+			return "Tram";
+		return "Bus";
+	}
+
+	long long getParentRelation (string name)
+	{
+		if(name.length()<=2)
+			return 3651333;
+		if(name[0]=='1' || name[0]=='2')
+			return 3651331;
+		if(name[0]=='3')
+			return 3651332;
+		if(name[0]=='4')
+			return 3651328;
+		if(name[0]=='5' || name[0]=='E')
+			return 3651327;
+		if(name[0]=='7' || name[0]=='8')
+			return 3651329;
+		if(name[0]=='N')
+			return 3651326;
+		return 4656333;
+	}
+
+	set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
+	{
+		set <string> wynik;
+		auto it1=bazaZtm->dane_linia.begin();
+		while(it1!=bazaZtm->dane_linia.end())
+		{
+			string kand=it1->first;
+			if(kand[0]!='K')
+			if(kand[0]!='S')
+			if(kand[0]!='W')
+			{
+				wynik.insert(kand);
+			}
+			it1++;
+		}
+		return wynik;
+	}
+	long long getRootRelation()
+	{
+		return 3651336;
+	}
+	string getNazwaMiasta()
+	{
+		return "Warszawa";
+	}
+};
+
+class WlasciwosciLokalneSzczecin : public WlasciwosciLokalne
+{
+	public:
+	string nazwaMala(string lineName)
+	{
+			return "tram";
+	}
+	string nazwaDuza(string lineName)
+	{
+			return "Tram";
+	}
+
+	long long getParentRelation (string name)
+	{
+		return 5291742;
+	}
+
+	set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
+	{
+		set <string> wynik;
+		auto it1=bazaZtm->dane_linia.begin();
+		while(it1!=bazaZtm->dane_linia.end())
+		{
+			string kand=it1->first;
+			wynik.insert(kand);
+			it1++;
+		}
+		return wynik;
+	}
+	long long getRootRelation()
+	{
+		return 5291742;
+	}
+	string getNazwaMiasta()
+	{
+		return "Szczecin";
+	}
+};
+
 vector <string> miejscowosci(vector <przystanek> xyz)
 {
 	vector <string> wynik;
@@ -207,23 +308,7 @@ class PrzegladanieCzyPrawidloweNoweLinie
 		}
 	}
 };
-set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
-{
-	set <string> wynik;
-	auto it1=bazaZtm->dane_linia.begin();
-	while(it1!=bazaZtm->dane_linia.end())
-	{
-		string kand=it1->first;
-		if(kand[0]!='K')
-		if(kand[0]!='S')
-		if(kand[0]!='W')
-		{
-			wynik.insert(kand);
-		}
-		it1++;
-	}
-	return wynik;
-}
+
 string zeraWiodace (string jeden)
 {
 	string wynik;
@@ -234,24 +319,7 @@ string zeraWiodace (string jeden)
 	wynik+=jeden;
 	return wynik;
 }
-long long getParentRelation (string name)
-{
-	if(name.length()<=2)
-		return 3651333;
-	if(name[0]=='1' || name[0]=='2')
-		return 3651331;
-	if(name[0]=='3')
-		return 3651332;
-	if(name[0]=='4')
-		return 3651328;
-	if(name[0]=='5' || name[0]=='E')
-		return 3651327;
-	if(name[0]=='7' || name[0]=='8')
-		return 3651329;
-	if(name[0]=='N')
-		return 3651326;
-	return 4656333;
-}
+
 
 /*
 class JSONObjectCore
@@ -274,8 +342,10 @@ class JSONObjectCore
 
 struct galk
 {
+	WlasciwosciLokalne* wlasciwosci;
 	osm_base* bazaOsm;
 	ztmread_for_html* bazaZtm;
+	string miasto;
 	string ztmBasePath;
 	string osmBasePath;
 	string pathHTML;
@@ -290,7 +360,7 @@ struct galk
 	{
 		ztmBasePath=argv[1];
 		osmBasePath=argv[2];
-		//outPath=argv[3];
+		miasto=argv[3];
 		pathHTML=argv[4];
 		string czyW=argv[5];
 		if(czyW=="-all")
@@ -399,11 +469,11 @@ struct galk
 	void generujLinie(string nazwa)
 	{
 		cout<<"GENEROWANIE "<<nazwa<<endl;
-		vector <long long> stareRelacje=relacje_linia(bazaOsm, 3651336, nazwa).second;
-		long long stareId=relacje_linia(bazaOsm, 3651336, nazwa).first;
+		vector <long long> stareRelacje=relacje_linia(bazaOsm, wlasciwosci->getRootRelation(), nazwa).second;
+		long long stareId=relacje_linia(bazaOsm, wlasciwosci->getRootRelation(), nazwa).first;
 		if(stareId==0)
 			stareId=-1;
-		string nazwaGEN=pathHTML+"/js"+nazwa+".json";
+		string nazwaGEN=pathHTML+"/"+wlasciwosci->getNazwaMiasta()+nazwa+".json";
 		fstream plik(nazwaGEN.c_str(), ios::out | ios::trunc);
 		vector <long long> noweRelacje;
 		int s1 = bazaZtm -> dane_linia[nazwa].size();
@@ -420,14 +490,14 @@ struct galk
 			if(i>0)
 				plik<<",";
 			plik<<"{ \"id\":"<<wariantOsmRelId<<","<<endl;
-			plik<<"\"track_type\":\""<<nazwa_mala(nazwa)<<"\",\"parentrel\":[],"<<endl;
+			plik<<"\"track_type\":\""<<wlasciwosci->nazwaMala(nazwa)<<"\",\"parentrel\":[],"<<endl;
 			tags["ref"]=nazwa;
 			tags["type"]="route";
 			tags["network"]="ZTM Warszawa";
-			tags["route"]=nazwa_mala(nazwa);
+			tags["route"]=wlasciwosci->nazwaMala(nazwa);
 			tags["from"]=from;
 			tags["to"]=to;
-			tags["name"]=nazwa_duza(nazwa)+" "+nazwa+": "+from+" => "+to;
+			tags["name"]=wlasciwosci->nazwaDuza(nazwa)+" "+nazwa+": "+from+" => "+to;
 			tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
 			/*vector <string> miasta = miejscowosci(bazaZtm->dane_linia[nazwa][i];
 			string via;
@@ -483,12 +553,12 @@ struct galk
 		tags["type"] = "route_master";
 		tags["ref"] = nazwa;
 		tags["source"]="Rozkład jazdy ZTM Warszawa, trasa wygenerowana przez bot";
-		tags["name"] = nazwa_duza(nazwa)+" "+nazwa;
+		tags["name"] = wlasciwosci->nazwaDuza(nazwa)+" "+nazwa;
 		tags["type"] = "route_master";
 		tags["url"] = "http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+nazwa;
-		tags["route_master"] = nazwa_mala(nazwa);
+		tags["route_master"] = wlasciwosci->nazwaMala(nazwa);
 		tags["network"] = "ZTM Warszawa";
-		plik<<",{\"id\":"<<stareId<<",\"parentrel\":["<<getParentRelation(nazwa)<<"],"<<endl;
+		plik<<",{\"id\":"<<stareId<<",\"parentrel\":["<<wlasciwosci->getParentRelation(nazwa)<<"],"<<endl;
 		addTags(tags, plik);
 		plik<<"\"track\":[],\"members\":[";
 		for(int i=0; i<noweRelacje.size(); i++)
@@ -560,7 +630,7 @@ struct galk
 	}
 	string oklink(string linia)
 	{
-		return "<a href=\"wyszukiwarka2.html?linia="+linia+"\" target=\"_blank\">Pokaż wygenerowany zestaw</a>";
+		return "<a href=\"wyszukiwarka2.html?linia="+miasto+linia+"\" target=\"_blank\">Pokaż wygenerowany zestaw</a>";
 	}
 	void wypiszRaport()
 	{
@@ -570,11 +640,15 @@ struct galk
 	{
 		readArg(argv);
 		readInput();
+		if(miasto=="Warszawa")
+			wlasciwosci = new WlasciwosciLokalneWarszawa();
+		if(miasto=="Szczecin")
+			wlasciwosci = new WlasciwosciLokalneSzczecin();
 		bazaOsm = new osm_base(osmBasePath);
 		osmStopData = loadOsmStopData(bazaOsm);
-		bazaZtm = new ztmread_for_html (ztmBasePath, "Warszawa");
+		bazaZtm = new ztmread_for_html (ztmBasePath, miasto);
 		if(czyWszystkie)
-			linieDoPrzerobienia=wszystkieLinie(bazaZtm);
+			linieDoPrzerobienia=wlasciwosci->wszystkieLinie(bazaZtm);
 		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, &infoHTML);
 		set <string> etap=przegl0.nieprawidlowe;
 		if(!czyWszystkie)
@@ -584,9 +658,7 @@ struct galk
 		linieDoPrzerobienia=przegl.prawidlowe;
 		set <string>::iterator it1=linieDoPrzerobienia.begin();
 		int licznik=1000;
-		string n2=pathHTML+"/openlayers.html";
-		if(!czyWszystkie)
-			n2=pathHTML+"/openlayers2.html";
+		string n2=pathHTML+"/Pełne"+miasto+".html";
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
 		htmlHead(plik5);
@@ -641,13 +713,13 @@ struct galk
 			plik5<<htmlgen::div("bprzyst", "", wypiszBlednyPrzystanek(it1))<<endl;
 		}
 		plik5<<htmlgen::div("partx", "", "Linie do usunięcia")<<endl;
-		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, 3651336);
+		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, wlasciwosci->getRootRelation());
 		for(auto& it1 : doUsuniecia)
 		{
 			plik5<<it1<<"</br>";
 		}
 		plik5<<htmlgen::div("partx", "", "???")<<endl;
-		auto dziwne = dziwneRelacje(bazaOsm, 3651336);
+		auto dziwne = dziwneRelacje(bazaOsm, wlasciwosci->getRootRelation());
 		for(auto& it1 : dziwne)
 		{
 			stringstream wyn, wyn0;

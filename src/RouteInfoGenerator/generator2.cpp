@@ -9,13 +9,13 @@
 #include "HTMLHeadersRouteinfo.hpp"
 #include "PrzegladanieCzyPrawidloweStareLinie.hpp"
 using namespace std;
-string nazwa_mala(string lineName)
+string nazwaMala(string lineName)
 {
 	if(lineName.length()<3)
 		return "tram";
 	return "bus";
 }
-string nazwa_duza(string lineName)
+string nazwaDuza(string lineName)
 {
 	if(lineName.length()<3)
 		return "Tram";
