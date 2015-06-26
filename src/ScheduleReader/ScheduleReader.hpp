@@ -331,12 +331,13 @@ class ScheduleReaderSzczecin : public ScheduleReader
 		for(int i=1; i<stopTimesTab.size(); i++)
 		{
 			cerr<<stopTimesTab[i][0]<<" "<<stopTimesTab[i][3]<<endl;
-			posrednie[stopTimesTab[i][0]].push_back(stopTimesTab[i][3]);
+			if(stopTimesTab[i][0][stopTimesTab[i][0].length()-1]=='0')
+				posrednie[stopTimesTab[i][0]].push_back(stopTimesTab[i][3]);
 		}
 		for(auto& it1 : posrednie)
 		{
 			string linia = tripsToRoutes[it1.first];
-			if(!cmp(wynikiLinie[linia], it1.second))
+			if(linia.length()!=0 && !cmp(wynikiLinie[linia], it1.second))
 				wynikiLinie[linia].push_back(it1.second);
 		}
 		for(auto& it1 : wynikiLinie)
