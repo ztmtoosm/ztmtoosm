@@ -333,6 +333,8 @@ class ScheduleReaderSzczecin : public ScheduleReader
 			cerr<<stopTimesTab[i][0]<<" "<<stopTimesTab[i][3]<<endl;
 			if(stopTimesTab[i][0][stopTimesTab[i][0].length()-1]=='0')
 				posrednie[stopTimesTab[i][0]].push_back(stopTimesTab[i][3]);
+			else
+				cerr<<stopTimesTab[i][0]<<endl;
 		}
 		for(auto& it1 : posrednie)
 		{
