@@ -473,7 +473,7 @@ struct galk
 		long long stareId=relacje_linia(bazaOsm, wlasciwosci->getRootRelation(), nazwa).first;
 		if(stareId==0)
 			stareId=-1;
-		string nazwaGEN=pathHTML+"/"+wlasciwosci->getNazwaMiasta()+nazwa+".json";
+		string nazwaGEN=pathHTML+"/js"+wlasciwosci->getNazwaMiasta()+nazwa+".json";
 		fstream plik(nazwaGEN.c_str(), ios::out | ios::trunc);
 		vector <long long> noweRelacje;
 		int s1 = bazaZtm -> dane_linia[nazwa].size();
