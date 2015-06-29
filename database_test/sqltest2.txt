@@ -1,0 +1,67 @@
+ALTER TABLE planet_osm_nodes ADD COLUMN geom geometry(Point,4326);
+ALTER TABLE planet_osm_nodes ADD zll boolean;
+CREATE TABLE ways2 (
+osmid bigint,
+highway text,
+railway text,
+source2 bigint,
+target2 bigint,
+source int,
+target int,
+vals double precision);
+
+CREATE FUNCTION extract_siejbi(t_row planet_osm_ways) RETURNS void AS $$
+DECLARE
+	a bigint[] := t_row.nodes;
+	i bigint;
+	t2_row planet_osm_roads%ROWTYPE;
+BEGIN
+SELECT * INTO t2_row FROM planet_osm_roads WHERE osm_id=t_row.id;
+FOR i IN 2 .. array_upper(a, 1)
+LOOP
+DECLARE
+b int;
+c int;
+lat_a bigint;
+lat_b bigint;
+lon_a bigint;
+lon_b bigint;
+wlen double precision;
+pa geography(Point,4326);
+pb geography(Point,4326);
+BEGIN
+SELECT lat, lon, key_column INTO lat_a, lon_a, b FROM planet_osm_nodes WHERE id=a[i-1];
+SELECT lat, lon, key_column INTO lat_b, lon_b, c FROM planet_osm_nodes WHERE id=a[i];
+pa := ST_MakePoint(lat_a/10000000.0, lon_a/10000000.0);
+pb := ST_MakePoint(lat_b/10000000.0, lon_b/10000000.0);
+wlen := ST_Distance(pa, pb);
+IF t2_row.highway = 'primary' OR t2_row.highway = 'secondary' THEN
+	wlen := wlen*0.9;
+END IF;
+IF t2_row.highway <> '' THEN
+	UPDATE planet_osm_nodes SET zll=true WHERE id=a[i-1];
+	UPDATE planet_osm_nodes SET zll=true WHERE id=a[i];
+	INSERT INTO ways2 (osmid, highway, railway, source2, target2, source, target, vals)
+	VALUES (t_row.id, t2_row.highway, t2_row.railway, a[i-1], a[i], b, c, wlen);
+	IF t2_row.oneway <> 'yes' THEN
+		INSERT INTO ways2 (osmid, highway, railway, source2, target2, source, target, vals)
+		VALUES (t_row.id, t2_row.highway, t2_row.railway, a[i], a[i-1], c, b, wlen);
+	END IF;
+END IF;
+END;
+END LOOP;
+END;                             
+$$ LANGUAGE plpgsql;
+
+ALTER TABLE planet_osm_nodes ADD COLUMN key_column BIGSERIAL;
+CREATE INDEX zzz ON planet_osm_nodes(key_column);
+
+SELECT extract_siejbi(planet_osm_ways.*) FROM planet_osm_ways;
+ALTER TABLE ways2 ADD COLUMN key_column BIGSERIAL PRIMARY KEY;
+CREATE INDEX ways_gid_idx ON ways2(key_column);
+CREATE INDEX ways_source_idx ON ways2(source);
+CREATE INDEX ways_target_idx ON ways2(target);
+CREATE INDEX latt ON planet_osm_nodes(lat);
+CREATE INDEX lonn ON planet_osm_nodes(lon);
+CREATE EXTENSION pgrouting;
+UPDATE planet_osm_nodes SET geom =ST_SetSRID( ST_MakePoint(lat/10000000.0, lon/10000000.0), 4326) WHERE zll=true;
