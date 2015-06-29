@@ -2,6 +2,7 @@
 #include "dij_data.hpp"
 #include "dijkstra.hpp"
 #include "fcgi_stdio.h"
+#include <pqxx/pqxx>
 void wypisz(stringstream& lol)
 {
 	printf("%s", lol.str().c_str());
@@ -42,6 +43,34 @@ map <string, string> mapaenv()
 	}
 	return wynik;
 }
+
+void getTrack(long long id1, long long id2, stringstream& wyp)
+{
+	pqxx::connection c("dbname=gis user=root");
+	pqxx::work txn(c);
+	int idd1=getDatabaseNodeId(id1, txn);
+	int idd2=getDatabaseNodeId(id2, txn);
+	stringstream polecenie;
+	polecenie<<"SELECT lat,lon, b.id FROM pgr_dijkstra(' \
+	SELECT key_column AS id,\
+	source::int,\
+	target::int,\
+	vals::double precision AS cost\
+	FROM ways2',"<<idd1<<", "<<idd2<<", false, false) a JOIN planet_osm_nodes b ON id1=key_column ORDER BY seq";
+	pqxx::result r = txn.exec(polecenie.str());
+	wyp<<"[";
+	for(int i=0; i<r.size(); i++)
+	{
+		double y = r[i][0].as<int>()/10000000.0;
+		double x = r[i][1].as<int>()/10000000.0;
+		if(i>0)
+			std::cout<<",";
+		wyp<<"{ \"y\":"<<y<<", \"x\":"<<x<<", \"id\": "<<r[i][2]<<endl;
+	}
+	wyp<<"]";
+}
+
+
 int main(int argc, char** argv)
 {
 	string osmBasePath = "/ztmtoosm/data/warszawa.osm";
@@ -111,25 +140,32 @@ int main(int argc, char** argv)
 			if(przel=="")
 				przel="0";
 			al1<<env["from"]<<" "<<env["to"]<<" "<<przel;
-			long long xxx;
+			long long xxx, yyy;
 			al1>>xxx;
 			rareNodes.push_back(xxx);
-			al1>>xxx;
-			rareNodes.push_back(xxx);
+			al1>>yyy;
+			rareNodes.push_back(yyy);
 			int przeli;
 			al1>>przeli;
-			dij_data out(rareNodes, &dij, przeli);
-			vector <long long> out2 = out.all_nodes;
-			cout<<przeli<<endl;
-			wyp<<"[";
-			for(int i=0; i<out2.size(); i++)
+			if(przeli!=9)
 			{
-				wyp<<"{\"id\": "<<out2[i]<<", \"y\": "<<bazaOsm.nodes[out2[i]].lat<<", \"x\": "<<bazaOsm.nodes[out2[i]].lon<<"}";
-				if(i<out2.size()-1)
-					wyp<<",";
-				wyp<<endl;
+				dij_data out(rareNodes, &dij, przeli);
+				vector <long long> out2 = out.all_nodes;
+				cout<<przeli<<endl;
+				wyp<<"[";
+				for(int i=0; i<out2.size(); i++)
+				{
+					wyp<<"{\"id\": "<<out2[i]<<", \"y\": "<<bazaOsm.nodes[out2[i]].lat<<", \"x\": "<<bazaOsm.nodes[out2[i]].lon<<"}";
+					if(i<out2.size()-1)
+						wyp<<",";
+					wyp<<endl;
+				}
+				wyp<<"]";
 			}
-			wyp<<"]";
+			else
+			{
+				getTrack(xxx, yyy, wyp);
+			}
 			wypisz(wyp);
 		}
 		}
