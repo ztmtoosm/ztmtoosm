@@ -3,7 +3,7 @@
 #include "dij_data.hpp"
 #include "dijkstra.hpp"
 #include "fcgi_stdio.h"
-int getDatabaseNodeId(long long foo, )
+int getDatabaseNodeId(long long foo, pqxx::work& txn)
 {
 	stringstream polecenie;
 	polecenie<<"SELECT key_column FROM planet_osm_nodes WHERE id="<<foo<<";";
@@ -72,8 +72,9 @@ void getTrack(long long id1, long long id2, stringstream& wyp)
 	SELECT key_column AS id,\
 	source::int,\
 	target::int,\
-	vals::double precision AS cost\
-	FROM ways2',"<<idd1<<", "<<idd2<<", false, false) a JOIN planet_osm_nodes b ON id1=key_column ORDER BY seq";
+	vals::double precision AS cost,\
+	vals_rev::double precision AS reverse_cost\
+	FROM ways2',"<<idd1<<", "<<idd2<<", true, true) a JOIN planet_osm_nodes b ON id1=key_column ORDER BY seq";
 	pqxx::result r = txn.exec(polecenie.str());
 	wyp<<"[";
 	for(int i=0; i<r.size(); i++)
