@@ -16,6 +16,8 @@ function loadJSON(url)
 function punktSciezka (y, x)
 {
 	var sciezka="/dijkstra";
+	if(parFff["x"]=="d")
+		sciezka+="2";
 	sciezka+='\?y\='+y;
 	sciezka+='\&x\='+x;
 	console.log(sciezka);
@@ -31,18 +33,20 @@ function lineRou(id)
 function punktId (id)
 {
 	var sciezka="/dijkstra";
+	if(parFff["x"]=="d")
+		sciezka+="2";
+	
 	sciezka+='\?val\='+id;
 	return sciezka;
 }
 function punktySciezka (from, to, type)
 {
 	var sciezka="/dijkstra";
+	if(parFff["x"]=="d")
+		sciezka+="2";
 	sciezka+='\?from\='+from;
 	sciezka+='\&to\='+to;
-	if(parFff["x"]=="d")
-		sciezka+='\&przelicznik\=9';
-	else
-		sciezka+='\&przelicznik\='+type;
+	sciezka+='\&przelicznik\='+type;
 	return sciezka;
 }
 
