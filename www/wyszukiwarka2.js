@@ -39,7 +39,10 @@ function punktySciezka (from, to, type)
 	var sciezka="/dijkstra";
 	sciezka+='\?from\='+from;
 	sciezka+='\&to\='+to;
-	sciezka+='\&przelicznik\='+type;
+	if(parFff["x"]=="d")
+		sciezka+='\&przelicznik\=9';
+	else
+		sciezka+='\&przelicznik\='+type;
 	return sciezka;
 }
 

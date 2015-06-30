@@ -1,8 +1,19 @@
+#include <pqxx/pqxx>
 #include "conf.h"
 #include "dij_data.hpp"
 #include "dijkstra.hpp"
 #include "fcgi_stdio.h"
-#include <pqxx/pqxx>
+int getDatabaseNodeId(long long foo, )
+{
+	stringstream polecenie;
+	polecenie<<"SELECT key_column FROM planet_osm_nodes WHERE id="<<foo<<";";
+	pqxx::result r = txn.exec(polecenie.str());
+	if(r.size()<=0)
+		return -1;
+	cout<<r[0][0].as<int>()<<endl;
+	return r[0][0].as<int>();
+}
+
 void wypisz(stringstream& lol)
 {
 	printf("%s", lol.str().c_str());
@@ -43,10 +54,16 @@ map <string, string> mapaenv()
 	}
 	return wynik;
 }
-
+/*
+void getPoint(double lat, double lon, stringstream& wyp, pqxx::work& txn)
+{
+	SELECT * FROM planet_osm_nodes WHERE lat>522000000 AND lat<522200000 
+    ORDER BY geom  <-> ST_GeometryFromText('POINT(52.21 21.12)',4326)                                                                              LIMIT 10;
+}
+*/
 void getTrack(long long id1, long long id2, stringstream& wyp)
 {
-	pqxx::connection c("dbname=gis user=root");
+	pqxx::connection c("dbname=gis user=root password=foo");
 	pqxx::work txn(c);
 	int idd1=getDatabaseNodeId(id1, txn);
 	int idd2=getDatabaseNodeId(id2, txn);
@@ -64,8 +81,8 @@ void getTrack(long long id1, long long id2, stringstream& wyp)
 		double y = r[i][0].as<int>()/10000000.0;
 		double x = r[i][1].as<int>()/10000000.0;
 		if(i>0)
-			std::cout<<",";
-		wyp<<"{ \"y\":"<<y<<", \"x\":"<<x<<", \"id\": "<<r[i][2]<<endl;
+			wyp<<",";
+		wyp<<"{ \"y\":"<<y<<", \"x\":"<<x<<", \"id\": "<<r[i][2]<<"}"<<endl;
 	}
 	wyp<<"]";
 }

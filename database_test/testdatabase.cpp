@@ -15,19 +15,15 @@ int getDatabaseNodeId(long long foo, pqxx::work& txn)
 
 int main(int, char *argv[])
 {
-	long long id1, id2;
+	double id1, id2;
 	cin>>id1>>id2;
 	pqxx::connection c("dbname=gis user=root");
 	pqxx::work txn(c);
-	int idd1=getDatabaseNodeId(id1, txn);
-	int idd2=getDatabaseNodeId(id2, txn);
+	long long idd1=id1*10000000;
+	long long idd2=id2*10000000;
 	stringstream polecenie;
-	polecenie<<"SELECT lat,lon, b.id FROM pgr_dijkstra(' \
-	SELECT key_column AS id,\
-	source::int,\
-	target::int,\
-	vals::double precision AS cost\
-	FROM ways2',"<<idd1<<", "<<idd2<<", false, false) a JOIN planet_osm_nodes b ON id1=key_column ORDER BY seq";
+	polecenie<<"SELECT lat, lon, id FROM planet_osm_nodes WHERE lat>"<<idd1-1000000<<" AND lat<"<<idd1+1000000;
+    	polecenie<<"ORDER BY geom  <-> ST_GeometryFromText('POINT("<<id1<<" "<<id2<<")',4326) LIMIT 1";
 	pqxx::result r = txn.exec(polecenie.str());
 	std::cout.precision(9);
 	std::cout<<"[";
