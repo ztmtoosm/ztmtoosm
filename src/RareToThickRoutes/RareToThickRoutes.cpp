@@ -1,8 +1,8 @@
+#include <pqxx/pqxx>
 #include "conf.h"
 #include "dij_data.hpp"
 #include "dijkstra.hpp"
 #include "fcgi_stdio.h"
-#include <pqxx/pqxx>
 void wypisz(stringstream& lol)
 {
 	printf("%s", lol.str().c_str());
