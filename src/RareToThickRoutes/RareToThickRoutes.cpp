@@ -1,22 +1,8 @@
-#include <pqxx/pqxx>
 #include "conf.h"
 #include "dij_data.hpp"
 #include "dijkstra.hpp"
 #include "fcgi_stdio.h"
-<<<<<<< HEAD
-int getDatabaseNodeId(long long foo)
-=======
-int getDatabaseNodeId(long long foo, pqxx::work& txn)
->>>>>>> fad3632c91d1ba6f44385ad18af47fe185fa40cc
-{
-	stringstream polecenie;
-	polecenie<<"SELECT key_column FROM planet_osm_nodes WHERE id="<<foo<<";";
-	pqxx::result r = txn.exec(polecenie.str());
-	if(r.size()<=0)
-		return -1;
-	cout<<r[0][0].as<int>()<<endl;
-	return r[0][0].as<int>();
-}
+
 void wypisz(stringstream& lol)
 {
 	printf("%s", lol.str().c_str());
@@ -57,40 +43,6 @@ map <string, string> mapaenv()
 	}
 	return wynik;
 }
-/*
-void getPoint(double lat, double lon, stringstream& wyp, pqxx::work& txn)
-{
-	SELECT * FROM planet_osm_nodes WHERE lat>522000000 AND lat<522200000 
-    ORDER BY geom  <-> ST_GeometryFromText('POINT(52.21 21.12)',4326)                                                                              LIMIT 10;
-}
-*/
-void getTrack(long long id1, long long id2, stringstream& wyp)
-{
-	pqxx::connection c("dbname=gis user=root password=foo");
-	pqxx::work txn(c);
-	int idd1=getDatabaseNodeId(id1, txn);
-	int idd2=getDatabaseNodeId(id2, txn);
-	stringstream polecenie;
-	polecenie<<"SELECT lat,lon, b.id FROM pgr_dijkstra(' \
-	SELECT key_column AS id,\
-	source::int,\
-	target::int,\
-	vals::double precision AS cost,\
-	vals_rev::double precision AS reverse_cost\
-	FROM ways2',"<<idd1<<", "<<idd2<<", true, true) a JOIN planet_osm_nodes b ON id1=key_column ORDER BY seq";
-	pqxx::result r = txn.exec(polecenie.str());
-	wyp<<"[";
-	for(int i=0; i<r.size(); i++)
-	{
-		double y = r[i][0].as<int>()/10000000.0;
-		double x = r[i][1].as<int>()/10000000.0;
-		if(i>0)
-			wyp<<",";
-		wyp<<"{ \"y\":"<<y<<", \"x\":"<<x<<", \"id\": "<<r[i][2]<<"}"<<endl;
-	}
-	wyp<<"]";
-}
-
 
 int main(int argc, char** argv)
 {
@@ -168,25 +120,18 @@ int main(int argc, char** argv)
 			rareNodes.push_back(yyy);
 			int przeli;
 			al1>>przeli;
-			if(przeli!=9)
+			dij_data out(rareNodes, &dij, przeli);
+			vector <long long> out2 = out.all_nodes;
+			cout<<przeli<<endl;
+			wyp<<"[";
+			for(int i=0; i<out2.size(); i++)
 			{
-				dij_data out(rareNodes, &dij, przeli);
-				vector <long long> out2 = out.all_nodes;
-				cout<<przeli<<endl;
-				wyp<<"[";
-				for(int i=0; i<out2.size(); i++)
-				{
-					wyp<<"{\"id\": "<<out2[i]<<", \"y\": "<<bazaOsm.nodes[out2[i]].lat<<", \"x\": "<<bazaOsm.nodes[out2[i]].lon<<"}";
-					if(i<out2.size()-1)
-						wyp<<",";
-					wyp<<endl;
-				}
-				wyp<<"]";
+				wyp<<"{\"id\": "<<out2[i]<<", \"y\": "<<bazaOsm.nodes[out2[i]].lat<<", \"x\": "<<bazaOsm.nodes[out2[i]].lon<<"}";
+				if(i<out2.size()-1)
+					wyp<<",";
+				wyp<<endl;
 			}
-			else
-			{
-				getTrack(xxx, yyy, wyp);
-			}
+			wyp<<"]";
 			wypisz(wyp);
 		}
 		}

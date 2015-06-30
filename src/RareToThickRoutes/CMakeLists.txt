@@ -1,3 +1,5 @@
 add_library (RareToThickRoutes2 dij_data.cpp dijkstra.cpp)
 add_executable (RareToThickRoutes.fcg RareToThickRoutes.cpp)
-target_link_libraries (RareToThickRoutes.fcg RareToThickRoutes2 fcgi pqxx pq stringspecial osmbase)
+add_executable (RareToThickRoutes2.fcg RareToThickRoutes2.cpp)
+target_link_libraries (RareToThickRoutes.fcg RareToThickRoutes2 fcgi stringspecial osmbase)
+target_link_libraries (RareToThickRoutes2.fcg fcgi pqxx pq stringspecial)
