@@ -182,7 +182,7 @@ void PrzegladanieCzyPrawidloweStareLinie::printRoznice(string linia, osm_base* b
 	{
 		if(osm_list.find(*it2)==osm_list.end())
 		{
-			wynik+=htmlgen::div("ztm_problem", "", *it2+" Jest w bazie ZTM, nie ma w bazie OSM");
+			wynik+=htmlgen::div("ztm_problem", "", *it2+" "+bazaZtm->przystanki[*it2].name+" Jest w bazie ZTM, nie ma w bazie OSM");
 			prawi=0;
 		}
 		it2++;
