@@ -1,8 +1,11 @@
 #include <pqxx/pqxx>
+#include <ctime>
+#include <sys/time.h>
 #include "conf.h"
 #include "stringspecial.hpp"
 #include "fcgi_stdio.h"
-
+string debug;
+string type;
 void getNearestPoint(double x, double y, pqxx::work& txn, stringstream& wyp)
 {
 	double id1 = x;
@@ -22,6 +25,14 @@ void getNearestPoint(double x, double y, pqxx::work& txn, stringstream& wyp)
 	}
 }
 
+double abs(double x, double y)
+{
+	double wyn=x-y;
+	if(x-y<0)
+		wyn*=-1;
+	return wyn;
+}
+
 void getId(long long id, pqxx::work& txn, stringstream& wyp)
 {
 	stringstream polecenie;
@@ -36,14 +47,15 @@ void getId(long long id, pqxx::work& txn, stringstream& wyp)
 	}
 }
 
-int getDatabaseNodeId(long long foo, pqxx::work& txn)
+int getDatabaseNodeId(long long foo, pqxx::work& txn, double& lat, double& lon)
 {
 	stringstream polecenie;
-	polecenie<<"SELECT key_column FROM planet_osm_nodes WHERE id="<<foo<<";";
+	polecenie<<"SELECT key_column, lat, lon FROM planet_osm_nodes WHERE id="<<foo<<";";
 	pqxx::result r = txn.exec(polecenie.str());
 	if(r.size()<=0)
 		return -1;
-	cout<<r[0][0].as<int>()<<endl;
+	lat=r[0][1].as<double>()/10000000.0;
+	lon=r[0][2].as<double>()/10000000.0;
 	return r[0][0].as<int>();
 }
 void wypisz(stringstream& lol)
@@ -90,17 +102,56 @@ map <string, string> mapaenv()
 
 void getTrack(long long id1, long long id2, pqxx::work& txn, stringstream& wyp)
 {
-	int idd1=getDatabaseNodeId(id1, txn);
-	int idd2=getDatabaseNodeId(id2, txn);
-	stringstream polecenie;
-	polecenie<<"SELECT lat,lon, b.id FROM pgr_dijkstra(' \
+	struct timeval start, end;
+	long mtime, seconds, useconds;    
+
+	gettimeofday(&start, NULL);
+	double lat1, lon1, lat2, lon2;
+	int idd1=getDatabaseNodeId(id1, txn, lat1, lon1);
+	int idd2=getDatabaseNodeId(id2, txn, lat2, lon2);
+	double marginx=max(max(abs(lat1-lat2), abs(lon1, lon2)*0.6), 0.07);
+	double marginy=max(max(abs(lat1-lat2)/0.6, abs(lon1, lon2)), 0.11);
+	if(debug=="xxx")
+	{
+		marginx=0.01;
+		marginy=0.01;
+	}
+	stringstream polecenie, polecenie2;
+	polecenie<<"SELECT lat,lon, b.id FROM pgr_"<<type<<"(' \
 	SELECT key_column AS id,\
 	source::int,\
 	target::int,\
 	vals::double precision AS cost,\
-	vals_rev::double precision AS reverse_cost\
-	FROM ways2',"<<idd1<<", "<<idd2<<", true, true) a JOIN planet_osm_nodes b ON id1=key_column ORDER BY seq";
+	vals_rev::double precision AS reverse_cost, x1,y1,x2,y2\
+	FROM ways2 ";
+	if(debug!="fio")
+		polecenie<<"WHERE x1>"<<min(lat1, lat2)-marginx<<" AND x1<"<<max(lat1,lat2)+marginx<<" AND y1>"<<min(lon1, lon2)-marginy<< " AND y1<"<<max(lon1,lon2)+marginy;
+	polecenie<<"',"<<idd1<<", "<<idd2;
+	polecenie<<", true, true) a JOIN planet_osm_nodes b ON id1=key_column ORDER BY seq";
+	polecenie2<<"SELECT COUNT(*)\
+	FROM ways2 WHERE x1>"<<min(lat1, lat2)-marginx<<" AND x1<"<<max(lat1,lat2)+marginx<<" AND y1>"<<min(lon1, lon2)-marginy<< " AND y1<"<<max(lon1,lon2)+marginy;
+	
+		pqxx::result g = txn.exec(polecenie2.str());
+if(debug!="")
+	{
+		gettimeofday(&end, NULL);
+
+	seconds  = end.tv_sec  - start.tv_sec;
+	useconds = end.tv_usec - start.tv_usec;
+
+	mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+		wyp<<mtime<<endl;
+
+
+	}
 	pqxx::result r = txn.exec(polecenie.str());
+	gettimeofday(&end, NULL);
+
+	seconds  = end.tv_sec  - start.tv_sec;
+	useconds = end.tv_usec - start.tv_usec;
+
+	mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+
 	wyp<<"[";
 	for(int i=0; i<r.size(); i++)
 	{
@@ -108,14 +159,22 @@ void getTrack(long long id1, long long id2, pqxx::work& txn, stringstream& wyp)
 		double x = r[i][1].as<int>()/10000000.0;
 		if(i>0)
 			wyp<<",";
-		wyp<<"{ \"y\":"<<y<<", \"x\":"<<x<<", \"id\": "<<r[i][2]<<"}"<<endl;
+		wyp<<"{ \"y\":"<<y<<", \"x\":"<<x<<", \"id\": "<<r[i][2];
+		if(debug!="")
+			wyp<<",\"ciapa\":\""<<mtime<< " ms\"";
+		wyp<<" }"  <<endl;
 	}
 	wyp<<"]";
+	if(debug!="")
+	{
+			wyp<<g[0][0].as<int>()<<" "<<lat1<<" "<<lon1<<" "<<lat2<<" "<<lon2<<" "<<polecenie.str()<<" "<<polecenie2.str()<<endl;
+	}
 }
 
 
 int main(int argc, char** argv)
 {
+	type="dijkstra";
 	pqxx::connection c("dbname=gis user=root password=foo");
 	pqxx::work txn(c);
 
@@ -145,6 +204,8 @@ int main(int argc, char** argv)
 		}
 		else
 		{
+			debug=env["debug"];
+			type=env["type"];
 			wyp<<"Content-type: application/json\n\n";
 			if(env.find("y")!=env.end() || env.find("val")!=env.end())
 			{

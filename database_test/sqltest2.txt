@@ -8,7 +8,13 @@ source2 bigint,
 target2 bigint,
 source int,
 target int,
-vals double precision);
+x1 double precision,
+y1 double precision,
+x2 double precision,
+y2 double precision,
+vals double precision,
+vals_rev double precision,
+the_geom geometry(LineString,4326));
 
 CREATE FUNCTION extract_siejbi(t_row planet_osm_ways) RETURNS void AS $$
 DECLARE
@@ -27,40 +33,73 @@ lat_b bigint;
 lon_a bigint;
 lon_b bigint;
 wlen double precision;
-pa geography(Point,4326);
-pb geography(Point,4326);
+val_normal double precision;
+val_reverse double precision;
+pa geometry(Point,4326);
+pb geometry(Point,4326);
 BEGIN
+val_normal := -1;
+val_reverse := -1;
 SELECT lat, lon, key_column INTO lat_a, lon_a, b FROM planet_osm_nodes WHERE id=a[i-1];
 SELECT lat, lon, key_column INTO lat_b, lon_b, c FROM planet_osm_nodes WHERE id=a[i];
-pa := ST_MakePoint(lat_a/10000000.0, lon_a/10000000.0);
-pb := ST_MakePoint(lat_b/10000000.0, lon_b/10000000.0);
+pa := ST_SetSRID(ST_MakePoint(lat_a/10000000.0, lon_a/10000000.0),4326);
+pb := ST_SetSRID(ST_MakePoint(lat_b/10000000.0, lon_b/10000000.0),4326);
 wlen := ST_Distance(pa, pb);
-IF t2_row.highway = 'primary' OR t2_row.highway = 'secondary' THEN
-	wlen := wlen*0.9;
+
+IF t2_row.highway = 'motorway' OR t2_row.highway = 'trunk' OR t2_row.highway = 'primary' OR t2_row.highway = 'secondary' OR t2_row.highway = 'tertiary' THEN
+	val_normal := wlen;
+	val_reverse := wlen;
 END IF;
+IF t2_row.highway = 'motorway_link' OR t2_row.highway = 'trunk_link' OR t2_row.highway = 'primary_link' OR t2_row.highway = 'secondary_link' OR t2_row.highway = 'tertiary_link' THEN
+	val_normal := wlen;
+	val_reverse := wlen;
+END IF;
+IF t2_row.highway = 'unclassified' OR t2_row.highway = 'service' OR t2_row.highway = 'residential' OR t2_row.highway = 'living_street' THEN
+	val_normal := wlen*1.3;
+	val_reverse := wlen*1.3;
+END IF;
+
+IF t2_row.highway = 'unclassified' OR t2_row.highway = 'service' OR t2_row.highway = 'residential' OR t2_row.highway = 'living_street' THEN
+	val_normal := wlen*1.3;
+END IF;
+
+IF t2_row.access = 'private' THEN
+	val_normal := -1;
+	val_reverse := -1;
+END IF;
+
+IF t2_row.oneway = 'yes' THEN
+	val_reverse := -1;
+END IF;
+
+IF t2_row.oneway = '-1' THEN
+	val_normal := -1;
+END IF;
+
+IF t2_row.junction = 'roundabout' THEN
+	val_reverse := -1;
+END IF;
+
 IF t2_row.highway <> '' THEN
 	UPDATE planet_osm_nodes SET zll=true WHERE id=a[i-1];
 	UPDATE planet_osm_nodes SET zll=true WHERE id=a[i];
-	INSERT INTO ways2 (osmid, highway, railway, source2, target2, source, target, vals)
-	VALUES (t_row.id, t2_row.highway, t2_row.railway, a[i-1], a[i], b, c, wlen);
-	IF t2_row.oneway <> 'yes' THEN
-		INSERT INTO ways2 (osmid, highway, railway, source2, target2, source, target, vals)
-		VALUES (t_row.id, t2_row.highway, t2_row.railway, a[i], a[i-1], c, b, wlen);
-	END IF;
+	INSERT INTO ways2 (osmid, highway, railway, source2, target2, source, target, vals, vals_rev, x1, y1, x2, y2, the_geom)
+	VALUES (t_row.id, t2_row.highway, t2_row.railway, a[i-1], a[i], b, c, val_normal, val_reverse, lat_a/10000000.0, lon_a/10000000.0, lat_b/10000000.0, lon_b/10000000.0, ST_MakeLine(pa,pb));
 END IF;
 END;
 END LOOP;
 END;                             
 $$ LANGUAGE plpgsql;
 
-ALTER TABLE planet_osm_nodes ADD COLUMN key_column BIGSERIAL;
+ALTER TABLE planet_osm_nodes ADD COLUMN key_column SERIAL;
 CREATE INDEX zzz ON planet_osm_nodes(key_column);
 
 SELECT extract_siejbi(planet_osm_ways.*) FROM planet_osm_ways;
-ALTER TABLE ways2 ADD COLUMN key_column BIGSERIAL PRIMARY KEY;
-CREATE INDEX ways_gid_idx ON ways2(key_column);
-CREATE INDEX ways_source_idx ON ways2(source);
-CREATE INDEX ways_target_idx ON ways2(target);
+ALTER TABLE ways2 ADD COLUMN key_column SERIAL PRIMARY KEY;
+create index myroads_gidx on ways2 using gist (the_geom);
+CREATE UNIQUE INDEX ways_gid_idx ON ways2(key_column);
+CREATE INDEX ways_source_idx ON ways2("source");
+CREATE INDEX ways_target_idx ON ways2("target");
 CREATE INDEX latt ON planet_osm_nodes(lat);
 CREATE INDEX lonn ON planet_osm_nodes(lon);
 CREATE EXTENSION pgrouting;

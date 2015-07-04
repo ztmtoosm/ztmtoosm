@@ -1,0 +1,16 @@
+CREATE OR REPLACE FUNCTION easy_routing (a bigint, b bigint) RETURNS geometry AS $$
+DECLARE
+	a_normal int;
+	b_normal int;
+	a_geometry geometry(Point,4326);
+	b_geometry geometry(Point,4326);
+	near_geom geometry;
+BEGIN
+	SELECT key_column INTO a_normal FROM planet_osm_nodes WHERE id=a;
+	SELECT key_column INTO b_normal FROM planet_osm_nodes WHERE id=b;
+	SELECT geom INTO a_geometry FROM planet_osm_nodes WHERE id=a;
+	SELECT geom INTO b_geometry FROM planet_osm_nodes WHERE id=b;
+	near_geom := ST_Buffer(ST_MakeLine(a_geometry, b_geometry), 0.1);
+	return near_geom;
+END;
+$$ LANGUAGE plpgsql;
