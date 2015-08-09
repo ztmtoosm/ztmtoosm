@@ -34,6 +34,8 @@ mv $1"/data/"$today2 $1"/data/ztm_download1.txt"
 iconv -f windows-1250 -t utf-8 $1"/data/"ztm_download1.txt > $1"/data/"ztm_downloade.txt
 mv $1"/data/"ztm_downloade.txt $1"/data/"ztm_download1.txt
 mv $1"/data/"ztm_download1.txt $1"/data/"warszawa.txt
+wget "http://www.ztm.waw.pl/rss.php?l=1&IDRss=3" -O $1"/www/rss.xml"
+
 # SZCZECIN
 
 rm -r $1"/data/szczecin"
@@ -41,4 +43,12 @@ wget http://zditm.szczecin.pl/rozklady/GTFS/latest/google_gtfs.zip -O $1"/data/s
 unzip $1"/data/szczecin.zip" -d $1"/data/szczecin"
 
 chmod -R 777 $1"/data"
+
+#GDAŃSK
+
+wget http://www.ztm.gda.pl/rozklady/pobierz_rozklady.php -O $1"/data/gdansk.zip"
+unzip $1"/data/gdansk.zip" -d $1"/data/gdansk2"
+
+
+$1"/osm_download.sh" $1
 # mysql -u root --local-infile < $1"/ztm_download/"ztm_download3.txt

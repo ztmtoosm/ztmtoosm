@@ -50,4 +50,16 @@ string htmlgen::link(string link, string info)
 	wynik+="</a>";
 	return wynik;
 }
+string htmlgen::link(string link, string info, string title)
+{
+	string wynik;
+	wynik+="<a href=\"";
+	wynik+=link;
+	wynik+="\" title=\"";
+	wynik+=title;
+	wynik+="\">";
+	wynik+=info;
+	wynik+="</a>";
+	return wynik;
+}
 #endif

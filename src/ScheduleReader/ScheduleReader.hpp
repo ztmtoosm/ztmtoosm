@@ -112,6 +112,15 @@ class ScheduleReaderGdansk : public ScheduleReader
 		}
 		return wyn;
 	}
+	bool ok_stop(string komorka)
+	{
+		cout<<komorka<<endl;
+		if(komorka.find("I,H")!=string::npos)
+		{
+			return false;
+		}
+		return true;
+	}
 	bool cmp(vector <vector <string> >& in, vector <string>& in2)
 	{
 		for(auto& it1 : in)
@@ -133,6 +142,40 @@ class ScheduleReaderGdansk : public ScheduleReader
 				return true;
 		}
 		return false;
+	}
+	bool isSubRoute(vector <string>& testowany, vector <string>& tester)
+	{
+		if(testowany.size()==0)
+			return false;
+		for(int i=0; i<tester.size(); i++)
+		{
+			bool ok_tmp = true;
+			if(tester[i]==testowany[0])
+			{
+				for(int j=0; j<testowany.size() && ok_tmp; j++)
+				{
+					if((i+j)>=tester.size())
+						ok_tmp = false;
+					if(tester[i+j]!=testowany[i])
+						ok_tmp = false;
+				}
+				if(ok_tmp)
+					return true;
+			}
+		}
+		return false;
+	}
+	bool isSubRoute(vector <vector <string> >& in, int pos)
+	{
+		bool ok = 0;
+		for(int i=0; i<in.size(); i++)
+		{
+			if(i!=pos)
+			{
+				ok |= isSubRoute(in[pos], in[i]);
+			}
+		}
+		return ok;
 	}
 	bool notempty(string foo)
 	{
@@ -167,12 +210,15 @@ class ScheduleReaderGdansk : public ScheduleReader
 		for(int i=4; i<tabela[0].size(); i++)
 		{
 			vector <string> posrednie;
+			bool ok = true;
 			for(int j=1; j<tabela.size(); j++)
 			{
+				if(!ok_stop(tabela[j][1]) && notempty(tabela[j][i]))
+					ok=false;	
 				if(notempty(tabela[j][i]))
 					posrednie.push_back(ref(tabela[j][1]));
 			}
-			if(!cmp(linieTmp[idLinii], posrednie))
+			if(!cmp(linieTmp[idLinii], posrednie) && ok && posrednie.size()>0)
 				linieTmp[idLinii].push_back(posrednie);
 		}
 	}
@@ -195,7 +241,6 @@ class ScheduleReaderGdansk : public ScheduleReader
 	ScheduleReaderGdansk (string sciezka, ScheduleHandler* handler) : ScheduleReader(sciezka, handler) {}
 	void run()
 	{
-		cout<<"start..."<<endl;
 		vector <string> lplik = szerokaLista(sciez);
 		for(int i=0; i<lplik.size(); i++)
 		{
@@ -210,7 +255,14 @@ class ScheduleReaderGdansk : public ScheduleReader
 		}
 		for(auto& it1 : linieTmp)
 		{
-			hand->nowa_linia(it1.first, it1.second);
+			vector <vector <string> > tmp = it1.second;
+			vector <vector <string> > tmp2;
+			for(int i=0; i<tmp.size(); i++)
+			{
+				if(!isSubRoute(tmp, i))
+					tmp2.push_back(tmp[i]);
+			}
+			hand->nowa_linia(it1.first, tmp2);
 		}
 	}
 };

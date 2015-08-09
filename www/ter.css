@@ -85,14 +85,20 @@
       {
 	      display: none;
       }
-      .spist{
-	      width: 500px;
-	          -webkit-column-count: 7; /* Chrome, Safari, Opera */
-		      -moz-column-count: 7; /* Firefox */
-		          column-count: 7;
+      .spist, .do_usuniecia {
+	          -webkit-column-width: 50px; /* Chrome, Safari, Opera */
+		      -moz-column-width: 50px; /* Firefox */
+		          column-width: 50px;
       }
+	.blstops, .dziwne {
+	          -webkit-column-width: 500px; /* Chrome, Safari, Opera */
+		      -moz-column-width: 500px; /* Firefox */
+		          column-width: 500px;
+      }
+
       .tryb_czerwony a
       {
+
 	      color: red;
       }
       .tryb_zielony a
@@ -134,4 +140,7 @@ white-space: nowrap;
   display:table-cell;
 text-align: left;
 padding: 10px 5px 10px 5px;
+}
+.attention{
+background-color: yellow;
 }

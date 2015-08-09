@@ -37,7 +37,7 @@ bool graphCohesion (map<long long, set <long long> >& graph)
 bool wayCohesion(set <long long> wayList, osm_base* base)
 {
 	if(wayList.size()==0)
-		return true;
+		return false;
 	map <long long, set <long long> > polaczenia;
 	for(long long it : wayList)
 	{
@@ -61,7 +61,7 @@ bool relationCohesion(long long relationId, osm_base* base)
 	{
 		if(it1.member_type==WAY)
 		{
-			if(it1.role=="")
+			if(it1.role=="" || it1.role=="backward" || it1.role=="forward")
 				wayList.insert(it1.member_id);
 		}
 	}

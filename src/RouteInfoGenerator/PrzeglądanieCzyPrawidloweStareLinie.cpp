@@ -42,7 +42,7 @@ pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long roo
 }
 
 
-set <string> extract_ref(osm_base* baza, long long rel)
+set <string> extract_ref(osm_base* baza, long long rel, string ref_key)
 {
 	set<string> wynik;
 	relation akt=baza->relations[rel];
@@ -58,9 +58,9 @@ set <string> extract_ref(osm_base* baza, long long rel)
 				auto tags=teraz.getTags();
 				if(tags["highway"]=="bus_stop" || tags["railway"]=="tram_stop" || tags["public_transport"]=="stop_position")
 				{
-					if(tags.find("ref")!=tags.end())
+					if(tags.find(ref_key)!=tags.end())
 					{
-						wynik.insert(tags["ref"]);
+						wynik.insert(tags[ref_key]);
 					}
 				}
 			}
@@ -74,9 +74,9 @@ set <string> extract_ref(osm_base* baza, long long rel)
 				auto tags = teraz.getTags();
 				if(tags["highway"]=="platform" || tags["railway"]=="platform")
 				{
-					if(tags.find("ref")!=tags.end())
+					if(tags.find(ref_key)!=tags.end())
 					{
-						wynik.insert(tags["ref"]);
+						wynik.insert(tags[ref_key]);
 					}
 				}
 			}
@@ -117,7 +117,7 @@ set <string> PrzegladanieCzyPrawidloweStareLinie::oldRelationStops(string linia,
 	vector <long long> rels=relacje_linia(baza, rootRel, linia).second;
 	for(int i=0; i<rels.size(); i++)
 	{
-		set <string> tmp1=extract_ref(baza, rels[i]);
+		set <string> tmp1=extract_ref(baza, rels[i], ref_key);
 		wynik0.insert(tmp1.begin(), tmp1.end());
 	}
 	return wynik0;
@@ -148,10 +148,12 @@ string PrzegladanieCzyPrawidloweStareLinie::infoLinie(string linia, osm_base* ba
 	{
 		link_href="http://openstreetmap.org/relation/"+tostring(rels[i]);
 		string nazwa=bazaOsm->relations[rels[i]].getTags()["name"];
+		string ra_link="http://analyser.openstreetmap.fr/cgi-bin/index.py?relation="+tostring(rels[i]);
+		string links=htmlgen::link(link_href, tostring(rels[i]), nazwa)+" "+htmlgen::link(ra_link, "RA");
 		if(!relationCohesion(rels[i], bazaOsm) && rels[i]!=0)
-			tmp1+=htmlgen::div("relboczna_niespojna", "", "route NIESPOJNA: "+htmlgen::link(link_href, tostring(rels[i])+" "+nazwa));
+			tmp1+=htmlgen::div("relboczna_niespojna", "", "Droga niespójna "+links);
 		else
-			tmp1+=htmlgen::div("relboczna", "", "route: "+htmlgen::link(link_href, tostring(rels[i])+" "+nazwa));
+			tmp1+=htmlgen::div("relboczna", "", links);
 	}
 	return htmlgen::div("infolinie", "", tmp1);
 }
@@ -159,16 +161,22 @@ void PrzegladanieCzyPrawidloweStareLinie::printRoznice(string linia, osm_base* b
 {
 	set <string> osm_list=oldRelationStops(linia, bazaOsm);
 	set <string> ztm_list=newRelationStops(linia, bazaZtm);
+	cout<<"a1"<<endl;
 	set <string>::iterator it1=osm_list.begin();
 	set <string>::iterator it2=ztm_list.begin();
 	vector <long long> rels=relacje_linia(bazaOsm, rootRel, linia).second;
+	cout<<"a2"<<endl;
 	bool prawi=1;
 	string wynik;
-	for(int i=0; i<rels.size(); i++)
+	if(ref_key!="ref:ztm")
 	{
-		if(!relationCohesion(rels[i], bazaOsm))
-			prawi=0;
+		for(int i=0; i<rels.size(); i++)
+		{
+			if(!relationCohesion(rels[i], bazaOsm))
+				prawi=0;
+		}
 	}
+	cout<<"a2.5"<<endl;
 	while(it1!=osm_list.end())
 	{
 		if(ztm_list.find(*it1)==ztm_list.end())
@@ -178,6 +186,7 @@ void PrzegladanieCzyPrawidloweStareLinie::printRoznice(string linia, osm_base* b
 		}
 		it1++;
 	}
+	cout<<"a2.7"<<endl;
 	while(it2!=ztm_list.end())
 	{
 		if(osm_list.find(*it2)==osm_list.end())
@@ -187,6 +196,7 @@ void PrzegladanieCzyPrawidloweStareLinie::printRoznice(string linia, osm_base* b
 		}
 		it2++;
 	}
+	cout<<"a3 "<<linia<<endl;
 	(*infoHTML)[linia]=infoLinie(linia, bazaOsm, bazaZtm);
 	if(prawi)
 	{
@@ -199,9 +209,11 @@ void PrzegladanieCzyPrawidloweStareLinie::printRoznice(string linia, osm_base* b
 		(*infoHTML)[linia]+=htmlgen::div("roznice", "roznice_"+linia, wynik);
 		nieprawidlowe.insert(linia);
 	}
+	cout<<"a4 "<<linia<<endl;
 }
-PrzegladanieCzyPrawidloweStareLinie::PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW, map<string, string>* infoHTML, long long rootRelW)
+PrzegladanieCzyPrawidloweStareLinie::PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW, map<string, string>* infoHTML, long long rootRelW, string ref_keyW)
 {
+	ref_key = ref_keyW;
 	rootRel = rootRelW;
 	doPrzerobienia=doPrzerobieniaW;
 	set <string>::iterator it1=doPrzerobienia.begin();
@@ -210,6 +222,7 @@ PrzegladanieCzyPrawidloweStareLinie::PrzegladanieCzyPrawidloweStareLinie(osm_bas
 		printRoznice(*it1, bazaOsm, bazaZtm, infoHTML);
 		it1++;
 	}
+	cout<<"a4 "<<endl;
 }
 
 /*

@@ -14,6 +14,7 @@ using namespace std;
 pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long root, string linia);
 class PrzegladanieCzyPrawidloweStareLinie
 {
+	string ref_key;
 	long long rootRel;
 	set <string> oldRelationStops(string linia, osm_base* baza);
 	set <string> newRelationStops(string linia, ztmread_for_html* baza);
@@ -23,6 +24,6 @@ class PrzegladanieCzyPrawidloweStareLinie
 	public:
 	set <string> prawidlowe;
 	set <string> nieprawidlowe;
-	PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW, map<string, string>* infoHTML, long long rootRelW);
+	PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW, map<string, string>* infoHTML, long long rootRelW, string ref_keyW);
 };
 #endif

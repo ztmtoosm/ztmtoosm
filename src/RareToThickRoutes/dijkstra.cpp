@@ -41,6 +41,8 @@ double PrzelicznikBus::getPrzelicznikWagiDrog(int id, map <string, string> akt_t
 			przelicznik=1.3;
 		if(akt_tags["routing:ztm"]=="yes")
 			przelicznik=0.8;
+		if(akt_tags["routing:ztm"]=="no")
+			przelicznik=0;
 		if(akt_tags["access"]=="private")
 			przelicznik=0;
 	}
