@@ -176,11 +176,19 @@ class WlasciwosciLokalneGdansk : public WlasciwosciLokalne
 	public:
 	string nazwaMala(string lineName)
 	{
-			return "tram";
+			if(lineName.length()==2 && isdigit(lineName[0]))
+				return "tram";
+			if(lineName=="N0")
+				return "tram";
+			return "bus";
 	}
 	string nazwaDuza(string lineName)
 	{
-			return "Tram";
+			if(lineName.length()==2 && isdigit(lineName[0]))
+				return "Tram";
+			if(lineName=="N0")
+				return "Tram";
+			return "Bus";
 	}
 	string getRefKey()
 	{
@@ -359,6 +367,7 @@ class PrzegladanieCzyPrawidloweNoweLinie
 			return false;
 		int s9=drugi.size();
 		bool ok=1;
+		set <string> badStops;
 		for(int i=0; i<s9; i++)
 		{
 			int s8=(drugi)[i].size();
@@ -367,25 +376,21 @@ class PrzegladanieCzyPrawidloweNoweLinie
 				OsmStopData data=(*osmStops)[drugi[i][j]];
 				if(data.stop_position==0)
 				{
-					bledy+=htmlgen::div("stop_pos_non", "", bazaZtm->przystanki[drugi[i][j]].name+" "+drugi[i][j]+" brak STOP_POSITION");
 					blednePrzystanki->insert(drugi[i][j]);
+					badStops.insert(drugi[i][j]);
 					ok=0;
-				}
-				else
-				{
-				/*	
-					TODO BRAK STOP POSITION NA DRODZE
-					if(data.pos_error)
-					{
-						bledy+=htmlgen::div("stop_pos_way", "", data.name+" "+data.id+" STOP_POSITION nie leży na drodze");
-						ok=0;
-					}*/
 				}
 			}
 		}
+		for(auto& it : badStops)
+		{
+			bledy+=htmlgen::div("stop_pos_non", "", bazaZtm->przystanki[it].name+" "+it);
+		}
 		if(!ok)
 		{
-			bledy=htmlgen::div("bledy2", "", "Nie można wygenerować nowej trasy, ponieważ: "+bledy);
+			stringstream bd;
+			bd<<badStops.size();
+			bledy=htmlgen::div("bledy2", "", "Liczba przystanków bez stop_position na linii: "+bd.str()+" "+bledy);
 			(*infoHTML)[linia]+=bledy;
 			return false;
 		}
@@ -477,6 +482,18 @@ struct galk
 			czyWszystkie=0;
 		}
 	}
+	/*
+	void addLine(int status, string name, fstream& plik)
+	{
+		string panel_type = "panel-info";
+		if(status==1)
+			panel_type= "panel-danger";
+		if(status==2)
+			panel_type="panel-success";
+		stringstream wew_str;
+		wew_str<<htmlgen::div("panel-heading", "", name);
+		plik<<htmlgen::div("panel "+panel_type, "", wew_str.str());
+	}*/
 	void readInput()
 	{
 		if(czyWszystkie)
@@ -742,16 +759,27 @@ struct galk
 		set <string>::iterator it1=linieDoPrzerobienia.begin();
 		int licznik=1000;
 		string n2=pathHTML+"/Pelne"+miasto+".html";
+		string n4=pathHTML+"/Pelne"+miasto+"bis.html";
+		string n4F=pathHTML+"/theme2.txt";
 		string n3=pathHTML+"/List"+miasto+".json";
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
-		fstream plik6(n3.c_str(), ios::out | ios::trunc);
-		plik5.precision(9);
-		htmlHead(plik5);
+		fstream nowyPlik5(n4.c_str(), ios::out | ios::trunc);
+		uzupelnij(nowyPlik5, pathHTML+"/theme.txt");
+		nowyPlik5<<miasto<<" - linie";
+		uzupelnij(nowyPlik5, pathHTML+"/themeA.txt");
+		nowyPlik5<<miasto<<"Stan na: ";
 		char buff[20];
 		time_t now = time(NULL);
 		plik5<<htmlgen::div("partx", "", miasto+" - pełne zestawienie")<<endl;
-		strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
+		strftime(buff, 20, "%d.%m.%Y %H:%M", localtime(&now));
 		string buff2=buff;
+		nowyPlik5<<buff2;
+		uzupelnij(nowyPlik5, pathHTML+"/themeB.txt");
+		std::ifstream p5footerBuf(n4F.c_str());
+		std::string nowyPlik5Footer((std::istreambuf_iterator<char>(p5footerBuf)), std::istreambuf_iterator<char>());
+		fstream plik6(n3.c_str(), ios::out | ios::trunc);
+		plik5.precision(9);
+		htmlHead(plik5);
 		plik5<<htmlgen::div("gentime", "", "Wygenerowano: "+buff2)<<endl;
 		map <string, string> slownik0;
 		map <string, pair<string, int> > slownikX;
@@ -861,8 +889,13 @@ struct galk
 			}
 		}
 		plik5<<testBadStops()<<endl;
-		htmlTile(plik5);
+		bool rss=false;
+		if(miasto=="Warszawa")
+			rss=true;
+		htmlTile(plik5, rss);
 		plik5.close();
+		nowyPlik5<<nowyPlik5Footer;
+		nowyPlik5.close();
 	}
 	~galk()
 	{

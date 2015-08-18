@@ -82,6 +82,10 @@ ztmread_for_html::ztmread_for_html (string sciez, string type="Warszawa")
 	{
 		nowo = new ScheduleReaderSzczecin (sciez, this);
 	}
+	if(type=="Łódź")
+	{
+		nowo = new ScheduleReaderLodz (sciez, this);
+	}
 	nowo->run();
 }
 void ztmread_for_html::nowy_przystanek(przystanek nowy)

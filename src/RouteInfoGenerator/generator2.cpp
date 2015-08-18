@@ -169,14 +169,14 @@ struct galk
 		foo<<"<a href=\"http://openstreetmap.org/"<<type<<"/"<<id<<"\">"<<type<<" "<<id<<"</a>";
 		return htmlgen::div("komorka", "", foo.str());
 	}
-	string divOsmRow(int arraySize, string* elem, string additional="")
+	string divOsmRow(int arraySize, string* elem, string id, string additional="")
 	{
 		stringstream foo;
 		for(int i=0; i<arraySize; i++)
 		{
 			foo<<elem[i];
 		}
-		return htmlgen::div("wiersz "+additional, "", foo.str());
+		return htmlgen::div("wiersz "+additional, id, foo.str());
 	}
 	string divOsmTable(vector <string> elem)
 	{
@@ -264,7 +264,7 @@ struct galk
 					   htmlgen::div("komorka", "", "bus/tram_stop"), htmlgen::div("komorka", "", "stop_position"),\
 					   htmlgen::div("komorka", "", "platform"), htmlgen::div("komorka", "", "linia1"),\
 					   htmlgen::div("komorka", "", "linia2"), htmlgen::div("komorka", "", "linia3")};
-		tabela.push_back(divOsmRow(8, row, "czolo"));
+		tabela.push_back(divOsmRow(8, row, "", "czolo"));
 		for(auto& it1 : osmStopData)
 		{
 			if(bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end())
@@ -276,7 +276,7 @@ struct galk
 				string k2 = htmlgen::div("komorka", "", kierunki[1]);
 				string k3 = htmlgen::div("komorka", "", kierunki[2]);
 				string row[] = {refDiv, refName, divOsmLink(it1.second.bus_stop, 'N'), divOsmLink(it1.second.stop_position, 'N'), divOsmLink(it1.second.platform, it1.second.platform_type), k1, k2, k3};
-				tabela.push_back(divOsmRow(8, row));
+				tabela.push_back(divOsmRow(8, row, it1.first));
 			}
 		}
 		for(auto& it1 : bazaZtm->przystanki)
@@ -291,11 +291,11 @@ struct galk
 				string k3 = htmlgen::div("komorka", "", kierunki[2]);
 				cout<<it1.first<<"	"<<it1.second.name<<endl;
 				string row[] = {refDiv, refName, divOsmLink(0, 'N'), divOsmLink(0, 'N'), divOsmLink(0, 'N'), k1, k2, k3};
-				tabela.push_back(divOsmRow(8, row));
+				tabela.push_back(divOsmRow(8, row, it1.first));
 			}
 		}
 		plik5<<divOsmTable(tabela);
-		htmlTile(plik5);
+		htmlTile(plik5, false);
 		plik5.close();
 	}
 	~galk()
