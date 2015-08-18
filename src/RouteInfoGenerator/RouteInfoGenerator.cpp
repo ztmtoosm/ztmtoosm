@@ -459,6 +459,7 @@ struct galk
 	string ztmBasePath;
 	string osmBasePath;
 	string pathHTML;
+	string pathTemplate;
 	string ztmBaseFreshTime;
 	set <string> linieDoPrzerobienia;
 	map <string, OsmStopData> osmStopData;
@@ -472,6 +473,7 @@ struct galk
 		osmBasePath=argv[2];
 		miasto=argv[3];
 		pathHTML=argv[4];
+		pathTemplate="/ztmtoosm/templates-www";
 		string czyW=argv[5];
 		if(czyW=="-all")
 		{
@@ -724,12 +726,18 @@ struct galk
 	{
 		return "<a href=\"wyszukiwarka2.html?linia="+miasto+linia+"\" target=\"_blank\">Pokaż wygenerowany zestaw</a>"+"</br><a href=\"wyszukiwarka2.html?x=d&linia="+miasto+linia+"\" target=\"_blank\">Pokaż wygenerowany zestaw - routing testowy</a>";
 	}
-	void wypiszRaport()
-	{
 
+	void dodajLinieDoHTML(fstream& plik, int typ, string name, string content, HtmlExtraGenerator& gen)
+	{
+		gen.loadedVariables[0]="panel-success";
+		gen.loadedVariables[1]=name;
+		gen.loadedVariables[2]=content;
+		gen.loadTemplate(pathTemplates+".lineHeader.template");
 	}
+
 	galk(char** argv)
 	{
+		HtmlExtraGenerator htmlGenerator;
 		readArg(argv);
 		readInput();
 		if(miasto=="Warszawa")
@@ -764,9 +772,9 @@ struct galk
 		string n3=pathHTML+"/List"+miasto+".json";
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		fstream nowyPlik5(n4.c_str(), ios::out | ios::trunc);
-		uzupelnij(nowyPlik5, pathHTML+"/theme.txt");
+		uzupelnij(nowyPlik5, pathTemplate+"/theme.template");
 		nowyPlik5<<miasto<<" - linie";
-		uzupelnij(nowyPlik5, pathHTML+"/themeA.txt");
+		uzupelnij(nowyPlik5, pathTemplate+"/themeA.template");
 		nowyPlik5<<miasto<<"Stan na: ";
 		char buff[20];
 		time_t now = time(NULL);
@@ -774,7 +782,7 @@ struct galk
 		strftime(buff, 20, "%d.%m.%Y %H:%M", localtime(&now));
 		string buff2=buff;
 		nowyPlik5<<buff2;
-		uzupelnij(nowyPlik5, pathHTML+"/themeB.txt");
+		uzupelnij(nowyPlik5, pathTemplate+"/themeB.template");
 		std::ifstream p5footerBuf(n4F.c_str());
 		std::string nowyPlik5Footer((std::istreambuf_iterator<char>(p5footerBuf)), std::istreambuf_iterator<char>());
 		fstream plik6(n3.c_str(), ios::out | ios::trunc);
@@ -865,6 +873,7 @@ struct galk
 				plik6<<",";
 			plik6<<"\""<<it0prim->second<<"\"";
 			plik5<<htmlgen::div("linia_green", "", infoHTML[it0prim->second]+oklink(it0prim->second)+attention(it0prim->second))<<endl;
+			dodajLinieDoHTML(nowyPlik5,2,it0prim->second, "", htmlGenerator);
 			it0prim++;
 			licznikx++;
 		}
@@ -876,6 +885,7 @@ struct galk
 		while(it3!=slownik1.end())
 		{
 			plik5<<htmlgen::div("linia_red", "", infoHTML[it3->second]+attention(it3->second))<<endl;
+			dodajLinieDoHTML(nowyPlik5,1,it0prim->second, "", htmlGenerator);
 			it3++;
 		}
 		if(czyWszystkie)
@@ -885,6 +895,7 @@ struct galk
 			while(it4!=slownik2.end())
 			{
 				plik5<<htmlgen::div("linia_blue", "", infoHTML[it4->second]+attention(it4->second))<<endl;
+				dodajLinieDoHTML(nowyPlik5,0,it0prim->second, "", htmlGenerator);
 				it4++;
 			}
 		}

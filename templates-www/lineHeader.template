@@ -1,0 +1,7 @@
+<div class="panel $0$">
+<!-- Default panel contents -->
+<div class="panel-heading">$1$</div>
+<div class="list-group">
+$2$
+</div>
+</div>
