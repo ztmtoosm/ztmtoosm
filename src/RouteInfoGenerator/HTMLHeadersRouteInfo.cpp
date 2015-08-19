@@ -81,7 +81,8 @@ string HtmlExtraGenerator::loadTemplate(string path)
 }
 bool okVariable(string str)
 {
-	for(int i=0; i<str.length(); i++) {
+	for(int i=0; i<str.length(); i++)
+	{
 		if(!isdigit(str[i]))
 			return false;
 	}

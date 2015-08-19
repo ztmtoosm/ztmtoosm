@@ -136,6 +136,7 @@ set <string> PrzegladanieCzyPrawidloweStareLinie::newRelationStops(string linia,
 	}
 	return wynik;
 }
+/*
 string PrzegladanieCzyPrawidloweStareLinie::infoLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm)
 {
 	vector <long long> rels=relacje_linia(bazaOsm, rootRel, linia).second;
@@ -156,32 +157,29 @@ string PrzegladanieCzyPrawidloweStareLinie::infoLinie(string linia, osm_base* ba
 			tmp1+=htmlgen::div("relboczna", "", links);
 	}
 	return htmlgen::div("infolinie", "", tmp1);
-}
-void PrzegladanieCzyPrawidloweStareLinie::printRoznice(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm, map<string, string>* infoHTML)
+}*/
+void PrzegladanieCzyPrawidloweStareLinie::zbadajLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm)
 {
+	relacjeDlaLinii[linia]=relacje_linia(bazaOsm, rootRel, linia);
 	set <string> osm_list=oldRelationStops(linia, bazaOsm);
 	set <string> ztm_list=newRelationStops(linia, bazaZtm);
-	cout<<"a1"<<endl;
 	set <string>::iterator it1=osm_list.begin();
 	set <string>::iterator it2=ztm_list.begin();
 	vector <long long> rels=relacje_linia(bazaOsm, rootRel, linia).second;
-	cout<<"a2"<<endl;
 	bool prawi=1;
-	string wynik;
-	if(ref_key!="ref:ztm")
+	for(int i=0; i<rels.size(); i++)
 	{
-		for(int i=0; i<rels.size(); i++)
-		{
 			if(!relationCohesion(rels[i], bazaOsm))
+			{
+				badRelations.insert(rels[i]);
 				prawi=0;
-		}
+			}
 	}
-	cout<<"a2.5"<<endl;
 	while(it1!=osm_list.end())
 	{
 		if(ztm_list.find(*it1)==ztm_list.end())
 		{
-			wynik+=htmlgen::div("osm_problem", "", *it1+" Jest w bazie OSM, nie ma w bazie ZTM");
+			onlyOsmStop[linia].insert(*it1);
 			prawi=0;
 		}
 		it1++;
@@ -191,38 +189,31 @@ void PrzegladanieCzyPrawidloweStareLinie::printRoznice(string linia, osm_base* b
 	{
 		if(osm_list.find(*it2)==osm_list.end())
 		{
-			wynik+=htmlgen::div("ztm_problem", "", *it2+" "+bazaZtm->przystanki[*it2].name+" Jest w bazie ZTM, nie ma w bazie OSM");
+			onlyZtmStop[linia].insert(*it2);
 			prawi=0;
 		}
 		it2++;
 	}
-	cout<<"a3 "<<linia<<endl;
-	(*infoHTML)[linia]=infoLinie(linia, bazaOsm, bazaZtm);
 	if(prawi)
 	{
 		prawidlowe.insert(linia);
 	}
 	else
 	{
-
-		(*infoHTML)[linia]+=htmlgen::div("bledy1", "bledy1_"+linia, "Pokaż różnice pomiędzy bazami >>>");
-		(*infoHTML)[linia]+=htmlgen::div("roznice", "roznice_"+linia, wynik);
 		nieprawidlowe.insert(linia);
 	}
-	cout<<"a4 "<<linia<<endl;
+	cout<<"L "<<linia<<endl;
 }
-PrzegladanieCzyPrawidloweStareLinie::PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW, map<string, string>* infoHTML, long long rootRelW, string ref_keyW)
+PrzegladanieCzyPrawidloweStareLinie::PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobienia, long long rootRelW, string ref_keyW)
 {
 	ref_key = ref_keyW;
 	rootRel = rootRelW;
-	doPrzerobienia=doPrzerobieniaW;
 	set <string>::iterator it1=doPrzerobienia.begin();
 	while(it1!=doPrzerobienia.end())
 	{
-		printRoznice(*it1, bazaOsm, bazaZtm, infoHTML);
+		zbadajLinie(*it1, bazaOsm, bazaZtm);
 		it1++;
 	}
-	cout<<"a4 "<<endl;
 }
 
 /*

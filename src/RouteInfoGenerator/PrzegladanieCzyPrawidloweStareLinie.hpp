@@ -18,12 +18,15 @@ class PrzegladanieCzyPrawidloweStareLinie
 	long long rootRel;
 	set <string> oldRelationStops(string linia, osm_base* baza);
 	set <string> newRelationStops(string linia, ztmread_for_html* baza);
-	string infoLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm);
-	void printRoznice(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm, map<string, string>* infoHTML);
-	set <string> doPrzerobienia;
+	//string infoLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm);
+	void zbadajLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm);
 	public:
 	set <string> prawidlowe;
 	set <string> nieprawidlowe;
-	PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobieniaW, map<string, string>* infoHTML, long long rootRelW, string ref_keyW);
+	set <long long> badRelations;
+	map <string, set<string> > onlyOsmStop;
+	map <string, set<string> > onlyZtmStop;
+	map <string, pair <long long, vector <long long> > > relacjeDlaLinii;
+	PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobienia, long long rootRelW, string ref_keyW);
 };
 #endif

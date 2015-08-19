@@ -1,0 +1,6 @@
+ <button type="button" class="list-group-item" data-toggle="collapse" href="#$0$" aria-expanded="false" aria-controls="$0$">Aktualne relacje w bazie<span class="caret"></span>
+ </button>
+
+<div class="collapse" id="$0$">
+$1$
+</div>

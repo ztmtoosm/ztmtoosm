@@ -780,17 +780,38 @@ struct galk
 	{
 		stringstream foo1;
 		foo1<<errPrzyst.size();
-		string message = "";
+		string message = "Brak stop_position dla przystanków: ";
+		int licznik = 0;
 		for(auto it1 : errPrzyst)
 		{
-			message+=it1+" ";
+			if(licznik>0)
+				message+=",";
+			message+=htmlgen::link(miasto+".html/#"+it1, osmStopData[it1].name+" ("+it1+")", "")+" ";
+			licznik++;
 		}
 		gen.loadedVariables[0]=linia+"niewygenerowane";
 		gen.loadedVariables[1]=message;
 		gen.loadedVariables[2]=foo1.str();
 		return gen.loadTemplate(pathTemplate+"/errLine.template");
 	}
-
+	string dodajInfoNormalne(pair <long long, vector <long long> > daneLinia, string linia, HtmlExtraGenerator& gen)
+	{
+		stringstream messageStream;
+		messageStream<<"<li class=\"list-group-item\">";
+		messageStream<<"route_master ";
+		messageStream<<daneLinia.first;
+		messageStream<<"</li>";
+		for(int i=0; i<daneLinia.second.size(); i++)
+		{
+			messageStream<<"<li class=\"list-group-item\">";
+			messageStream<<"route: ";
+			messageStream<<daneLinia.second[i];
+			messageStream<<"</li>";
+		}
+		gen.loadedVariables[0]=linia+"info";
+		gen.loadedVariables[1]=messageStream.str();
+		return gen.loadTemplate(pathTemplate+"/infoLine.template");
+	}
 	galk(char** argv)
 	{
 		HtmlExtraGenerator htmlGenerator;
@@ -810,12 +831,11 @@ struct galk
 		cerr<<"Załadowano dane "<<bazaZtm<<endl;
 		if(czyWszystkie)
 			linieDoPrzerobienia=wlasciwosci->wszystkieLinie(bazaZtm);
-		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, &infoHTML, wlasciwosci->getRootRelation(), wlasciwosci->getRefKey());
+		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, wlasciwosci->getRootRelation(), wlasciwosci->getRefKey());
 		cerr<<"etap1 "<<endl;
 		set <string> etap=przegl0.nieprawidlowe;
 		if(!czyWszystkie)
 			etap=linieDoPrzerobienia;
-		set <string> blednePrzystanki;
 		cerr<<"etap2 "<<endl;
 		PrzegladanieCzyPrawidloweNoweLinie przegl(&osmStopData, bazaZtm, etap);
 		cerr<<"etap3 "<<endl;
@@ -878,7 +898,8 @@ struct galk
 				plik6<<",";
 			plik6<<"\""<<it1.str<<"\"";
 			generujLinie(it1.str);
-			dodajLinieDoHTML(nowyPlik5, 2, it1.str, "", htmlGenerator);
+			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator);
+			dodajLinieDoHTML(nowyPlik5, 2, it1.str, message1, htmlGenerator);
 			licznikx++;
 		}
 		plik6<<"]";
@@ -888,7 +909,8 @@ struct galk
 		for(auto it1 : linieNiewygenerowaneSorted)
 		{
 			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
-			string message1=dodajInfoNiewygenerowane(errPrzyst, it1.str, htmlGenerator);
+			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator);
+			message1 +=dodajInfoNiewygenerowane(errPrzyst, it1.str, htmlGenerator);
 			dodajLinieDoHTML(nowyPlik5,1, it1.str, message1, htmlGenerator);
 		}
 		if(czyWszystkie)
@@ -896,7 +918,8 @@ struct galk
 			auto linieNormalneSorted = SpecialSortedString::convertSet(przegl0.prawidlowe);
 			for(auto it1 : linieNormalneSorted)
 			{
-				dodajLinieDoHTML(nowyPlik5,1, it1.str, "", htmlGenerator);
+				string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator);
+				dodajLinieDoHTML(nowyPlik5,0, it1.str, message1, htmlGenerator);
 			}
 		}
 		/*

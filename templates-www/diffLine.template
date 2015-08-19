@@ -1,0 +1,7 @@
+ <button type="button" class="list-group-item" data-toggle="collapse" href="#$0$" aria-expanded="false" aria-controls="$0$">Różnice bazy ze stanem faktycznym<span class="caret"></span>
+ <span class="badge">$2$</span>
+ </button>
+
+<div class="collapse" id="$0$">
+<li class="list-group-item">$1$</li>
+</div>
