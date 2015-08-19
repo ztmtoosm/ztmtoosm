@@ -388,7 +388,7 @@ class PrzegladanieCzyPrawidloweNoweLinie
 	{
 		return nieprawidlowe;
 	}
-	PrzegladanieCzyPrawidloweNoweLinie(map<string, OsmStopData>* osmStopsW, ztmread_for_html* bazaZtmW, set<String> doPrzerobienia)
+	PrzegladanieCzyPrawidloweNoweLinie(map<string, OsmStopData>* osmStopsW, ztmread_for_html* bazaZtmW, set<string> doPrzerobienia)
 	{
 		osmStops = osmStopsW;
 		bazaZtm = bazaZtmW;
@@ -403,7 +403,6 @@ class PrzegladanieCzyPrawidloweNoweLinie
 			{
 				nieprawidlowe[it1]=wynTmp;
 			}
-			it1++;
 		}
 	}
 };
@@ -442,22 +441,22 @@ class JSONObjectCore
 struct SpecialSortedString
 {
 	string str;
-	static string zeroGen(int count)
+	bool operator < (const SpecialSortedString& rhs) const
 	{
-		string wynik;
-		for(int i=0; i<count; i++) {
-			wynik+="0";
-		}
-		return wynik;
+		string l=str;
+		string r=rhs.str;
+		return zeraWiodace(l)<zeraWiodace(r);
 	}
-	bool operator () (const SpecialSortedString& lhs, const SpecialSortedString& rhs)
+	bool operator == (const SpecialSortedString& rhs) const
 	{
-		return (zeroGen(10-lhs.str.length())+lhs.str) <= (zeroGen(10-rhs.str.length())+rhs.str);
+		string l=str;
+		string r=rhs.str;
+		return l==r;
 	}
 	static set <SpecialSortedString> convertSet(set<string> normal)
 	{
 		set <SpecialSortedString> wynik;
-		for(auto& it1 : normal)
+		for(auto it1 : normal)
 		{
 			SpecialSortedString foo;
 			foo.str=it1;
@@ -468,7 +467,7 @@ struct SpecialSortedString
 	static set <string> convertToNormal(set<SpecialSortedString> extra)
 	{
 		set <string> wynik;
-		for(auto& it1 : extra)
+		for(auto it1 : extra)
 		{
 			wynik.insert(it1.str);
 		}
@@ -841,11 +840,10 @@ struct galk
 		plik5<<htmlgen::div("dziwne", "", p7_tmp.str())<<endl;
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		*/
-		auto it0prim=slownik0.begin();
 		plik6<<"[";
 		int licznikx=0;
-		auto linieDoPrzerobieniaSorted = SpecialSortedString.convertSet(linieDoPrzerobienia);
-		for(auto& it1 : linieDoPrzerobieniaSorted)
+		auto linieDoPrzerobieniaSorted = SpecialSortedString::convertSet(linieDoPrzerobienia);
+		for(auto it1 : linieDoPrzerobieniaSorted)
 		{
 			if(licznikx>0)
 				plik6<<",";
