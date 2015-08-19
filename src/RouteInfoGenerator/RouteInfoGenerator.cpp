@@ -785,8 +785,8 @@ struct galk
 		for(auto it1 : errPrzyst)
 		{
 			if(licznik>0)
-				message+=",";
-			message+=htmlgen::link(miasto+".html/#"+it1, osmStopData[it1].name+" ("+it1+")", "")+" ";
+				message+=" ,";
+			message+=htmlgen::link(miasto+".html#"+it1, osmStopData[it1].name+" ("+it1+")", "");
 			licznik++;
 		}
 		gen.loadedVariables[0]=linia+"niewygenerowane";
@@ -794,7 +794,7 @@ struct galk
 		gen.loadedVariables[2]=foo1.str();
 		return gen.loadTemplate(pathTemplate+"/errLine.template");
 	}
-	string dodajInfoNormalne(pair <long long, vector <long long> > daneLinia, string linia, HtmlExtraGenerator& gen)
+	string dodajInfoNormalne(pair <long long, vector <long long> > daneLinia, string linia, HtmlExtraGenerator& gen, set<long long>& niespojne)
 	{
 		stringstream messageStream;
 		messageStream<<"<li class=\"list-group-item\">";
@@ -805,12 +805,30 @@ struct galk
 		{
 			messageStream<<"<li class=\"list-group-item\">";
 			messageStream<<"route: ";
-			messageStream<<daneLinia.second[i];
+			messageStream<<htmlgen::link("http://openstreetmap.org/relation/"+toXstring(daneLinia.second[i]), toXstring(daneLinia.second[i]), "");
+			if(niespojne.find(daneLinia.second[i])!=niespojne.end())
+			{
+				messageStream<<"<span class=\"label label-danger\">niespójna</span>";
+			}
 			messageStream<<"</li>";
 		}
 		gen.loadedVariables[0]=linia+"info";
 		gen.loadedVariables[1]=messageStream.str();
 		return gen.loadTemplate(pathTemplate+"/infoLine.template");
+	}
+	string dodajProgress(int val1, int val2, int val3, HtmlExtraGenerator& gen)
+	{
+		double suma = val1+val2+val3;
+		double vall1 = val1;
+		double vall2 = val2;
+		double vall3 = val3;
+		vall1/=suma*100.0;
+		vall2/=suma*100.0;
+		vall3/=suma*100.0;
+		gen.loadedVariables[0]=toXstring((int)vall1);
+		gen.loadedVariables[1]=toXstring((int)vall2);
+		gen.loadedVariables[2]=toXstring((int)vall3);
+		return gen.loadTemplate(pathTemplate+"/progress.template");
 	}
 	galk(char** argv)
 	{
@@ -898,7 +916,7 @@ struct galk
 				plik6<<",";
 			plik6<<"\""<<it1.str<<"\"";
 			generujLinie(it1.str);
-			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator);
+			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
 			dodajLinieDoHTML(nowyPlik5, 2, it1.str, message1, htmlGenerator);
 			licznikx++;
 		}
@@ -909,7 +927,7 @@ struct galk
 		for(auto it1 : linieNiewygenerowaneSorted)
 		{
 			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
-			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator);
+			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
 			message1 +=dodajInfoNiewygenerowane(errPrzyst, it1.str, htmlGenerator);
 			dodajLinieDoHTML(nowyPlik5,1, it1.str, message1, htmlGenerator);
 		}
@@ -918,7 +936,7 @@ struct galk
 			auto linieNormalneSorted = SpecialSortedString::convertSet(przegl0.prawidlowe);
 			for(auto it1 : linieNormalneSorted)
 			{
-				string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator);
+				string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
 				dodajLinieDoHTML(nowyPlik5,0, it1.str, message1, htmlGenerator);
 			}
 		}

@@ -31,6 +31,14 @@ template <typename T1> T1 fromstring(string alfa)
 	foo>>foo2;
 	return foo2;
 }
+template <typename T1> string toXstring(T1 alfa)
+{
+	stringstream foo;
+	foo<<alfa;
+	string foo2;
+	foo>>foo2;
+	return foo2;
+}
 string substituteWhiteCharsBySpace(string nazwa);
 struct dat
 {
