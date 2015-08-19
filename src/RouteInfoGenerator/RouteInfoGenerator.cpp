@@ -357,17 +357,14 @@ set <string> linieDoUsuniecia(ztmread_for_html* baza_ztm, osm_base* roo, long lo
 
 class PrzegladanieCzyPrawidloweNoweLinie
 {
-	set <string> doPrzerobienia;
-	map <string, OsmStopData>* osmStops;
+	set <string> prawidlowe;
+	map <string, set<string> > nieprawidlowe;
 	ztmread_for_html* bazaZtm;
-	bool sprawdzLinie(string linia, vector <vector <string> > drugi, map <string, OsmStopData>* osmStops, map<string, string>* infoHTML, set <string>* blednePrzystanki)
+	map <string, OsmStopData>* osmStops;
+	set <string> sprawdzLinie(string linia, vector <vector <string> > drugi)
 	{
-		string bledy;
-		if(doPrzerobienia.find(linia)==doPrzerobienia.end())
-			return false;
+		set <string> wynik;
 		int s9=drugi.size();
-		bool ok=1;
-		set <string> badStops;
 		for(int i=0; i<s9; i++)
 		{
 			int s8=(drugi)[i].size();
@@ -376,43 +373,35 @@ class PrzegladanieCzyPrawidloweNoweLinie
 				OsmStopData data=(*osmStops)[drugi[i][j]];
 				if(data.stop_position==0)
 				{
-					blednePrzystanki->insert(drugi[i][j]);
-					badStops.insert(drugi[i][j]);
-					ok=0;
+					wynik.insert(drugi[i][j]);
 				}
 			}
 		}
-		for(auto& it : badStops)
-		{
-			bledy+=htmlgen::div("stop_pos_non", "", bazaZtm->przystanki[it].name+" "+it);
-		}
-		if(!ok)
-		{
-			stringstream bd;
-			bd<<badStops.size();
-			bledy=htmlgen::div("bledy2", "", "Liczba przystanków bez stop_position na linii: "+bd.str()+" "+bledy);
-			(*infoHTML)[linia]+=bledy;
-			return false;
-		}
-		return true;
+		return wynik;
 	}
 	public:
-	set <string> prawidlowe;
-	set <string> nieprawidlowe;
-	PrzegladanieCzyPrawidloweNoweLinie(map<string, OsmStopData>* osmStops, ztmread_for_html* bazaZtmW, set <string> doPrzerobieniaW, map <string, string>* infoHTML, set<string>* blednePrzystanki)
+	set <string> getPrawidlowe()
 	{
+		return prawidlowe;
+	}
+	map <string, set<string> > getNieprawidlowe()
+	{
+		return nieprawidlowe;
+	}
+	PrzegladanieCzyPrawidloweNoweLinie(map<string, OsmStopData>* osmStopsW, ztmread_for_html* bazaZtmW, set<String> doPrzerobienia)
+	{
+		osmStops = osmStopsW;
 		bazaZtm = bazaZtmW;
-		doPrzerobienia=doPrzerobieniaW;
-		set <string>::iterator it1=doPrzerobienia.begin();
-		while(it1!=doPrzerobienia.end())
+		for(auto& it1 : doPrzerobienia)
 		{
-			if(sprawdzLinie(*it1, bazaZtm->dane_linia[*it1], osmStops, infoHTML, blednePrzystanki))
+			set <string> wynTmp = sprawdzLinie(it1, bazaZtm->dane_linia[it1]);
+			if(wynTmp.size()==0)
 			{
-				prawidlowe.insert(*it1);
+				prawidlowe.insert(it1);
 			}
 			else
 			{
-				nieprawidlowe.insert(*it1);
+				nieprawidlowe[it1]=wynTmp;
 			}
 			it1++;
 		}
@@ -449,6 +438,43 @@ class JSONObjectCore
 	}
 };
 */
+
+struct SpecialSortedString
+{
+	string str;
+	static string zeroGen(int count)
+	{
+		string wynik;
+		for(int i=0; i<count; i++) {
+			wynik+="0";
+		}
+		return wynik;
+	}
+	bool operator () (const SpecialSortedString& lhs, const SpecialSortedString& rhs)
+	{
+		return (zeroGen(10-lhs.str.length())+lhs.str) <= (zeroGen(10-rhs.str.length())+rhs.str);
+	}
+	static set <SpecialSortedString> convertSet(set<string> normal)
+	{
+		set <SpecialSortedString> wynik;
+		for(auto& it1 : normal)
+		{
+			SpecialSortedString foo;
+			foo.str=it1;
+			wynik.insert(foo);
+		}
+		return wynik;
+	}
+	static set <string> convertToNormal(set<SpecialSortedString> extra)
+	{
+		set <string> wynik;
+		for(auto& it1 : extra)
+		{
+			wynik.insert(it1.str);
+		}
+		return wynik;
+	}
+};
 
 struct galk
 {
@@ -763,77 +789,26 @@ struct galk
 			etap=linieDoPrzerobienia;
 		set <string> blednePrzystanki;
 		cerr<<"etap2 "<<endl;
-		PrzegladanieCzyPrawidloweNoweLinie przegl(&osmStopData, bazaZtm, etap, &infoHTML, &blednePrzystanki);
+		PrzegladanieCzyPrawidloweNoweLinie przegl(&osmStopData, bazaZtm, etap);
 		cerr<<"etap3 "<<endl;
-		linieDoPrzerobienia=przegl.prawidlowe;
-		set <string>::iterator it1=linieDoPrzerobienia.begin();
+		linieDoPrzerobienia=przegl.getPrawidlowe();
 		int licznik=1000;
-		string n2=pathHTML+"/Pelne"+miasto+".html";
 		string n4=pathHTML+"/Pelne"+miasto+"bis.html";
 		string n3=pathHTML+"/List"+miasto+".json";
-		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		fstream nowyPlik5(n4.c_str(), ios::out | ios::trunc);
+		nowyPlik5.precision(9);
 		uzupelnij(nowyPlik5, pathTemplate+"/theme.template");
 		nowyPlik5<<miasto<<" - linie";
 		uzupelnij(nowyPlik5, pathTemplate+"/themeA.template");
 		nowyPlik5<<"Stan na: ";
 		char buff[20];
 		time_t now = time(NULL);
-		plik5<<htmlgen::div("partx", "", miasto+" - pełne zestawienie")<<endl;
 		strftime(buff, 20, "%d.%m.%Y %H:%M", localtime(&now));
 		string buff2=buff;
 		nowyPlik5<<buff2;
 		uzupelnij(nowyPlik5, pathTemplate+"/themeB.template");
 		fstream plik6(n3.c_str(), ios::out | ios::trunc);
-		plik5.precision(9);
-		htmlHead(plik5);
-		plik5<<htmlgen::div("gentime", "", "Wygenerowano: "+buff2)<<endl;
-		map <string, string> slownik0;
-		map <string, pair<string, int> > slownikX;
-		auto it2=linieDoPrzerobienia.begin();
-		while(it2!=linieDoPrzerobienia.end())
-		{
-			cout<<"START "<<*it2<<endl;
-			generujLinie(*it2);
-			cout<<"STOP "<<*it2<<endl;
-			slownik0[zeraWiodace(*it2)]=*it2;
-			slownikX[zeraWiodace(*it2)]=make_pair(*it2, 1);
-			it2++;
-			licznik++;
-		}
-		cout<<"xyz1"<<endl;
-		map <string, string> slownik1;
-		auto it3prim=przegl.nieprawidlowe.begin();
-		while(it3prim!=przegl.nieprawidlowe.end())
-		{
-			slownik1[zeraWiodace(*it3prim)]=*it3prim;
-			slownikX[zeraWiodace(*it3prim)]=make_pair(*it3prim, 2);
-			it3prim++;
-		}
-		cout<<"xyz2"<<endl;
-		map <string, string> slownik2;
-		auto it4prim=przegl0.prawidlowe.begin();
-		while(it4prim!=przegl0.prawidlowe.end())
-		{
-			slownik2[zeraWiodace(*it4prim)]=*it4prim;
-			slownikX[zeraWiodace(*it4prim)]=make_pair(*it4prim, 3);
-			it4prim++;
-		}
-		string divX;
-		auto i1prim = slownikX.begin();
-		cout<<"xyz3"<<endl;
-		while(i1prim != slownikX.end())
-		{
-			string znak="tryb_niebieski";
-			if(i1prim->second.second==1)
-				znak="tryb_zielony";
-			if(i1prim->second.second==2)
-				znak="tryb_czerwony";
-			divX+=htmlgen::div(znak, "", htmlgen::link( "#poczatek"+i1prim->second.first,  i1prim->second.first));
-			i1prim++;
-		}
-		plik5<<htmlgen::div("spist", "", divX)<<endl;
-		plik5<<htmlgen::div("partx", "", "Błędne Przystanki")<<endl;
+		/*
 		stringstream p5_tmp, p6_tmp, p7_tmp;
 		for(string it1 : blednePrzystanki)
 		{
@@ -865,22 +840,23 @@ struct galk
 		cout<<"AAA-END"<<endl;
 		plik5<<htmlgen::div("dziwne", "", p7_tmp.str())<<endl;
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
+		*/
 		auto it0prim=slownik0.begin();
 		plik6<<"[";
 		int licznikx=0;
-		while(it0prim!=slownik0.end())
+		auto linieDoPrzerobieniaSorted = SpecialSortedString.convertSet(linieDoPrzerobienia);
+		for(auto& it1 : linieDoPrzerobieniaSorted)
 		{
 			if(licznikx>0)
 				plik6<<",";
-			plik6<<"\""<<it0prim->second<<"\"";
-			plik5<<htmlgen::div("linia_green", "", infoHTML[it0prim->second]+oklink(it0prim->second)+attention(it0prim->second))<<endl;
-			dodajLinieDoHTML(nowyPlik5,2,it0prim->second, "", htmlGenerator);
-			it0prim++;
+			plik6<<"\""<<it1.str<<"\"";
+			generujLinie(it1.str);
+			dodajLinieDoHTML(nowyPlik5, 2, it1.str, "", htmlGenerator);
 			licznikx++;
 		}
-		cout<<"ZIK-END"<<endl;
 		plik6<<"]";
 		plik6.close();
+		/*
 		plik5<<htmlgen::div("partx", "", "Trasy niewygenerowane...")<<endl;
 		
 		auto it3=slownik1.begin();
@@ -912,7 +888,7 @@ struct galk
 		cout<<"ZZZZ-END"<<endl;
 		uzupelnij(nowyPlik5, pathTemplate+"/theme2.template");
 		cout<<"GGG-END"<<endl;
-
+		*/
 		nowyPlik5.close();
 	}
 	~galk()
