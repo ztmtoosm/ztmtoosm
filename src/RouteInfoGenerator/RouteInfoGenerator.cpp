@@ -798,8 +798,11 @@ struct galk
 	{
 		stringstream messageStream;
 		messageStream<<"<li class=\"list-group-item\">";
-		messageStream<<"route_master ";
-		messageStream<<daneLinia.first;
+		messageStream<<"route_master: ";
+		if(daneLinia.first!=0)
+			messageStream<<htmlgen::link("http://openstreetmap.org/relation/"+toXstring(daneLinia.first), toXstring(daneLinia.first), "");
+		else
+			messageStream<<" <span class=\"label label-danger\">BRAK</span>";
 		messageStream<<"</li>";
 		for(int i=0; i<daneLinia.second.size(); i++)
 		{
@@ -808,8 +811,9 @@ struct galk
 			messageStream<<htmlgen::link("http://openstreetmap.org/relation/"+toXstring(daneLinia.second[i]), toXstring(daneLinia.second[i]), "");
 			if(niespojne.find(daneLinia.second[i])!=niespojne.end())
 			{
-				messageStream<<"<span class=\"label label-danger\">niespójna</span>";
+				messageStream<<" <span class=\"label label-danger\">NIESPÓJNA/span>";
 			}
+			messageStream<<" <a class=\"label label-info\" href=\""<<"http://analyser.openstreetmap.fr/cgi-bin/index.py?relation="<<daneLinia.second[i]<<"\">RA</a>";
 			messageStream<<"</li>";
 		}
 		gen.loadedVariables[0]=linia+"info";
@@ -907,6 +911,7 @@ struct galk
 		plik5<<htmlgen::div("dziwne", "", p7_tmp.str())<<endl;
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		*/
+		nowyPlik5<<dodajProgress(linieDoPrzerobienia.size(), przegl.getNieprawidlowe().size(), przegl0.prawidlowe.size(), htmlGenerator)<<endl;
 		plik6<<"[";
 		int licznikx=0;
 		auto linieDoPrzerobieniaSorted = SpecialSortedString::convertSet(linieDoPrzerobienia);
