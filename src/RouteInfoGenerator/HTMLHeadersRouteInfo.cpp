@@ -1,4 +1,5 @@
 #include "HTMLHeadersRouteinfo.hpp"
+#include <iostream>
 #include <vector>
 void htmlHead(fstream& plik5)
 {
@@ -26,20 +27,31 @@ void htmlTile(fstream& plik5, bool rsstest)
 }
 void uzupelnij(fstream& plik5, string path)
 {
+	cout<<"sta "<<path<<endl;
 	std::ifstream fileStream(path.c_str());
 	std::string str((std::istreambuf_iterator<char>(fileStream)), std::istreambuf_iterator<char>());
+	if(str.length()>0)
+		str = str.substr(0, str.length()-1);
+	else
+		cout<<path<<" BŁĄD"<<endl;
 	plik5<<str;
 	fileStream.close();
+	cout<<"sto"<<endl;
 }
 
 string HtmlExtraGenerator::loadTemplate(string path)
 {
+	cout<<"T1"<<endl;
 	string str;
 	if(loadedTemplates.find(path)==loadedTemplates.end())
 	{
 		std::ifstream fileStream(path.c_str());
 		std::string str2((std::istreambuf_iterator<char>(fileStream)), std::istreambuf_iterator<char>());
 		fileStream.close();
+		if(str2.length()>1)
+			str2 = str2.substr(0, str2.length()-1);
+		else
+			cout<<path<<" BŁĄD"<<endl;
 		str=str2;
 		loadedTemplates[path]=str;
 	}
@@ -51,6 +63,7 @@ string HtmlExtraGenerator::loadTemplate(string path)
 	foo<<str;
 	vector<string> tmp;
 	string tmp2;
+	cout<<"T2"<<endl;
 	while(getline(foo,tmp2,'$'))
 	{
 		tmp.push_back(tmp2);
@@ -71,6 +84,7 @@ string HtmlExtraGenerator::loadTemplate(string path)
 			wynik+=tmp[i];
 		}
 	}
+	cout<<"T3"<<endl;
 	return wynik;
 }
 bool okVariable(string str)

@@ -729,10 +729,12 @@ struct galk
 
 	void dodajLinieDoHTML(fstream& plik, int typ, string name, string content, HtmlExtraGenerator& gen)
 	{
+		cout<<"LOADER START"<<endl;
 		gen.loadedVariables[0]="panel-success";
 		gen.loadedVariables[1]=name;
 		gen.loadedVariables[2]=content;
-		gen.loadTemplate(pathTemplates+".lineHeader.template");
+		plik<<gen.loadTemplate(pathTemplate+"/lineHeader.template");
+		cout<<"LOADER STOP"<<endl;
 	}
 
 	galk(char** argv)
@@ -768,14 +770,13 @@ struct galk
 		int licznik=1000;
 		string n2=pathHTML+"/Pelne"+miasto+".html";
 		string n4=pathHTML+"/Pelne"+miasto+"bis.html";
-		string n4F=pathHTML+"/theme2.txt";
 		string n3=pathHTML+"/List"+miasto+".json";
 		fstream plik5(n2.c_str(), ios::out | ios::trunc);
 		fstream nowyPlik5(n4.c_str(), ios::out | ios::trunc);
 		uzupelnij(nowyPlik5, pathTemplate+"/theme.template");
 		nowyPlik5<<miasto<<" - linie";
 		uzupelnij(nowyPlik5, pathTemplate+"/themeA.template");
-		nowyPlik5<<miasto<<"Stan na: ";
+		nowyPlik5<<"Stan na: ";
 		char buff[20];
 		time_t now = time(NULL);
 		plik5<<htmlgen::div("partx", "", miasto+" - pełne zestawienie")<<endl;
@@ -783,8 +784,6 @@ struct galk
 		string buff2=buff;
 		nowyPlik5<<buff2;
 		uzupelnij(nowyPlik5, pathTemplate+"/themeB.template");
-		std::ifstream p5footerBuf(n4F.c_str());
-		std::string nowyPlik5Footer((std::istreambuf_iterator<char>(p5footerBuf)), std::istreambuf_iterator<char>());
 		fstream plik6(n3.c_str(), ios::out | ios::trunc);
 		plik5.precision(9);
 		htmlHead(plik5);
@@ -862,6 +861,8 @@ struct galk
 			}
 			p7_tmp<<htmlgen::div("dziwna_linia", "", wyn.str())<<"</br>";
 		}
+
+		cout<<"AAA-END"<<endl;
 		plik5<<htmlgen::div("dziwne", "", p7_tmp.str())<<endl;
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		auto it0prim=slownik0.begin();
@@ -877,6 +878,7 @@ struct galk
 			it0prim++;
 			licznikx++;
 		}
+		cout<<"ZIK-END"<<endl;
 		plik6<<"]";
 		plik6.close();
 		plik5<<htmlgen::div("partx", "", "Trasy niewygenerowane...")<<endl;
@@ -885,9 +887,10 @@ struct galk
 		while(it3!=slownik1.end())
 		{
 			plik5<<htmlgen::div("linia_red", "", infoHTML[it3->second]+attention(it3->second))<<endl;
-			dodajLinieDoHTML(nowyPlik5,1,it0prim->second, "", htmlGenerator);
+			dodajLinieDoHTML(nowyPlik5,1,it3->second, "", htmlGenerator);
 			it3++;
 		}
+		cout<<"RED-END"<<endl;
 		if(czyWszystkie)
 		{
 			plik5<<htmlgen::div("partx", "", "Trasy bez zmian...")<<endl;
@@ -895,17 +898,21 @@ struct galk
 			while(it4!=slownik2.end())
 			{
 				plik5<<htmlgen::div("linia_blue", "", infoHTML[it4->second]+attention(it4->second))<<endl;
-				dodajLinieDoHTML(nowyPlik5,0,it0prim->second, "", htmlGenerator);
+				dodajLinieDoHTML(nowyPlik5,0,it4->second, "", htmlGenerator);
 				it4++;
 			}
 		}
+		cout<<"BLUE-END"<<endl;
 		plik5<<testBadStops()<<endl;
 		bool rss=false;
 		if(miasto=="Warszawa")
 			rss=true;
 		htmlTile(plik5, rss);
 		plik5.close();
-		nowyPlik5<<nowyPlik5Footer;
+		cout<<"ZZZZ-END"<<endl;
+		uzupelnij(nowyPlik5, pathTemplate+"/theme2.template");
+		cout<<"GGG-END"<<endl;
+
 		nowyPlik5.close();
 	}
 	~galk()
