@@ -776,7 +776,7 @@ struct galk
 		plik<<gen.loadTemplate(pathTemplate+"/lineHeader.template");
 		cout<<"LOADER STOP"<<endl;
 	}
-	string dodajInfoNiewygenerowane(set <string> errPrzyst, string linia)
+	string dodajInfoNiewygenerowane(set <string> errPrzyst, string linia, HtmlExtraGenerator& gen)
 	{
 		stringstream foo1;
 		foo1<<errPrzyst.size();
@@ -888,7 +888,7 @@ struct galk
 		for(auto it1 : linieNiewygenerowaneSorted)
 		{
 			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
-			string message1=dodajInfoNiewygenerowane(errPrzyst, it1.str);
+			string message1=dodajInfoNiewygenerowane(errPrzyst, it1.str, htmlGenerator);
 			dodajLinieDoHTML(nowyPlik5,1, it1.str, message1, htmlGenerator);
 		}
 		if(czyWszystkie)
