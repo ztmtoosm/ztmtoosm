@@ -384,7 +384,17 @@ class PrzegladanieCzyPrawidloweNoweLinie
 	{
 		return prawidlowe;
 	}
-	map <string, set<string> > getNieprawidlowe()
+	set <string> getNieprawidlowe()
+	{
+		set <string> wynik;
+		for(auto& it1 : nieprawidlowe)
+		{
+			if(it1.first.size()>0)
+				wynik.insert(it1.first);
+		}
+		return wynik;
+	}
+	map <string, set<string> > getNieprawidloweMap()
 	{
 		return nieprawidlowe;
 	}
@@ -755,11 +765,30 @@ struct galk
 	void dodajLinieDoHTML(fstream& plik, int typ, string name, string content, HtmlExtraGenerator& gen)
 	{
 		cout<<"LOADER START"<<endl;
-		gen.loadedVariables[0]="panel-success";
+		if(typ==2)
+			gen.loadedVariables[0]="panel-success";
+		if(typ==1)
+			gen.loadedVariables[0]="panel-warning";
+		if(typ==0)
+			gen.loadedVariables[0]="panel-info";
 		gen.loadedVariables[1]=name;
 		gen.loadedVariables[2]=content;
 		plik<<gen.loadTemplate(pathTemplate+"/lineHeader.template");
 		cout<<"LOADER STOP"<<endl;
+	}
+	string dodajInfoNiewygenerowane(set <string> errPrzyst, string linia)
+	{
+		stringstream foo1;
+		foo1<<errPrzyst.size();
+		string message = "";
+		for(auto it1 : errPrzyst)
+		{
+			message+=it1+" ";
+		}
+		gen.loadedVariables[0]=linia+"niewygenerowane";
+		gen.loadedVariables[1]=message;
+		gen.loadedVariables[2]=foo1.str();
+		return gen.loadTemplate(pathTemplate+"/errLine.template");
 	}
 
 	galk(char** argv)
@@ -854,28 +883,23 @@ struct galk
 		}
 		plik6<<"]";
 		plik6.close();
-		/*
-		plik5<<htmlgen::div("partx", "", "Trasy niewygenerowane...")<<endl;
-		
-		auto it3=slownik1.begin();
-		while(it3!=slownik1.end())
+		auto linieNiewygenerowaneSorted = SpecialSortedString::convertSet(przegl.getNieprawidlowe());
+		auto linieNiewygenerowaneMap = przegl.getNieprawidloweMap();
+		for(auto it1 : linieNiewygenerowaneSorted)
 		{
-			plik5<<htmlgen::div("linia_red", "", infoHTML[it3->second]+attention(it3->second))<<endl;
-			dodajLinieDoHTML(nowyPlik5,1,it3->second, "", htmlGenerator);
-			it3++;
+			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
+			string message1=dodajInfoNiewygenerowane(errPrzyst, it1.str);
+			dodajLinieDoHTML(nowyPlik5,1, it1.str, message1, htmlGenerator);
 		}
-		cout<<"RED-END"<<endl;
 		if(czyWszystkie)
 		{
-			plik5<<htmlgen::div("partx", "", "Trasy bez zmian...")<<endl;
-			auto it4=slownik2.begin();
-			while(it4!=slownik2.end())
+			auto linieNormalneSorted = SpecialSortedString::convertSet(przegl0.prawidlowe);
+			for(auto it1 : linieNormalneSorted)
 			{
-				plik5<<htmlgen::div("linia_blue", "", infoHTML[it4->second]+attention(it4->second))<<endl;
-				dodajLinieDoHTML(nowyPlik5,0,it4->second, "", htmlGenerator);
-				it4++;
+				dodajLinieDoHTML(nowyPlik5,1, it1.str, "", htmlGenerator);
 			}
 		}
+		/*
 		cout<<"BLUE-END"<<endl;
 		plik5<<testBadStops()<<endl;
 		bool rss=false;
@@ -884,9 +908,8 @@ struct galk
 		htmlTile(plik5, rss);
 		plik5.close();
 		cout<<"ZZZZ-END"<<endl;
-		uzupelnij(nowyPlik5, pathTemplate+"/theme2.template");
-		cout<<"GGG-END"<<endl;
 		*/
+		uzupelnij(nowyPlik5, pathTemplate+"/theme2.template");
 		nowyPlik5.close();
 	}
 	~galk()
