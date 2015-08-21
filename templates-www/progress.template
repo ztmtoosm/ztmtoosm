@@ -1,11 +1,11 @@
 <div class="progress">
-  <div class="progress-bar progress-bar-success" style="width: $0$">
+  <div class="progress-bar progress-bar-success" style="width: $0$%">
     <span class="sr-only">$0$</span>
   </div>
-  <div class="progress-bar progress-bar-warning" style="width: $1$">
+  <div class="progress-bar progress-bar-warning" style="width: $1$%">
     <span class="sr-only">$1$</span>
   </div>
-  <div class="progress-bar progress-bar-info" style="width: $2$">
+  <div class="progress-bar progress-bar-info" style="width: $2$%">
     <span class="sr-only">$2$</span>
   </div>
 </div>

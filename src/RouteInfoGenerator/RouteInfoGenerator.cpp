@@ -944,7 +944,7 @@ struct galk
 		}
 		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
 		string ostatni = bazaZtm->przystanki[ostatniId].name;
-		string info = idLinia + " -> "+ostatni;
+		string info = "<a href=\"Pelne"+miasto+".html#poczatek"+idLinia+"\">"+idLinia + "</a>  -> "+ostatni;
 		return info;
 	}
 	vector <string> przystanekKierunki(string p)
@@ -1018,7 +1018,7 @@ struct galk
 		przystankiHTMLStream<<miasto<<" - przystanki";
 		uzupelnij(przystankiHTMLStream, pathTemplate+"/themeA.template");
 		przystankiHTMLStream<<"Stan na: ";
-		lineHTMLStream<<aktTime();
+		przystankiHTMLStream<<aktTime();
 		uzupelnij(przystankiHTMLStream, pathTemplate+"/themeB.template");
 
 
@@ -1105,10 +1105,17 @@ struct galk
 		{
 			if(bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end())
 			{
+				auto& it2 = bazaZtm->przystanki[it1.first];
 				stringstream line;
 				line<<"<tr id=\""<<it1.first<<"\">";
 				line<<"<td>"<<it1.first<<"</td>";
-				line<<"<td>"<<it1.second.name<<"</td>";
+				line<<"<td>"<<it2.name<<"</td>";
+				line<<"<td>"<<it2.lon<<"</td>";
+				line<<"<td>"<<it2.lat<<"</td>";
+				line<<"<td>"<<it2.stopinfo<<"</td>";
+				line<<"<td>"<<divOsmLink(it1.second.bus_stop, 'N')<<"</td>";
+				line<<"<td>"<<divOsmLink(it1.second.stop_position, 'N')<<"</td>";
+				line<<"<td>"<<divOsmLink(it1.second.platform, it1.second.platform_type)<<"</td>";
 				vector <string> kierunki=przystanekKierunki(it1.first);
 				line<<"<td>"<<kierunki[0]<<"</td>";
 				line<<"<td>"<<kierunki[1]<<"</td>";
@@ -1142,7 +1149,7 @@ struct galk
 			}
 		}
 */
-		lineHTMLStream<<divOsmTable(tabela)<<endl;
+		przystankiHTMLStream<<divOsmTable(tabela)<<endl;
 
 		uzupelnij(lineHTMLStream, pathTemplate+"/theme2.template");
 		lineHTMLStream.close();
