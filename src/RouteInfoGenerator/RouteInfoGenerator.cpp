@@ -794,6 +794,33 @@ struct galk
 		gen.loadedVariables[2]=foo1.str();
 		return gen.loadTemplate(pathTemplate+"/errLine.template");
 	}
+	string dodajInfoRoznice(set <string> ein, set <string> zwei, string linia, HtmlExtraGenerator& gen)
+	{
+		stringstream foo1;
+		foo1<<ein.size()+zwei.size();
+		string message = "Przystanki, : ";
+		int licznik = 0;
+		for(auto it1 : ein)
+		{
+			if(licznik>0)
+				message+=" ,";
+			message+=htmlgen::link(miasto+".html#"+it1, osmStopData[it1].name+" ("+it1+")", "");
+			licznik++;
+		}
+		message += ". Przystanki, które są na linii, ale : ";
+		licznik = 0;
+		for(auto it1 : zwei)
+		{
+			if(licznik>0)
+				message+=" ,";
+			message+=htmlgen::link(miasto+".html#"+it1, osmStopData[it1].name+" ("+it1+")", "");
+			licznik++;
+		}
+		gen.loadedVariables[0]=linia+"roznice";
+		gen.loadedVariables[1]=message;
+		gen.loadedVariables[2]=foo1.str();
+		return gen.loadTemplate(pathTemplate+"/diffLine.template");
+	}
 	string dodajInfoNormalne(pair <long long, vector <long long> > daneLinia, string linia, HtmlExtraGenerator& gen, set<long long>& niespojne)
 	{
 		stringstream messageStream;
@@ -811,7 +838,7 @@ struct galk
 			messageStream<<htmlgen::link("http://openstreetmap.org/relation/"+toXstring(daneLinia.second[i]), toXstring(daneLinia.second[i]), "");
 			if(niespojne.find(daneLinia.second[i])!=niespojne.end())
 			{
-				messageStream<<" <span class=\"label label-danger\">NIESPÓJNA/span>";
+				messageStream<<" <span class=\"label label-danger\">NIESPÓJNA</span>";
 			}
 			messageStream<<" <a class=\"label label-info\" href=\""<<"http://analyser.openstreetmap.fr/cgi-bin/index.py?relation="<<daneLinia.second[i]<<"\">RA</a>";
 			messageStream<<"</li>";
@@ -826,13 +853,120 @@ struct galk
 		double vall1 = val1;
 		double vall2 = val2;
 		double vall3 = val3;
-		vall1/=suma*100.0;
-		vall2/=suma*100.0;
-		vall3/=suma*100.0;
+		vall1/=suma/100.0;
+		vall2/=suma/100.0;
+		vall3/=suma/100.0;
 		gen.loadedVariables[0]=toXstring((int)vall1);
 		gen.loadedVariables[1]=toXstring((int)vall2);
 		gen.loadedVariables[2]=toXstring((int)vall3);
 		return gen.loadTemplate(pathTemplate+"/progress.template");
+	}
+	string aktTime()
+	{
+		char buff[20];
+		time_t now = time(NULL);
+		strftime(buff, 20, "%d.%m.%Y %H:%M", localtime(&now));
+		string buff2=buff;
+		return buff2;
+	}
+
+	string testBadStops()
+	{
+		stringstream wynik;
+		for(auto& ddd : osmStopData)
+		{
+			OsmStopData& dataOsm = ddd.second;
+			string id = ddd.first;
+			if(bazaZtm->przystanki.find(id)==bazaZtm->przystanki.end())
+			{
+				if(id.length()==6 && (id[4]=='5' || id[4]=='6'))
+				{
+					double lat = 0;
+					double lon = 0;
+					if(bazaOsm->nodes.find(dataOsm.stop_position)!=bazaOsm->nodes.end())
+					{
+						lat = bazaOsm->nodes[dataOsm.stop_position].lat;
+						lon = bazaOsm->nodes[dataOsm.stop_position].lon;
+					}
+					else if(bazaOsm->nodes.find(dataOsm.bus_stop)!=bazaOsm->nodes.end())
+					{
+						lat = bazaOsm->nodes[dataOsm.bus_stop].lat;
+						lon = bazaOsm->nodes[dataOsm.bus_stop].lon;
+					}
+					wynik<<htmlgen::div("bprzyst", "", wypiszPrzystanekDoUsuniecia(id, dataOsm.name, lon, lat))<<endl;
+				}
+			}
+		}
+		return wynik.str();
+	}
+
+
+	string divOsmTable(vector <string> elem)
+	{
+		stringstream foo;
+		foo<<"<table class=\"table table-striped\">";
+		for(int i=0; i<elem.size(); i++)
+		{
+			foo<<elem[i];
+		}
+		foo<<"</table>";
+		return foo.str();
+	}
+
+	string divOsmLink(long long id, char t)
+	{
+		string type;
+		if(t=='N')
+			type="node";
+		if(t=='W')
+			type="way";
+		if(t=='R')
+			type="relaton";
+		if(id==0)
+			return htmlgen::div("komorka", "", "-");
+		stringstream foo;
+		foo<<"<a href=\"http://openstreetmap.org/"<<type<<"/"<<id<<"\">"<<type<<" "<<id<<"</a>";
+		return htmlgen::div("komorka", "", foo.str());
+	}
+	string dokladnePrzystanki(string idPrzystanek, string idLinia, int idWariantu, int idKol)
+	{
+		string poprzedni = "POCZĄTKOWY";
+		string kolejny = "KOŃCOWY";
+		if(idKol>0)
+		{
+			string poprzedniId = bazaZtm->dane_linia[idLinia][idWariantu][idKol-1];
+			poprzedni = bazaZtm->przystanki[poprzedniId].name;
+		}
+		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+1)
+		{
+			string kolejnyId = bazaZtm->dane_linia[idLinia][idWariantu][idKol+1];
+			kolejny = bazaZtm->przystanki[kolejnyId].name;
+		}
+		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
+		string ostatni = bazaZtm->przystanki[ostatniId].name;
+		string info = idLinia + " -> "+ostatni;
+		return info;
+	}
+	vector <string> przystanekKierunki(string p)
+	{
+		vector <string> wynik;
+		for(auto& it2 : bazaZtm->dane_linia)
+		{
+			for(int i=0; i<it2.second.size(); i++)
+			{
+				for(int j=0; j<it2.second[i].size(); j++)
+				{
+					if(it2.second[i][j]==p)
+						wynik.push_back(dokladnePrzystanki(p, it2.first, i, j));
+				}
+			}
+		}
+		if(wynik.size()<3)
+		{
+			for(int i=wynik.size(); i<3; i++)
+				wynik.push_back("-");
+		}
+		return wynik;
 	}
 	galk(char** argv)
 	{
@@ -863,21 +997,31 @@ struct galk
 		cerr<<"etap3 "<<endl;
 		linieDoPrzerobienia=przegl.getPrawidlowe();
 		int licznik=1000;
-		string n4=pathHTML+"/Pelne"+miasto+"bis.html";
-		string n3=pathHTML+"/List"+miasto+".json";
-		fstream nowyPlik5(n4.c_str(), ios::out | ios::trunc);
-		nowyPlik5.precision(9);
-		uzupelnij(nowyPlik5, pathTemplate+"/theme.template");
-		nowyPlik5<<miasto<<" - linie";
-		uzupelnij(nowyPlik5, pathTemplate+"/themeA.template");
-		nowyPlik5<<"Stan na: ";
-		char buff[20];
-		time_t now = time(NULL);
-		strftime(buff, 20, "%d.%m.%Y %H:%M", localtime(&now));
-		string buff2=buff;
-		nowyPlik5<<buff2;
-		uzupelnij(nowyPlik5, pathTemplate+"/themeB.template");
-		fstream plik6(n3.c_str(), ios::out | ios::trunc);
+		string linieHTMLPath=pathHTML+"/Pelne"+miasto+"bis.html";
+		string przystankiHTMLPath=pathHTML+"/"+miasto+"bis.html";
+		string jsonPath=pathHTML+"/List"+miasto+".json";
+		fstream lineHTMLStream(linieHTMLPath.c_str(), ios::out | ios::trunc);
+		fstream przystankiHTMLStream(przystankiHTMLPath.c_str(), ios::out | ios::trunc);
+		fstream jsonStream(jsonPath.c_str(), ios::out | ios::trunc);
+
+
+		lineHTMLStream.precision(9);
+		uzupelnij(lineHTMLStream, pathTemplate+"/theme.template");
+		lineHTMLStream<<miasto<<" - linie";
+		uzupelnij(lineHTMLStream, pathTemplate+"/themeA.template");
+		lineHTMLStream<<"Stan na: ";
+		lineHTMLStream<<aktTime();
+		uzupelnij(lineHTMLStream, pathTemplate+"/themeB.template");
+
+		przystankiHTMLStream.precision(9);
+		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme.template");
+		przystankiHTMLStream<<miasto<<" - przystanki";
+		uzupelnij(przystankiHTMLStream, pathTemplate+"/themeA.template");
+		przystankiHTMLStream<<"Stan na: ";
+		lineHTMLStream<<aktTime();
+		uzupelnij(przystankiHTMLStream, pathTemplate+"/themeB.template");
+
+
 		/*
 		stringstream p5_tmp, p6_tmp, p7_tmp;
 		for(string it1 : blednePrzystanki)
@@ -911,22 +1055,22 @@ struct galk
 		plik5<<htmlgen::div("dziwne", "", p7_tmp.str())<<endl;
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		*/
-		nowyPlik5<<dodajProgress(linieDoPrzerobienia.size(), przegl.getNieprawidlowe().size(), przegl0.prawidlowe.size(), htmlGenerator)<<endl;
-		plik6<<"[";
+		lineHTMLStream<<dodajProgress(linieDoPrzerobienia.size(), przegl.getNieprawidlowe().size(), przegl0.prawidlowe.size(), htmlGenerator)<<endl;
+		jsonStream<<"[";
 		int licznikx=0;
 		auto linieDoPrzerobieniaSorted = SpecialSortedString::convertSet(linieDoPrzerobienia);
 		for(auto it1 : linieDoPrzerobieniaSorted)
 		{
 			if(licznikx>0)
-				plik6<<",";
-			plik6<<"\""<<it1.str<<"\"";
+				jsonStream<<",";
+			jsonStream<<"\""<<it1.str<<"\"";
 			generujLinie(it1.str);
 			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
-			dodajLinieDoHTML(nowyPlik5, 2, it1.str, message1, htmlGenerator);
+			dodajLinieDoHTML(lineHTMLStream, 2, it1.str, message1, htmlGenerator);
 			licznikx++;
 		}
-		plik6<<"]";
-		plik6.close();
+		jsonStream<<"]";
+		jsonStream.close();
 		auto linieNiewygenerowaneSorted = SpecialSortedString::convertSet(przegl.getNieprawidlowe());
 		auto linieNiewygenerowaneMap = przegl.getNieprawidloweMap();
 		for(auto it1 : linieNiewygenerowaneSorted)
@@ -934,7 +1078,7 @@ struct galk
 			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
 			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
 			message1 +=dodajInfoNiewygenerowane(errPrzyst, it1.str, htmlGenerator);
-			dodajLinieDoHTML(nowyPlik5,1, it1.str, message1, htmlGenerator);
+			dodajLinieDoHTML(lineHTMLStream,1, it1.str, message1, htmlGenerator);
 		}
 		if(czyWszystkie)
 		{
@@ -942,7 +1086,7 @@ struct galk
 			for(auto it1 : linieNormalneSorted)
 			{
 				string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
-				dodajLinieDoHTML(nowyPlik5,0, it1.str, message1, htmlGenerator);
+				dodajLinieDoHTML(lineHTMLStream,0, it1.str, message1, htmlGenerator);
 			}
 		}
 		/*
@@ -955,42 +1099,61 @@ struct galk
 		plik5.close();
 		cout<<"ZZZZ-END"<<endl;
 		*/
-		uzupelnij(nowyPlik5, pathTemplate+"/theme2.template");
-		nowyPlik5.close();
+
+		vector <string> tabela;
+		for(auto& it1 : osmStopData)
+		{
+			if(bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end())
+			{
+				stringstream line;
+				line<<"<tr id=\""<<it1.first<<"\">";
+				line<<"<td>"<<it1.first<<"</td>";
+				line<<"<td>"<<it1.second.name<<"</td>";
+				vector <string> kierunki=przystanekKierunki(it1.first);
+				line<<"<td>"<<kierunki[0]<<"</td>";
+				line<<"<td>"<<kierunki[1]<<"</td>";
+				line<<"<td>"<<kierunki[2]<<"</td>";
+				/*
+				string refDiv = htmlgen::div("komorka", "", it1.first);
+				string refName = htmlgen::div("komorka", "", it1.second.name);
+				string k1 = htmlgen::div("komorka", "", kierunki[0]);
+				string k2 = htmlgen::div("komorka", "", kierunki[1]);
+				string k3 = htmlgen::div("komorka", "", kierunki[2]);
+				string row[] = {refDiv, refName, divOsmLink(it1.second.bus_stop, 'N'), divOsmLink(it1.second.stop_position, 'N'), divOsmLink(it1.second.platform, it1.second.platform_type), k1, k2, k3};
+				*/
+				line<<"</tr>";
+				tabela.push_back(line.str());
+			}
+		}
+		/*
+		for(auto& it1 : bazaZtm->przystanki)
+		{
+			if(osmStopData.find(it1.first)==osmStopData.end())
+			{
+				vector <string> kierunki=przystanekKierunki(it1.first);
+				string refDiv = htmlgen::div("komorka", "", it1.first);
+				string refName = htmlgen::div("komorka", "", it1.second.name);
+				string k1 = htmlgen::div("komorka", "", kierunki[0]);
+				string k2 = htmlgen::div("komorka", "", kierunki[1]);
+				string k3 = htmlgen::div("komorka", "", kierunki[2]);
+				cout<<it1.first<<"	"<<it1.second.name<<endl;
+				string row[] = {refDiv, refName, divOsmLink(0, 'N'), divOsmLink(0, 'N'), divOsmLink(0, 'N'), k1, k2, k3};
+				tabela.push_back(divOsmRow(8, row, it1.first));
+			}
+		}
+*/
+		lineHTMLStream<<divOsmTable(tabela)<<endl;
+
+		uzupelnij(lineHTMLStream, pathTemplate+"/theme2.template");
+		lineHTMLStream.close();
+
+		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme2.template");
+		przystankiHTMLStream.close();
 	}
 	~galk()
 	{
 		delete bazaOsm;
 		delete bazaZtm;
-	}
-	string testBadStops()
-	{
-		stringstream wynik;
-		for(auto& ddd : osmStopData)
-		{
-			OsmStopData& dataOsm = ddd.second;
-			string id = ddd.first;
-			if(bazaZtm->przystanki.find(id)==bazaZtm->przystanki.end())
-			{
-				if(id.length()==6 && (id[4]=='5' || id[4]=='6'))
-				{
-					double lat = 0;
-					double lon = 0;
-					if(bazaOsm->nodes.find(dataOsm.stop_position)!=bazaOsm->nodes.end())
-					{
-						lat = bazaOsm->nodes[dataOsm.stop_position].lat;
-						lon = bazaOsm->nodes[dataOsm.stop_position].lon;
-					}
-					else if(bazaOsm->nodes.find(dataOsm.bus_stop)!=bazaOsm->nodes.end())
-					{
-						lat = bazaOsm->nodes[dataOsm.bus_stop].lat;
-						lon = bazaOsm->nodes[dataOsm.bus_stop].lon;
-					}
-					wynik<<htmlgen::div("bprzyst", "", wypiszPrzystanekDoUsuniecia(id, dataOsm.name, lon, lat))<<endl;
-				}
-			}
-		}
-		return wynik.str();
 	}
 };
 int main(int argc, char** argv)

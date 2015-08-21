@@ -181,11 +181,13 @@ struct galk
 	string divOsmTable(vector <string> elem)
 	{
 		stringstream foo;
+		foo<<"<table class=\"table table-striped\">";
 		for(int i=0; i<elem.size(); i++)
 		{
 			foo<<elem[i];
 		}
-		return htmlgen::div("tabela", "", foo.str());
+		foo<<"</table>";
+		return foo.str();
 	}
 	string dokladnePrzystanki(string idPrzystanek, string idLinia, int idWariantu, int idKol)
 	{
