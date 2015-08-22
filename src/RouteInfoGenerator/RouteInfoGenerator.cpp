@@ -961,11 +961,6 @@ struct galk
 				}
 			}
 		}
-		if(wynik.size()<3)
-		{
-			for(int i=wynik.size(); i<3; i++)
-				wynik.push_back("-");
-		}
 		return wynik;
 	}
 	galk(char** argv)
@@ -996,16 +991,17 @@ struct galk
 		PrzegladanieCzyPrawidloweNoweLinie przegl(&osmStopData, bazaZtm, etap);
 		cerr<<"etap3 "<<endl;
 		linieDoPrzerobienia=przegl.getPrawidlowe();
-		int licznik=1000;
 		string linieHTMLPath=pathHTML+"/Pelne"+miasto+"bis.html";
 		string przystankiHTMLPath=pathHTML+"/"+miasto+"bis.html";
 		string jsonPath=pathHTML+"/List"+miasto+".json";
+		string json2Path=pathHTML+"/Przystanki"+miasto+".json";
 		fstream lineHTMLStream(linieHTMLPath.c_str(), ios::out | ios::trunc);
 		fstream przystankiHTMLStream(przystankiHTMLPath.c_str(), ios::out | ios::trunc);
 		fstream jsonStream(jsonPath.c_str(), ios::out | ios::trunc);
-
+		fstream json2Stream(json2Path.c_str(), ios::out | ios::trunc);
 
 		lineHTMLStream.precision(9);
+		json2Stream.precision(9);
 		uzupelnij(lineHTMLStream, pathTemplate+"/theme.template");
 		lineHTMLStream<<miasto<<" - linie";
 		uzupelnij(lineHTMLStream, pathTemplate+"/themeA.template");
@@ -1099,14 +1095,22 @@ struct galk
 		plik5.close();
 		cout<<"ZZZZ-END"<<endl;
 		*/
-
-		vector <string> tabela;
+		int jsonTableRowCount = 0;
+		json2Stream<<"[";
 		for(auto& it1 : osmStopData)
 		{
 			if(bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end())
 			{
 				auto& it2 = bazaZtm->przystanki[it1.first];
 				stringstream line;
+				if(jsonTableRowCount>0)
+					line<<",";
+				line<<"{";
+				line<<"\"id\":\""<<it1.first<<"\"";
+				line<<"\",name\":\""<<it2.name<<"\"";
+				line<<"\",lon\":\""<<it2.lon<<"\"";
+				line<<"\",lat\":\""<<it2.lat<<"\"";
+				/*
 				line<<"<tr id=\""<<it1.first<<"\">";
 				line<<"<td>"<<it1.first<<"</td>";
 				line<<"<td>"<<it2.name<<"</td>";
@@ -1119,7 +1123,7 @@ struct galk
 				vector <string> kierunki=przystanekKierunki(it1.first);
 				line<<"<td>"<<kierunki[0]<<"</td>";
 				line<<"<td>"<<kierunki[1]<<"</td>";
-				line<<"<td>"<<kierunki[2]<<"</td>";
+				line<<"<td>"<<kierunki[2]<<"</td>";*/
 				/*
 				string refDiv = htmlgen::div("komorka", "", it1.first);
 				string refName = htmlgen::div("komorka", "", it1.second.name);
@@ -1128,8 +1132,9 @@ struct galk
 				string k3 = htmlgen::div("komorka", "", kierunki[2]);
 				string row[] = {refDiv, refName, divOsmLink(it1.second.bus_stop, 'N'), divOsmLink(it1.second.stop_position, 'N'), divOsmLink(it1.second.platform, it1.second.platform_type), k1, k2, k3};
 				*/
-				line<<"</tr>";
-				tabela.push_back(line.str());
+				line<<"}";
+				json2Stream<<line.str();
+				jsonTableRowCount++;
 			}
 		}
 		/*
@@ -1149,11 +1154,11 @@ struct galk
 			}
 		}
 */
-		przystankiHTMLStream<<divOsmTable(tabela)<<endl;
-
+		//przystankiHTMLStream<<divOsmTable(tabela)<<endl;
+		json2Stream<<"]";
 		uzupelnij(lineHTMLStream, pathTemplate+"/theme2.template");
 		lineHTMLStream.close();
-
+		json2Stream.close();
 		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme2.template");
 		przystankiHTMLStream.close();
 	}
