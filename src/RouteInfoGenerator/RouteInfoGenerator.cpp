@@ -963,6 +963,27 @@ struct galk
 		}
 		return wynik;
 	}
+
+	std::string escapeJsonString(const std::string& input) {
+		std::ostringstream ss;
+		for (auto iter = input.cbegin(); iter != input.cend(); iter++) {
+		//C++98/03:
+		//for (std::string::const_iterator iter = input.begin(); iter != input.end(); iter++) {
+			switch (*iter) {
+				case '\\': ss << "\\\\"; break;
+				case '"': ss << "\\\""; break;
+				case '/': ss << "\\/"; break;
+				case '\b': ss << "\\b"; break;
+				case '\f': ss << "\\f"; break;
+				case '\n': ss << "\\n"; break;
+				case '\r': ss << "\\r"; break;
+				case '\t': ss << "\\t"; break;
+				default: ss << *iter; break;
+			}
+		}
+		return ss.str();
+	}
+
 	galk(char** argv)
 	{
 		HtmlExtraGenerator htmlGenerator;
@@ -1107,9 +1128,9 @@ struct galk
 					line<<",";
 				line<<"{";
 				line<<"\"id\":\""<<it1.first<<"\"";
-				line<<"\",name\":\""<<it2.name<<"\"";
-				line<<"\",lon\":\""<<it2.lon<<"\"";
-				line<<"\",lat\":\""<<it2.lat<<"\"";
+				line<<",\"name\":\""<<escapeJsonString(it2.name)<<"\"";
+				line<<",\"lon\":\""<<it2.lon<<"\"";
+				line<<",\"lat\":\""<<it2.lat<<"\"";
 				/*
 				line<<"<tr id=\""<<it1.first<<"\">";
 				line<<"<td>"<<it1.first<<"</td>";
