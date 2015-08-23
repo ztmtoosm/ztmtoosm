@@ -51,7 +51,7 @@ rm -r $1"/data/gdansk"
 wget http://www.ztm.gda.pl/rozklady/pobierz_rozklady.php -O $1"/data/gdansk.zip"
 unzip $1"/data/gdansk.zip" -d $1"/data/gdansk2"
 mkdir $1"/data/gdansk"
-cp -r $1"/data/gdansk2/*/*" $1"/data/gdansk"
+cp -r $1"/data/gdansk2"/*/* $1"/data/gdansk"
 
 $1"/osm_download.sh" $1
 # mysql -u root --local-infile < $1"/ztm_download/"ztm_download3.txt

@@ -1131,6 +1131,16 @@ struct galk
 				line<<",\"name\":\""<<escapeJsonString(it2.name)<<"\"";
 				line<<",\"lon\":\""<<it2.lon<<"\"";
 				line<<",\"lat\":\""<<it2.lat<<"\"";
+				vector <string> kierunki=przystanekKierunki(it1.first);
+				for(int i=0; i<min(5,(int)kierunki.size()); i++)
+				{
+					line<<",\"kierunki"<<i<<"\":\""<<kierunki[i]<<"\"";
+				}
+				line<<",\"bus_stop\":\""<<it1.second.bus_stop<<"\"";
+				line<<",\"stop_position\":\""<<it1.second.stop_position<<"\"";
+				line<<",\"platform\":\""<<it1.second.platform<<"\"";
+				line<<",\"platform_type\":\""<<it1.second.platform_type<<"\"";
+
 				/*
 				line<<"<tr id=\""<<it1.first<<"\">";
 				line<<"<td>"<<it1.first<<"</td>";
@@ -1158,23 +1168,30 @@ struct galk
 				jsonTableRowCount++;
 			}
 		}
-		/*
-		for(auto& it1 : bazaZtm->przystanki)
+
+		for(auto& it2 : bazaZtm->przystanki)
 		{
-			if(osmStopData.find(it1.first)==osmStopData.end())
+			if(osmStopData.find(it2.first)==osmStopData.end())
 			{
-				vector <string> kierunki=przystanekKierunki(it1.first);
-				string refDiv = htmlgen::div("komorka", "", it1.first);
-				string refName = htmlgen::div("komorka", "", it1.second.name);
-				string k1 = htmlgen::div("komorka", "", kierunki[0]);
-				string k2 = htmlgen::div("komorka", "", kierunki[1]);
-				string k3 = htmlgen::div("komorka", "", kierunki[2]);
-				cout<<it1.first<<"	"<<it1.second.name<<endl;
-				string row[] = {refDiv, refName, divOsmLink(0, 'N'), divOsmLink(0, 'N'), divOsmLink(0, 'N'), k1, k2, k3};
-				tabela.push_back(divOsmRow(8, row, it1.first));
+				stringstream line;
+				if(jsonTableRowCount>0)
+					line<<",";
+				line<<"{";
+				line<<"\"id\":\""<<it2.first<<"\"";
+				line<<",\"name\":\""<<escapeJsonString(it2.second.name)<<"\"";
+				line<<",\"lon\":\""<<it2.second.lon<<"\"";
+				line<<",\"lat\":\""<<it2.second.lat<<"\"";
+				vector <string> kierunki=przystanekKierunki(it2.first);
+				for(int i=0; i<min(5,(int)kierunki.size()); i++)
+				{
+					line<<",\"kierunki"<<i<<"\":\""<<kierunki[i]<<"\"";
+				}
+				line<<"}";
+				json2Stream<<line.str();
+				jsonTableRowCount++;
 			}
 		}
-*/
+
 		//przystankiHTMLStream<<divOsmTable(tabela)<<endl;
 		json2Stream<<"]";
 		uzupelnij(lineHTMLStream, pathTemplate+"/theme2.template");
