@@ -856,9 +856,9 @@ struct galk
 		vall1/=suma/100.0;
 		vall2/=suma/100.0;
 		vall3/=suma/100.0;
-		gen.loadedVariables[0]=toXstring((int)vall1);
-		gen.loadedVariables[1]=toXstring((int)vall2);
-		gen.loadedVariables[2]=toXstring((int)vall3);
+		gen.loadedVariables[0]=toXstring(vall1);
+		gen.loadedVariables[1]=toXstring(vall2);
+		gen.loadedVariables[2]=toXstring(vall3);
 		return gen.loadTemplate(pathTemplate+"/progress.template");
 	}
 	string aktTime()
@@ -1140,7 +1140,8 @@ struct galk
 				line<<",\"bus_stop\":\""<<it1.second.bus_stop<<"\"";
 				line<<",\"stop_position\":\""<<it1.second.stop_position<<"\"";
 				line<<",\"platform\":\""<<it1.second.platform<<"\"";
-				line<<",\"platform_type\":\""<<it1.second.platform_type<<"\"";
+				if(it1.second.platform_type=='N' || it1.second.platform_type=='W' || it1.second.platform_type=='R')
+					line<<",\"platform_type\":\""<<it1.second.platform_type<<"\"";
 
 				/*
 				line<<"<tr id=\""<<it1.first<<"\">";
