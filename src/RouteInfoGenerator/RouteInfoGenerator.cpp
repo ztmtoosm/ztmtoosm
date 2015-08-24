@@ -944,7 +944,8 @@ struct galk
 		}
 		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
 		string ostatni = bazaZtm->przystanki[ostatniId].name;
-		string info = "<a href=\"Pelne"+miasto+".html#poczatek"+idLinia+"\">"+idLinia + "</a>  -> "+ostatni;
+		string info = idLinia + "->" + ostatni;
+		//string info = "<a href=\"Pelne"+miasto+".html#poczatek"+idLinia+"\">"+idLinia + "</a>  -> "+ostatni;
 		return info;
 	}
 	vector <string> przystanekKierunki(string p)
@@ -1134,7 +1135,7 @@ struct galk
 				vector <string> kierunki=przystanekKierunki(it1.first);
 				for(int i=0; i<min(5,(int)kierunki.size()); i++)
 				{
-					line<<",\"kierunki"<<i<<"\":\""<<kierunki[i]<<"\"";
+					line<<",\"kierunki"<<i<<"\":\""<<escapeJsonString(kierunki[i])<<"\"";
 				}
 				line<<",\"bus_stop\":\""<<it1.second.bus_stop<<"\"";
 				line<<",\"stop_position\":\""<<it1.second.stop_position<<"\"";
