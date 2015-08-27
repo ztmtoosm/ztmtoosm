@@ -234,6 +234,60 @@ class WlasciwosciLokalneGdansk : public WlasciwosciLokalne
 };
 
 
+class WlasciwosciLokalneLodz : public WlasciwosciLokalne
+{
+	public:
+	string nazwaMala(string lineName)
+	{
+		return "tram";
+	}
+	string nazwaDuza(string lineName)
+	{
+		return "Tram";
+	}
+	string getRefKey()
+	{
+		return "ref";
+	}
+	long long getParentRelation (string name)
+	{
+		return 5467192;
+	}
+
+	set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
+	{
+		set <string> wynik;
+		auto it1=bazaZtm->dane_linia.begin();
+		while(it1!=bazaZtm->dane_linia.end())
+		{
+			string kand=it1->first;
+			wynik.insert(kand);
+			it1++;
+		}
+		return wynik;
+	}
+	long long getRootRelation()
+	{
+		return 5467192;
+	}
+	string getNazwaMiasta()
+	{
+		return "Łódź";
+	}
+	string substituteWhiteCharsBySpace(string nazwa)
+	{
+		return nazwa;
+	}
+	string getNetworkName()
+	{
+		return "MPK Łódź";
+	}
+	string getUrlLine(string line)
+	{
+		return "http://www.mpk.lodz.pl/";
+	}
+};
+
 
 vector <string> miejscowosci(vector <przystanek> xyz)
 {
@@ -996,6 +1050,8 @@ struct galk
 			wlasciwosci = new WlasciwosciLokalneSzczecin();
 		if(miasto=="Gdańsk")
 			wlasciwosci = new WlasciwosciLokalneGdansk();
+		if(miasto=="Łódź")
+			wlasciwosci = new WlasciwosciLokalneLodz();
 		bazaOsm = new osm_base(osmBasePath);
 		cerr<<"BAZA OSM - OK"<<endl;
 		osmStopData = loadOsmStopData(bazaOsm, wlasciwosci->getRefKey());
