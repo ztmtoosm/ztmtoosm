@@ -259,12 +259,16 @@ class ScheduleReaderGdansk : public ScheduleReader
 				time_t rawtime;
 				struct tm * timeinfo;
 				time ( &rawtime );
-				timeinfo = localtime ( &rawtime );
+				timeinfo = gmtime ( &rawtime );
 				timeinfo->tm_year = year - 1900;
 				timeinfo->tm_mon = month - 1;
 				timeinfo->tm_mday = day;
+				timeinfo->tm_hour=0;
+				timeinfo->tm_min=0;
 				int wyn=mktime(timeinfo);
-				t.push_back(make_pair(wyn, buffer));
+				cout<<wyn<<" "<<time(NULL)<<endl;
+				if(wyn<(int)(time(NULL)))
+					t.push_back(make_pair(wyn, buffer));
 			}
 			sort(t.begin(), t.end());
 			if(t.size()>0)
