@@ -172,6 +172,7 @@ void PrzegladanieCzyPrawidloweStareLinie::zbadajLinie(string linia, osm_base* ba
 			if(!relationCohesion(rels[i], bazaOsm))
 			{
 				badRelations.insert(rels[i]);
+				badLines.insert(linia);
 				prawi=0;
 			}
 	}

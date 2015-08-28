@@ -24,6 +24,7 @@ class PrzegladanieCzyPrawidloweStareLinie
 	set <string> prawidlowe;
 	set <string> nieprawidlowe;
 	set <long long> badRelations;
+	set <string> badLines;
 	map <string, set<string> > onlyOsmStop;
 	map <string, set<string> > onlyZtmStop;
 	map <string, pair <long long, vector <long long> > > relacjeDlaLinii;

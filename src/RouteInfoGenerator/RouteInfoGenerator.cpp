@@ -839,7 +839,7 @@ struct galk
 		for(auto it1 : errPrzyst)
 		{
 			if(licznik>0)
-				message+=" ,";
+				message+=", ";
 			message+=htmlgen::link(miasto+".html#"+it1, bazaZtm->przystanki[it1].name+" ("+it1+")", "");
 			licznik++;
 		}
@@ -848,20 +848,22 @@ struct galk
 		gen.loadedVariables[2]=foo1.str();
 		return gen.loadTemplate(pathTemplate+"/errLine.template");
 	}
-	string dodajInfoRoznice(set <string> ein, set <string> zwei, string linia, HtmlExtraGenerator& gen)
+	string dodajInfoRoznice(set <string> ein, set <string> zwei, bool brakRelacji, string linia, HtmlExtraGenerator& gen)
 	{
 		stringstream foo1;
-		foo1<<ein.size()+zwei.size();
-		string message = "Przystanki, : ";
+		foo1<<ein.size()+zwei.size()+(int)(brakRelacji);
+		string message = "Przystanki na których nie zatrzymuje się linia, ale OSM twierdzi inaczej: ";
 		int licznik = 0;
+		if(ein.size()==0)
+			message+="brak";
 		for(auto it1 : ein)
 		{
 			if(licznik>0)
-				message+=" ,";
+				message+=", ";
 			message+=htmlgen::link(miasto+".html#"+it1, osmStopData[it1].name+" ("+it1+")", "");
 			licznik++;
 		}
-		message += ". Przystanki, które są na linii, ale : ";
+		message += ". Przystanki na których zatrzymuje się linia nieuwzględnione w OSM: ";
 		licznik = 0;
 		for(auto it1 : zwei)
 		{
@@ -870,6 +872,11 @@ struct galk
 			message+=htmlgen::link(miasto+".html#"+it1, bazaZtm->przystanki[it1].name+" ("+it1+")", "");
 			licznik++;
 		}
+		if(zwei.size()==0)
+			message+="brak";
+		message+=". ";
+		if(brakRelacji)
+			message += "Niespójność/brak relacji.";
 		gen.loadedVariables[0]=linia+"roznice";
 		gen.loadedVariables[1]=message;
 		gen.loadedVariables[2]=foo1.str();
@@ -1104,12 +1111,16 @@ struct galk
 		}
 		plik5<<htmlgen::div("blstops", "", p5_tmp.str())<<endl;
 		plik5<<htmlgen::div("partx", "", "Linie do usunięcia")<<endl;
+		*/
+		stringstream p6_tmp;
+		lineHTMLStream<<"<h1>Linie do usunięcia</h1>";
 		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, wlasciwosci->getRootRelation());
 		for(auto& it1 : doUsuniecia)
 		{
-			p6_tmp<<it1<<"</br>";
+			p6_tmp<<it1<<" ";
 		}
-		plik5<<htmlgen::div("do_usuniecia", "", p6_tmp.str())<<endl;
+		lineHTMLStream<htmlgen::div("do_usuniecia", "", p6_tmp.str())<<endl;
+		/*
 		plik5<<htmlgen::div("partx", "", "Inne relacje komunikacji w bazie OSM")<<endl;
 		auto dziwne = dziwneRelacje(bazaOsm, wlasciwosci->getRootRelation());
 		for(auto& it1 : dziwne)
@@ -1133,6 +1144,7 @@ struct galk
 		jsonStream<<"[";
 		int licznikx=0;
 		auto linieDoPrzerobieniaSorted = SpecialSortedString::convertSet(linieDoPrzerobienia);
+		lineHTMLStream<<"<h1>Linie wygenerowane</h1>";
 		for(auto it1 : linieDoPrzerobieniaSorted)
 		{
 			if(licznikx>0)
@@ -1140,7 +1152,7 @@ struct galk
 			jsonStream<<"\""<<it1.str<<"\"";
 			generujLinie(it1.str);
 			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
-			message1 += dodajInfoRoznice(przegl0.onlyOsmStop[it1.str], przegl0.onlyZtmStop[it1.str], it1.str, htmlGenerator);
+			message1 += dodajInfoRoznice(przegl0.onlyOsmStop[it1.str], przegl0.onlyZtmStop[it1.str], (przegl0.badLines.find(it1.str)!=przegl0.badLines.end()), it1.str, htmlGenerator);
 			dodajLinieDoHTML(lineHTMLStream, 2, it1.str, message1, htmlGenerator);
 			licznikx++;
 		}
@@ -1148,14 +1160,16 @@ struct galk
 		jsonStream.close();
 		auto linieNiewygenerowaneSorted = SpecialSortedString::convertSet(przegl.getNieprawidlowe());
 		auto linieNiewygenerowaneMap = przegl.getNieprawidloweMap();
+		lineHTMLStream<<"<h1>Linie niewygenerowane</h1>";
 		for(auto it1 : linieNiewygenerowaneSorted)
 		{
 			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
 			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
-			message1 += dodajInfoRoznice(przegl0.onlyOsmStop[it1.str], przegl0.onlyZtmStop[it1.str], it1.str, htmlGenerator);
+			message1 += dodajInfoRoznice(przegl0.onlyOsmStop[it1.str], przegl0.onlyZtmStop[it1.str], (przegl0.badLines.find(it1.str)!=przegl0.badLines.end()), it1.str, htmlGenerator);
 			message1 +=dodajInfoNiewygenerowane(errPrzyst, it1.str, htmlGenerator);
 			dodajLinieDoHTML(lineHTMLStream,1, it1.str, message1, htmlGenerator);
 		}
+		lineHTMLStream<<"<h1>Linie bez zmian</h1>";
 		if(czyWszystkie)
 		{
 			auto linieNormalneSorted = SpecialSortedString::convertSet(przegl0.prawidlowe);
