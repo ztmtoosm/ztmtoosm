@@ -1112,14 +1112,15 @@ struct galk
 		plik5<<htmlgen::div("blstops", "", p5_tmp.str())<<endl;
 		plik5<<htmlgen::div("partx", "", "Linie do usunięcia")<<endl;
 		*/
+		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, wlasciwosci->getRootRelation());
 		stringstream p6_tmp;
 		lineHTMLStream<<"<h1>Linie do usunięcia</h1>";
-		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, wlasciwosci->getRootRelation());
 		for(auto& it1 : doUsuniecia)
 		{
 			p6_tmp<<it1<<" ";
 		}
-		lineHTMLStream<htmlgen::div("do_usuniecia", "", p6_tmp.str())<<endl;
+		string p6_xxx = p6_tmp.str();
+		lineHTMLStream<<htmlgen::div("do_usuniecia", "", p6_xxx)<<endl;
 		/*
 		plik5<<htmlgen::div("partx", "", "Inne relacje komunikacji w bazie OSM")<<endl;
 		auto dziwne = dziwneRelacje(bazaOsm, wlasciwosci->getRootRelation());
