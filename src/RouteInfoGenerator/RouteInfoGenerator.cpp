@@ -867,7 +867,7 @@ struct galk
 		{
 			if(licznik>0)
 				message+=" ,";
-			message+=htmlgen::link(miasto+".html#"+it1, osmStopData[it1].name+" ("+it1+")", "");
+			message+=htmlgen::link(miasto+".html#"+it1, bazaZtm->przystanki[it1].name+" ("+it1+")", "");
 			licznik++;
 		}
 		gen.loadedVariables[0]=linia+"roznice";
@@ -1152,6 +1152,7 @@ struct galk
 		{
 			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
 			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
+			message1 += dodajInfoRoznice(przegl0.onlyOsmStop[it1.str], przegl0.onlyZtmStop[it1.str], it1.str, htmlGenerator);
 			message1 +=dodajInfoNiewygenerowane(errPrzyst, it1.str, htmlGenerator);
 			dodajLinieDoHTML(lineHTMLStream,1, it1.str, message1, htmlGenerator);
 		}

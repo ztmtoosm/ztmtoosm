@@ -255,7 +255,6 @@ class ScheduleReaderGdansk : public ScheduleReader
 				foo2<<date.substr(0, 4)<<" "<<date.substr(4,2)<<" "<<date.substr(6,2);
 				int year, month, day;
 				foo2>>year>>month>>day;
-				cout<<year<<" "<<month<<" "<<day<<" "<<lin<<" "<<buffer<<endl;
 				time_t rawtime;
 				struct tm * timeinfo;
 				time ( &rawtime );
@@ -266,14 +265,18 @@ class ScheduleReaderGdansk : public ScheduleReader
 				timeinfo->tm_hour=0;
 				timeinfo->tm_min=0;
 				int wyn=mktime(timeinfo);
-				cout<<wyn<<" "<<time(NULL)<<endl;
 				if(wyn<(int)(time(NULL)))
 					t.push_back(make_pair(wyn, buffer));
 			}
 			sort(t.begin(), t.end());
 			if(t.size()>0)
 			{
-				buffers.insert(t[t.size()-1].second);
+				int j=t.size()-1;
+				while(j>=0 && t[t.size()-1].first==t[j].first)
+				{
+					buffers.insert(t[j].second);
+					j--;
+				}
 			}
 		}
 		for(string buffer : buffers)
