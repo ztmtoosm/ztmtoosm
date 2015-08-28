@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstring>
 #include <sstream>
+#include <algorithm>
 #include "stringspecial.hpp"
 using namespace std;
 enum typ_postoju
@@ -232,7 +233,7 @@ class ScheduleReaderGdansk : public ScheduleReader
 		map <string, vector <string> > buffers2;
 		while(fscanf(file, "%100s", buffer) !=EOF)
 		{
-			buffers.insert((string)(buffer));
+			//buffers.insert((string)(buffer));
 			stringstream foo;
 			foo<<buffer;
 			string lin, date;
@@ -242,6 +243,7 @@ class ScheduleReaderGdansk : public ScheduleReader
 		}
 		for(auto& it1 : buffers2)
 		{
+			vector <pair<int, string> > t;
 			for(string buffer : it1.second)
 			{
 				stringstream foo;
@@ -254,6 +256,20 @@ class ScheduleReaderGdansk : public ScheduleReader
 				int year, month, day;
 				foo2>>year>>month>>day;
 				cout<<year<<" "<<month<<" "<<day<<" "<<lin<<" "<<buffer<<endl;
+				time_t rawtime;
+				struct tm * timeinfo;
+				time ( &rawtime );
+				timeinfo = localtime ( &rawtime );
+				timeinfo->tm_year = year - 1900;
+				timeinfo->tm_mon = month - 1;
+				timeinfo->tm_mday = day;
+				int wyn=mktime(timeinfo);
+				t.push_back(make_pair(wyn, buffer));
+			}
+			sort(t.begin(), t.end());
+			if(t.size()>0)
+			{
+				buffers.insert(t[t.size()-1].second);
 			}
 		}
 		for(string buffer : buffers)
