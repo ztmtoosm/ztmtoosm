@@ -228,7 +228,35 @@ class ScheduleReaderGdansk : public ScheduleReader
 		string pol="ls "+path+"/*/*warianty*.csv";
 		FILE* file = popen(pol.c_str(), "r");
 		char buffer[256];
+		set <string> buffers;
+		map <string, vector <string> > buffers2;
 		while(fscanf(file, "%100s", buffer) !=EOF)
+		{
+			buffers.insert((string)(buffer));
+			stringstream foo;
+			foo<<buffer;
+			string lin, date;
+			getline(foo, lin, '_');
+			getline(foo, date, '_');
+			buffers2[lin].push_back((string)(buffer));
+		}
+		for(auto& it1 : buffers2)
+		{
+			for(string buffer : it1.second)
+			{
+				stringstream foo;
+				foo<<buffer;
+				string lin, date;
+				getline(foo, lin, '_');
+				getline(foo, date, '_');
+				stringstream foo2;
+				foo2<<date.substr(0, 4)<<" "<<date.substr(4,2)<<" "<<date.substr(6,2);
+				int year, month, day;
+				foo2>>year>>month>>day;
+				cout<<year<<" "<<month<<" "<<day<<" "<<lin<<" "<<buffer<<endl;
+			}
+		}
+		for(string buffer : buffers)
 		{
 			string pol2 = "iconv -f windows-1250 -t utf-8 < "+(string)(buffer)+" > "+(string)(buffer)+"2";
 			system(pol2.c_str());
