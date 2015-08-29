@@ -1,0 +1,13 @@
+<table data-toggle="table" data-url="Przystanki$0$.json" data-sort-name="name">
+    <thead>
+        <tr>
+            <th data-field="id"  data-sortable="true">id</th>
+            <th data-field="name" data-sortable="true">name</th>
+            <th data-field="lat" data-sortable="true">lat</th>
+            <th data-field="lon" data-sortable="true">lon</th>
+            <th data-field="bus_stop" data-sortable="true">bus/tram stop</th>
+            <th data-field="stop_position" data-sortable="true">stop_position</th>
+            <th data-field="platform" data-sortable="true">platform</th>
+        </tr>
+    </thead>
+</table>

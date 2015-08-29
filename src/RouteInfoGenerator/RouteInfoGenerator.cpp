@@ -539,7 +539,7 @@ struct SpecialSortedString
 	}
 };
 
-struct galk
+struct MainClass
 {
 	WlasciwosciLokalne* wlasciwosci;
 	osm_base* bazaOsm;
@@ -868,7 +868,7 @@ struct galk
 		for(auto it1 : zwei)
 		{
 			if(licznik>0)
-				message+=" ,";
+				message+=", ";
 			message+=htmlgen::link(miasto+".html#"+it1, bazaZtm->przystanki[it1].name+" ("+it1+")", "");
 			licznik++;
 		}
@@ -1046,7 +1046,7 @@ struct galk
 		return ss.str();
 	}
 
-	galk(char** argv)
+	MainClass(char** argv)
 	{
 		HtmlExtraGenerator htmlGenerator;
 		readArg(argv);
@@ -1112,15 +1112,7 @@ struct galk
 		plik5<<htmlgen::div("blstops", "", p5_tmp.str())<<endl;
 		plik5<<htmlgen::div("partx", "", "Linie do usunięcia")<<endl;
 		*/
-		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, wlasciwosci->getRootRelation());
-		stringstream p6_tmp;
-		lineHTMLStream<<"<h1>Linie do usunięcia</h1>";
-		for(auto& it1 : doUsuniecia)
-		{
-			p6_tmp<<it1<<" ";
-		}
-		string p6_xxx = p6_tmp.str();
-		lineHTMLStream<<htmlgen::div("do_usuniecia", "", p6_xxx)<<endl;
+
 		/*
 		plik5<<htmlgen::div("partx", "", "Inne relacje komunikacji w bazie OSM")<<endl;
 		auto dziwne = dziwneRelacje(bazaOsm, wlasciwosci->getRootRelation());
@@ -1142,10 +1134,24 @@ struct galk
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		*/
 		lineHTMLStream<<dodajProgress(linieDoPrzerobienia.size(), przegl.getNieprawidlowe().size(), przegl0.prawidlowe.size(), htmlGenerator)<<endl;
+
+		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, wlasciwosci->getRootRelation());
+		if(doUsuniecia.size()>0)
+		{
+			stringstream p6_tmp;
+			lineHTMLStream<<"<h1>Linie do usunięcia<span class=\"badge\">"<<doUsuniecia.size()<<"</span></h1>";
+			for(auto& it1 : doUsuniecia)
+			{
+				p6_tmp<<it1<<" ";
+			}
+			string p6_xxx = p6_tmp.str();
+			lineHTMLStream<<htmlgen::div("do_usuniecia", "", p6_xxx)<<endl;
+		}
+
 		jsonStream<<"[";
 		int licznikx=0;
 		auto linieDoPrzerobieniaSorted = SpecialSortedString::convertSet(linieDoPrzerobienia);
-		lineHTMLStream<<"<h1>Linie wygenerowane</h1>";
+		lineHTMLStream<<"<h1>Linie wygenerowane<span class=\"badge\">"<<linieDoPrzerobieniaSorted.size()<<"</span></h1>";
 		for(auto it1 : linieDoPrzerobieniaSorted)
 		{
 			if(licznikx>0)
@@ -1161,7 +1167,7 @@ struct galk
 		jsonStream.close();
 		auto linieNiewygenerowaneSorted = SpecialSortedString::convertSet(przegl.getNieprawidlowe());
 		auto linieNiewygenerowaneMap = przegl.getNieprawidloweMap();
-		lineHTMLStream<<"<h1>Linie niewygenerowane</h1>";
+		lineHTMLStream<<"<h1>Linie niewygenerowane<span class=\"badge\">"<<linieNiewygenerowaneSorted.size()<<"</span></h1>";
 		for(auto it1 : linieNiewygenerowaneSorted)
 		{
 			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
@@ -1170,10 +1176,11 @@ struct galk
 			message1 +=dodajInfoNiewygenerowane(errPrzyst, it1.str, htmlGenerator);
 			dodajLinieDoHTML(lineHTMLStream,1, it1.str, message1, htmlGenerator);
 		}
-		lineHTMLStream<<"<h1>Linie bez zmian</h1>";
+
 		if(czyWszystkie)
 		{
 			auto linieNormalneSorted = SpecialSortedString::convertSet(przegl0.prawidlowe);
+			lineHTMLStream<<"<h1>Linie niewygenerowane<span class=\"badge\">"<<linieNormalneSorted.size()<<"</span></h1>";
 			for(auto it1 : linieNormalneSorted)
 			{
 				string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
@@ -1272,10 +1279,16 @@ struct galk
 		uzupelnij(lineHTMLStream, pathTemplate+"/theme2.template");
 		lineHTMLStream.close();
 		json2Stream.close();
-		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme2.template");
+
+		htmlGenerator.loadedVariables[0]=miasto;
+		przystankiHTMLStream<<htmlGenerator.loadTemplate(pathTemplate+"/theme5.template");
+
+		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme3.template");
+		przystankiHTMLStream<<"Przystanki"<<miasto<<".json";
+		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme4.template");
 		przystankiHTMLStream.close();
 	}
-	~galk()
+	~MainClass()
 	{
 		delete bazaOsm;
 		delete bazaZtm;
@@ -1283,5 +1296,5 @@ struct galk
 };
 int main(int argc, char** argv)
 {
-	galk foo(argv);
+	MainClass foo(argv);
 }
