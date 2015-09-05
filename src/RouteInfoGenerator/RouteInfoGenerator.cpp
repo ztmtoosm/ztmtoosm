@@ -178,12 +178,16 @@ class WlasciwosciLokalneGdansk : public WlasciwosciLokalne
 	{
 			if(lineName.length()==2 && isdigit(lineName[0]))
 				return "tram";
+			if(lineName.length()==1 && isdigit(lineName[0]))
+				return "tram";
 			if(lineName=="N0")
 				return "tram";
 			return "bus";
 	}
 	string nazwaDuza(string lineName)
 	{
+			if(lineName.length()==1 && isdigit(lineName[0]))
+				return "Tram";
 			if(lineName.length()==2 && isdigit(lineName[0]))
 				return "Tram";
 			if(lineName=="N0")
@@ -1139,7 +1143,7 @@ struct MainClass
 		if(doUsuniecia.size()>0)
 		{
 			stringstream p6_tmp;
-			lineHTMLStream<<"<h1>Linie do usunięcia<span class=\"badge\">"<<doUsuniecia.size()<<"</span></h1>";
+			lineHTMLStream<<"<h2>Linie do usunięcia <span class=\"badge\">"<<doUsuniecia.size()<<"</span></h2>";
 			for(auto& it1 : doUsuniecia)
 			{
 				p6_tmp<<it1<<" ";
@@ -1151,7 +1155,7 @@ struct MainClass
 		jsonStream<<"[";
 		int licznikx=0;
 		auto linieDoPrzerobieniaSorted = SpecialSortedString::convertSet(linieDoPrzerobienia);
-		lineHTMLStream<<"<h1>Linie wygenerowane<span class=\"badge\">"<<linieDoPrzerobieniaSorted.size()<<"</span></h1>";
+		lineHTMLStream<<"<h2>Linie wygenerowane <span class=\"badge\">"<<linieDoPrzerobieniaSorted.size()<<"</span></h2>";
 		for(auto it1 : linieDoPrzerobieniaSorted)
 		{
 			if(licznikx>0)
@@ -1167,7 +1171,7 @@ struct MainClass
 		jsonStream.close();
 		auto linieNiewygenerowaneSorted = SpecialSortedString::convertSet(przegl.getNieprawidlowe());
 		auto linieNiewygenerowaneMap = przegl.getNieprawidloweMap();
-		lineHTMLStream<<"<h1>Linie niewygenerowane<span class=\"badge\">"<<linieNiewygenerowaneSorted.size()<<"</span></h1>";
+		lineHTMLStream<<"<h2>Linie niewygenerowane <span class=\"badge\">"<<linieNiewygenerowaneSorted.size()<<"</span></h2>";
 		for(auto it1 : linieNiewygenerowaneSorted)
 		{
 			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
@@ -1180,7 +1184,7 @@ struct MainClass
 		if(czyWszystkie)
 		{
 			auto linieNormalneSorted = SpecialSortedString::convertSet(przegl0.prawidlowe);
-			lineHTMLStream<<"<h1>Linie niewygenerowane<span class=\"badge\">"<<linieNormalneSorted.size()<<"</span></h1>";
+			lineHTMLStream<<"<h2>Linie bez zmian <span class=\"badge\">"<<linieNormalneSorted.size()<<"</span></h2>";
 			for(auto it1 : linieNormalneSorted)
 			{
 				string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
