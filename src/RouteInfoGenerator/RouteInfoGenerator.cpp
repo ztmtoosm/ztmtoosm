@@ -1008,25 +1008,33 @@ struct MainClass
 			kolejnyId = bazaZtm->dane_linia[idLinia][idWariantu][idKol+1];
 			kolejny = bazaZtm->przystanki[kolejnyId].name;
 		}
+		string aktualny = bazaZtm->przystanki[idPrzystanek].name;;
 		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
 		string ostatni = bazaZtm->przystanki[ostatniId].name;
-		string info;
+		string pierwszyId = bazaZtm->dane_linia[idLinia][idWariantu][0];
+		string pierwszy = bazaZtm->przystanki[pierwszyId].name;
+		string info=htmlgen::link("Pelne"+miasto+"/#"+idLinia, idLinia);
+		info+=": ";
 		if(idKol>1)
 		{
-			info+="... - ";
+			info+=htmlgen::link("#"+pierwszyId, pierwszy+" ("+pierwszyId+")");
+			info+=" - ... - ";
 		}
 		if(idKol>0)
 		{
-			info+=poprzedni+" ("+poprzedniId+") - ";
+			info+=htmlgen::link("#"+poprzedniId, poprzedni+" ("+poprzedniId+")");
+			info+=" - ";
 		}
-		info+="XXX";
+		info+=aktualny+" ("+idPrzystanek+")";
 		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+1)
 		{
-			info+=" - "+kolejny+" ("+kolejnyId+")";
+			info+=" - ";
+			info+=htmlgen::link("#"+kolejnyId, kolejny+" ("+kolejnyId+")");
 		}
 		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+2)
 		{
-			info+=" - ... - "+ostatni+" ("+ostatniId+")";
+			info+=" - ... - ";
+			info+=htmlgen::link("#"+ostatniId, ostatni+" ("+ostatniId+")");
 		}
 		return info;
 	}
