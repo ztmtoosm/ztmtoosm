@@ -1239,7 +1239,7 @@ struct MainClass
 				{
 					if(i>0)
 						line<<",";
-					line<<"\""<<kierunki[i]<<"\"";
+					line<<"\""<<escapeJsonString(kierunki[i])<<"\"";
 				}
 				line<<"]";
 				line<<",\"bus_stop\":\""<<it1.second.bus_stop<<"\"";
@@ -1294,7 +1294,7 @@ struct MainClass
 				{
 					if(i>0)
 						line<<",";
-					line<<"\""<<kierunki[i]<<"\"";
+					line<<"\""<<escapeJsonString(kierunki[i])<<"\"";
 				}
 				line<<"]";
 				line<<"}";
