@@ -26,7 +26,8 @@ var tbl = function(url)
 		div.appendChild(divGroup);
 		newGroupItem(divGroup, data[i].name);
 		newGroupItem(divGroup, data[i].stop_position);
-		newGroupItem(divGroup, data[i].kierunki0);
+		for(var j=0; j<data[i].kierunki.length; j++)
+			newGroupItem(divGroup, data[i].kierunki[j]);
 		newGroupItem(divGroup, data[i].lon);
 		newGroupItem(divGroup, data[i].lat);
 		var x = document.getElementsByClassName("container");
