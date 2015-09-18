@@ -997,20 +997,37 @@ struct MainClass
 	{
 		string poprzedni = "POCZĄTKOWY";
 		string kolejny = "KOŃCOWY";
+		string poprzedniId, kolejnyId;
 		if(idKol>0)
 		{
-			string poprzedniId = bazaZtm->dane_linia[idLinia][idWariantu][idKol-1];
+			poprzedniId = bazaZtm->dane_linia[idLinia][idWariantu][idKol-1];
 			poprzedni = bazaZtm->przystanki[poprzedniId].name;
 		}
 		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+1)
 		{
-			string kolejnyId = bazaZtm->dane_linia[idLinia][idWariantu][idKol+1];
+			kolejnyId = bazaZtm->dane_linia[idLinia][idWariantu][idKol+1];
 			kolejny = bazaZtm->przystanki[kolejnyId].name;
 		}
 		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
 		string ostatni = bazaZtm->przystanki[ostatniId].name;
-		string info = idLinia + "->" + ostatni;
-		//string info = "<a href=\"Pelne"+miasto+".html#poczatek"+idLinia+"\">"+idLinia + "</a>  -> "+ostatni;
+		string info;
+		if(idKol>1)
+		{
+			info+="... - ";
+		}
+		if(idKol>0)
+		{
+			info+=poprzedni+" ("+poprzedniId+") - ";
+		}
+		info+="XXX";
+		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+1)
+		{
+			info+=" - "+kolejny+" ("+kolejnyId+")";
+		}
+		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+2)
+		{
+			info+=" - ... - "+ostatni+" ("+ostatniId+")";
+		}
 		return info;
 	}
 	vector <string> przystanekKierunki(string p)
@@ -1216,11 +1233,15 @@ struct MainClass
 				line<<",\"name\":\""<<escapeJsonString(it2.name)<<"\"";
 				line<<",\"lon\":\""<<it2.lon<<"\"";
 				line<<",\"lat\":\""<<it2.lat<<"\"";
+				line<<",\"kierunki\":[";
 				vector <string> kierunki=przystanekKierunki(it1.first);
-				for(int i=0; i<min(5,(int)kierunki.size()); i++)
+				for(int i=0; i<kierunki.size(); i++)
 				{
-					line<<",\"kierunki"<<i<<"\":\""<<escapeJsonString(kierunki[i])<<"\"";
+					if(i>0)
+						line<<",";
+					line<<"\""<<kierunki[i]<<"\"";
 				}
+				line<<"]";
 				line<<",\"bus_stop\":\""<<it1.second.bus_stop<<"\"";
 				line<<",\"stop_position\":\""<<it1.second.stop_position<<"\"";
 				line<<",\"platform\":\""<<it1.second.platform<<"\"";
@@ -1267,11 +1288,15 @@ struct MainClass
 				line<<",\"name\":\""<<escapeJsonString(it2.second.name)<<"\"";
 				line<<",\"lon\":\""<<it2.second.lon<<"\"";
 				line<<",\"lat\":\""<<it2.second.lat<<"\"";
+				line<<",\"kierunki\":[";
 				vector <string> kierunki=przystanekKierunki(it2.first);
-				for(int i=0; i<min(5,(int)kierunki.size()); i++)
+				for(int i=0; i<kierunki.size(); i++)
 				{
-					line<<",\"kierunki"<<i<<"\":\""<<kierunki[i]<<"\"";
+					if(i>0)
+						line<<",";
+					line<<"\""<<kierunki[i]<<"\"";
 				}
+				line<<"]";
 				line<<"}";
 				json2Stream<<line.str();
 				jsonTableRowCount++;
@@ -1285,7 +1310,7 @@ struct MainClass
 		json2Stream.close();
 
 		htmlGenerator.loadedVariables[0]=miasto;
-		przystankiHTMLStream<<htmlGenerator.loadTemplate(pathTemplate+"/theme5.template");
+		//przystankiHTMLStream<<htmlGenerator.loadTemplate(pathTemplate+"/theme5.template");
 
 		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme3.template");
 		przystankiHTMLStream<<"Przystanki"<<miasto<<".json";
