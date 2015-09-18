@@ -16,6 +16,7 @@ add_subdirectory (RouteInfoGenerator)
 add_subdirectory (ScheduleReader)
 add_subdirectory (testparse)
 add_subdirectory (RareToThickRoutes)
+add_subdirectory (Koordynacje)
 
 
 #find_package (Doxygen)
