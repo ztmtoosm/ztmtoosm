@@ -731,12 +731,16 @@ struct MainClass
 		string ostatni = bazaZtm->przystanki[ostatniId].name;
 		string pierwszyId = bazaZtm->dane_linia[idLinia][idWariantu][0];
 		string pierwszy = bazaZtm->przystanki[pierwszyId].name;
-		string info=htmlgen::link("Pelne"+miasto+"/#"+idLinia, idLinia);
+		string info=htmlgen::link("Pelne"+miasto+".html/#pelne"+idLinia, idLinia);
 		info+=": ";
 		if(idKol>1)
 		{
 			info+=htmlgen::link("#"+pierwszyId, pierwszy+" ("+pierwszyId+")");
-			info+=" - ... - ";
+			info+=" - ";
+		}
+		if(idKol>2)
+		{
+			info+="... - ";
 		}
 		if(idKol>0)
 		{
@@ -749,9 +753,13 @@ struct MainClass
 			info+=" - ";
 			info+=htmlgen::link("#"+kolejnyId, kolejny+" ("+kolejnyId+")");
 		}
+		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+3)
+		{
+			info+=" - ...";
+		}
 		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+2)
 		{
-			info+=" - ... - ";
+			info+=" - ";
 			info+=htmlgen::link("#"+ostatniId, ostatni+" ("+ostatniId+")");
 		}
 		return info;
@@ -791,6 +799,70 @@ struct MainClass
 			}
 		}
 		return ss.str();
+	}
+
+	string wyszName(char type, long long id)
+	{
+		if(type=='N' && bazaOsm->nodes.find(id)!=bazaOsm->nodes.end())
+		{
+			return bazaOsm->nodes[id].getTags()["name"];
+		}
+		if(type=='W' && bazaOsm->nodes.find(id)!=bazaOsm->nodes.end())
+		{
+			return bazaOsm->ways[id].getTags()["name"];
+		}
+		if(type=='R' && bazaOsm->nodes.find(id)!=bazaOsm->nodes.end())
+		{
+			return bazaOsm->relations[id].getTags()["name"];
+		}
+		return "";
+	}
+
+	bool getLatLon(char type, long long id, double& lat, double& lon)
+	{
+		if(type=='R' && bazaOsm->relations.find(id)!=bazaOsm->relations.end())
+		{
+			relation& r = bazaOsm->relations[id];
+			for(int i=0; i<r.members.size(); i++)
+			{
+				if(r.members[i].member_type==WAY)
+				{
+					id=r.members[i].member_id;
+					type='W';
+				}
+			}
+		}
+
+		if(type=='W' && bazaOsm->ways.find(id)!=bazaOsm->ways.end())
+		{
+			way& r = bazaOsm->ways[id];
+			for(int i=0; i<r.nodes.size(); i++)
+			{
+				id=r.nodes[i];
+				type='N';
+			}
+		}
+
+		if(type=='N' && bazaOsm->nodes.find(id)!=bazaOsm->nodes.end())
+		{
+			lat = bazaOsm->nodes[id].lat;
+			lon = bazaOsm->nodes[id].lon;
+			return true;
+		}
+		return false;
+	}
+
+	double getDistance(char type1, long long id1, char type2, long long id2)
+	{
+		double lat1, lon1;
+		double lat2, lon2;
+		bool t1 = getLatLon(type1, id1, lat1, lon1);
+		bool t2 = getLatLon(type2, id2, lat2, lon2);
+		if(t1 && t2)
+		{
+			return distance(lon1, lat1, lon2, lat2);
+		}
+		return 1000000;
 	}
 
 	MainClass(char** argv)
@@ -920,7 +992,7 @@ struct MainClass
 			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
 			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
 			message1 += dodajInfoRoznice(przegl0.onlyOsmStop[it1.str], przegl0.onlyZtmStop[it1.str], (przegl0.badLines.find(it1.str)!=przegl0.badLines.end()), it1.str, htmlGenerator);
-			message1 +=dodajInfoNiewygenerowane(errPrzyst, it1.str, htmlGenerator);
+			message1 += dodajInfoNiewygenerowane(errPrzyst, it1.str, htmlGenerator);
 			dodajLinieDoHTML(lineHTMLStream,1, it1.str, message1, htmlGenerator);
 		}
 
@@ -931,7 +1003,7 @@ struct MainClass
 			for(auto it1 : linieNormalneSorted)
 			{
 				string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
-				dodajLinieDoHTML(lineHTMLStream,0, it1.str, message1, htmlGenerator);
+				dodajLinieDoHTML(lineHTMLStream, 0, it1.str, message1, htmlGenerator);
 			}
 		}
 		/*
@@ -969,8 +1041,14 @@ struct MainClass
 				}
 				line<<"]";
 				line<<",\"bus_stop\":\""<<it1.second.bus_stop<<"\"";
+				line<<",\"bus_stop_name\":\""<<wyszName('N', it1.second.bus_stop)<<"\"";
 				line<<",\"stop_position\":\""<<it1.second.stop_position<<"\"";
+				line<<",\"stop_position_name\":\""<<wyszName('N', it1.second.stop_position)<<"\"";
 				line<<",\"platform\":\""<<it1.second.platform<<"\"";
+				line<<",\"platform_name\":\""<<wyszName(it1.second.platform_type, it1.second.platform)<<"\"";
+				line<<",\"BS_SP\": "<<getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position)<<" ";
+				line<<",\"SP_PL\": "<<getDistance(it1.second.platform_type, it1.second.platform, 'N', it1.second.stop_position)<<" ";
+				line<<",\"PL_BS\": "<<getDistance('N', it1.second.bus_stop, it1.second.platform_type, it1.second.platform)<<" ";
 				if(it1.second.platform_type=='N' || it1.second.platform_type=='W' || it1.second.platform_type=='R')
 					line<<",\"platform_type\":\""<<it1.second.platform_type<<"\"";
 
