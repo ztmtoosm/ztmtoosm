@@ -1022,6 +1022,9 @@ struct MainClass
 		{
 			if(bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end())
 			{
+				int powod = 0;
+				if(it1.second.stop_position==0)
+					powod = 1;
 				auto& it2 = bazaZtm->przystanki[it1.first];
 				stringstream line;
 				if(jsonTableRowCount>0)
@@ -1046,9 +1049,12 @@ struct MainClass
 				line<<",\"stop_position_name\":\""<<escapeJsonString(wyszName('N', it1.second.stop_position))<<"\"";
 				line<<",\"platform\":\""<<it1.second.platform<<"\"";
 				line<<",\"platform_name\":\""<<escapeJsonString(wyszName(it1.second.platform_type, it1.second.platform))<<"\"";
-				line<<",\"BS_SP\": \""<<getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position)<<"\"";
-				//line<<",\"SP_PL\": "<<getDistance(it1.second.platform_type, it1.second.platform, 'N', it1.second.stop_position);
-				//line<<",\"PL_BS\": "<<getDistance('N', it1.second.bus_stop, it1.second.platform_type, it1.second.platform);
+				line<<",\"BS_SP\": "<<getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position);
+				if(it1.second.bus_stop!=0 && powod==0 && getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position)>150)
+					powod = 3;
+				line<<",\"SP_PL\": "<<getDistance(it1.second.platform_type, it1.second.platform, 'N', it1.second.stop_position);
+				line<<",\"PL_BS\": "<<getDistance('N', it1.second.bus_stop, it1.second.platform_type, it1.second.platform);
+				line<<",\"powod\": "<<powod;
 				if(it1.second.platform_type=='N' || it1.second.platform_type=='W' || it1.second.platform_type=='R')
 					line<<",\"platform_type\":\""<<it1.second.platform_type<<"\"";
 
@@ -1084,6 +1090,7 @@ struct MainClass
 		{
 			if(osmStopData.find(it2.first)==osmStopData.end())
 			{
+				int powod = 1;
 				stringstream line;
 				if(jsonTableRowCount>0)
 					line<<",";
@@ -1092,6 +1099,7 @@ struct MainClass
 				line<<",\"name\":\""<<escapeJsonString(it2.second.name)<<"\"";
 				line<<",\"lon\":\""<<it2.second.lon<<"\"";
 				line<<",\"lat\":\""<<it2.second.lat<<"\"";
+				line<<",\"powod\": "<<powod;
 				line<<",\"kierunki\":[";
 				vector <string> kierunki=przystanekKierunki(it2.first);
 				for(int i=0; i<kierunki.size(); i++)
