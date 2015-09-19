@@ -1041,11 +1041,11 @@ struct MainClass
 				}
 				line<<"]";
 				line<<",\"bus_stop\":\""<<it1.second.bus_stop<<"\"";
-				line<<",\"bus_stop_name\":\""<<wyszName('N', it1.second.bus_stop)<<"\"";
+				line<<",\"bus_stop_name\":\""<<escapeJsonString(wyszName('N', it1.second.bus_stop))<<"\"";
 				line<<",\"stop_position\":\""<<it1.second.stop_position<<"\"";
-				line<<",\"stop_position_name\":\""<<wyszName('N', it1.second.stop_position)<<"\"";
+				line<<",\"stop_position_name\":\""<<escapeJsonString(wyszName('N', it1.second.stop_position))<<"\"";
 				line<<",\"platform\":\""<<it1.second.platform<<"\"";
-				line<<",\"platform_name\":\""<<wyszName(it1.second.platform_type, it1.second.platform)<<"\"";
+				line<<",\"platform_name\":\""<<escapeJsonString(wyszName(it1.second.platform_type, it1.second.platform))<<"\"";
 				line<<",\"BS_SP\": \""<<getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position)<<"\"";
 				//line<<",\"SP_PL\": "<<getDistance(it1.second.platform_type, it1.second.platform, 'N', it1.second.stop_position);
 				//line<<",\"PL_BS\": "<<getDistance('N', it1.second.bus_stop, it1.second.platform_type, it1.second.platform);
