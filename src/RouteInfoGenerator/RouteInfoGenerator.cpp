@@ -1046,7 +1046,7 @@ struct MainClass
 				line<<",\"stop_position_name\":\""<<wyszName('N', it1.second.stop_position)<<"\"";
 				line<<",\"platform\":\""<<it1.second.platform<<"\"";
 				line<<",\"platform_name\":\""<<wyszName(it1.second.platform_type, it1.second.platform)<<"\"";
-				line<<",\"BS_SP\": "<<getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position);
+				line<<",\"BS_SP\": \""<<getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position)<<"\"";
 				//line<<",\"SP_PL\": "<<getDistance(it1.second.platform_type, it1.second.platform, 'N', it1.second.stop_position);
 				//line<<",\"PL_BS\": "<<getDistance('N', it1.second.bus_stop, it1.second.platform_type, it1.second.platform);
 				if(it1.second.platform_type=='N' || it1.second.platform_type=='W' || it1.second.platform_type=='R')
