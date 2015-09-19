@@ -860,9 +860,9 @@ struct MainClass
 		bool t2 = getLatLon(type2, id2, lat2, lon2);
 		if(t1 && t2)
 		{
-			return distance(lon1, lat1, lon2, lat2);
+			return distance(lon1, lat1, lon2, lat2)*1000.0;
 		}
-		return 1000000;
+		return -1.0;
 	}
 
 	MainClass(char** argv)
