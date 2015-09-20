@@ -332,6 +332,7 @@ void ScheduleReaderWarszawa::readpr(string nazwa, fstream& plik, string akt, str
 	bool ok=1;
 	double y1=0;
 	double x1=0;
+	boolean wprowadzone = false;
 	while(ok && plik.getline(data, 100000))
 	{
 		stringstream plt;
@@ -342,6 +343,7 @@ void ScheduleReaderWarszawa::readpr(string nazwa, fstream& plik, string akt, str
 			ok=0;
 		else
 		{
+			bool jakosc = false;
 			int licz;
 			plt>>licz;
 			string gowno;
@@ -367,14 +369,19 @@ void ScheduleReaderWarszawa::readpr(string nazwa, fstream& plik, string akt, str
 					plt>>y1;
 					plt>>gowno;
 					plt>>x1;
+					wprowadzone=true;
+					jakosc=true;
 				}
 			}
+			int liczbaJakosc = jakosc;
+			liczbaJakosc+=(int)wprowadzone;
 			przystanek foo;
 			foo.miejscowosc=aktmiasto;
 			foo.name=akt;
 			foo.id=lll;
 			foo.lon=x1;
 			foo.lat=y1;
+			foo.wsp_jakosc = liczbaJakosc;
 			foo.stopinfo="ulica "+alfa+" kierunek "+beta;
 			hand->nowy_przystanek(foo);
 			pominlinie(licz, plik);

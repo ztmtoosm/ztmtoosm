@@ -97,7 +97,7 @@ var tbl = function(url)
 		var stat = "panel-success";
 		if(data[i].powod==1)
 			stat = "panel-danger";
-		if(data[i].powod>2)
+		if(data[i].powod>2 && data[i].powod<1000)
 			stat = "panel-warning";
 		div.setAttribute('class', "panel "+stat);
 		div.setAttribute('id', data[i].id);

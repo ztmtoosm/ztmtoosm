@@ -32,6 +32,7 @@ struct przystanek
 	string miejscowosc;
 	double lon;
 	double lat;
+	int wsp_jakosc = 0;
 	string stopinfo;
 };
 
