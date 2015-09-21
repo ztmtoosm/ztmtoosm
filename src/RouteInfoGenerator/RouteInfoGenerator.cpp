@@ -542,11 +542,11 @@ struct MainClass
 	{
 		cout<<"LOADER START"<<endl;
 		if(typ==2)
-			gen.loadedVariables[0]="panel-success";
+			gen.loadedVariables[0]="panel-success panel-linia";
 		if(typ==1)
-			gen.loadedVariables[0]="panel-warning";
+			gen.loadedVariables[0]="panel-warning panel-linia";
 		if(typ==0)
-			gen.loadedVariables[0]="panel-info";
+			gen.loadedVariables[0]="panel-info panel-linia";
 		gen.loadedVariables[1]=name;
 		gen.loadedVariables[2]=content;
 		plik<<gen.loadTemplate(pathTemplate+"/lineHeader.template");
@@ -867,7 +867,6 @@ struct MainClass
 
 	bool getWsp(double& lat, double& lon, char type1, long long id1, char type2, long long id2)
 	{
-		double lat, lon;
 		bool t1 = getLatLon(type1, id1, lat, lon);
 		if(t1)
 			return true;
@@ -1071,7 +1070,7 @@ struct MainClass
 				line<<",\"stop_position_name\":\""<<escapeJsonString(wyszName('N', it1.second.stop_position))<<"\"";
 				line<<",\"platform\": "<<it1.second.platform<<" ";
 				line<<",\"platform_name\":\""<<escapeJsonString(wyszName(it1.second.platform_type, it1.second.platform))<<"\"";
-				line<<",\"additional\":\""<<escapeJsonString(it2.stop_info+" ; "+it2.miejscowosc)<<"\"";
+				line<<",\"additional\":\""<<escapeJsonString(it2.stopinfo+" ; "+it2.miejscowosc)<<"\"";
 				line<<",\"BS_SP\": "<<getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position);
 				if(it1.second.bus_stop!=0 && powod==1000 && getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position)>150)
 					powod = 3;
@@ -1122,7 +1121,7 @@ struct MainClass
 				line<<",\"name\":\""<<escapeJsonString(it2.second.name)<<"\"";
 				line<<",\"lon\": "<<it2.second.lon<<" ";
 				line<<",\"lat\": "<<it2.second.lat<<" ";
-				line<<",\"latlon_jakosc\": "<<it2.wsp_jakosc<<" ";
+				line<<",\"latlon_jakosc\": "<<it2.second.wsp_jakosc<<" ";
 				line<<",\"powod\": "<<powod;
 				line<<",\"kierunki\":[";
 				vector <string> kierunki=przystanekKierunki(it2.first);
@@ -1142,6 +1141,9 @@ struct MainClass
 		//przystankiHTMLStream<<divOsmTable(tabela)<<endl;
 		json2Stream<<"]";
 		uzupelnij(lineHTMLStream, pathTemplate+"/theme2.template");
+		if(miasto=="Warszawa")
+			lineHTMLStream<<"<script src=\"rss-test.js\"></script>";
+		lineHTMLStream<<"</body></html>";
 		lineHTMLStream.close();
 		json2Stream.close();
 

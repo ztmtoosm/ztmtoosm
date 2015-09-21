@@ -332,7 +332,7 @@ void ScheduleReaderWarszawa::readpr(string nazwa, fstream& plik, string akt, str
 	bool ok=1;
 	double y1=0;
 	double x1=0;
-	boolean wprowadzone = false;
+	bool wprowadzone = false;
 	while(ok && plik.getline(data, 100000))
 	{
 		stringstream plt;
