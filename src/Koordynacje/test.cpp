@@ -1,5 +1,6 @@
 #include "conf.h"
 #include "../ScheduleReader/ScheduleReader.hpp"
+#include "md5.h"
 #include <map>
 #include <vector>
 using namespace std;
@@ -13,8 +14,10 @@ class CoordinationHandler : public ScheduleHandler
 	map <string, vector <vector <string> > > linie;
 	map <string, string> przystanki;
 	map <string, map <string, set <string> > > mapa7;
+	map <string, string> hashOut;
 	void analizujRelacje(string about, set <pair<int, kurs*> > scz)
 	{
+		stringstream hash;
 		stringstream about2;
 		about2<<about;
 		vector <string> foo;
@@ -24,6 +27,20 @@ class CoordinationHandler : public ScheduleHandler
 			string data2 = data;
 			foo.push_back(data2);
 		}
+		for(int i=2; i<foo.size(); i++)
+		{
+			hash<<foo[i];
+		}
+		set<string> mhs;
+
+		for(auto& it2 : scz)
+		{
+			stringstream tmp5;
+			tmp5<<it2.second;
+			mhs.insert(tmp5.str());
+		}
+		for(auto& it2 : mhs)
+			hash<<it2;
 
 		vector <pair <int, string> > kursy2;
 		for(auto& it2 : scz)
@@ -75,31 +92,34 @@ class CoordinationHandler : public ScheduleHandler
 			zuo = false;
 		if(true)
 		{
-			cout<<"<tr><td>"<<przystanki[foo[0]]<<" "<<foo[0][4]<<foo[0][5]<<"</td><td>"<<przystanki[foo[1]]<<" "<<foo[1][4]<<foo[1][5]<<"</td><td>";
+			stringstream frt;
+			frt<<"<tr><td>"<<przystanki[foo[0]]<<" "<<foo[0][4]<<foo[0][5]<<"</td><td>"<<przystanki[foo[1]]<<" "<<foo[1][4]<<foo[1][5]<<"</td><td>";
 			for(int i=2; i<foo.size(); i++)
 			{
 				if(i>2)
-					cout<<", ";
-				cout<<foo[i];
+					frt<<", ";
+				frt<<foo[i];
 			}
-			cout<<"</td><td>";
-			/*for(int i=0; i<kursy3.size(); i++)
+			frt<<"</td><td>";
+			//frt<<md5(hash.str())<<"</td><td>";
+			for(int i=0; i<kursy3.size(); i++)
 			{
 				if(i==0)
 				{
-
-					//cout<<"<span title=\""<<godz(kursy2[i].first)<<" / "<<kursy2[i].second<<"\">-</span>";
+					frt<<"<span title=\""<<godz(kursy2[i].first)<<" / "<<kursy2[i].second<<"\">-</span>";
 				}
 				if(tab[i])
-					cout<<"<b>";
-				cout<<kursy3[i];
+					frt<<"<b>";
+				frt<<kursy3[i];
 				if(tab[i])
-					cout<<"</b>";
-				cout<<" ";
-				//cout<<"<span title=\""<<godz(kursy2[i+1].first)<<" / "<<kursy2[i+1].second<<"\">-</span>";
-			}*/
+					frt<<"</b>";
+				frt<<" ";
+				frt<<"<span title=\""<<godz(kursy2[i+1].first)<<" / "<<kursy2[i+1].second<<"\">-</span>";
+			}
 			//cout<<bledix.size()<<" "<<zuo;
-			cout<<"</td></tr>"<<endl;
+			frt<<"</td>";
+			frt<<"</tr>";
+			hashOut[hash.str()]=frt.str();
 		}
 	}
 	bool eq(set<string> a, set<string> b)
@@ -170,15 +190,18 @@ class CoordinationHandler : public ScheduleHandler
 
 	virtual void nowa_linia(string nazwa, vector <vector <string> > trasy)
 	{
-		linie[nazwa] = trasy;
-		for(int j=0; j<trasy.size(); j++)
+		if(nazwa.size()>0 && nazwa[0]!='N')
 		{
-			auto& it1 = trasy[j];
-			for(int i=0; i<it1.size()-1; i++)
+			linie[nazwa] = trasy;
+			for(int j=0; j<trasy.size(); j++)
 			{
-				stringstream nazwa2;
-				nazwa2<<nazwa<<"$"<<j;
-				mapa[make_pair(it1[i], it1[i+1])].insert(nazwa2.str());
+				auto& it1 = trasy[j];
+				for(int i=0; i<it1.size()-1; i++)
+				{
+					stringstream nazwa2;
+					nazwa2<<nazwa<<"$"<<j;
+					mapa[make_pair(it1[i], it1[i+1])].insert(nazwa2.str());
+				}
 			}
 		}
 	}
@@ -269,6 +292,10 @@ int main(int argc, char** argv)
 	{
 
 		hand.analizujRelacje(it1.first, it1.second);
+	}
+	for(auto& it1 :hand.hashOut)
+	{
+		cout<<it1.second<<endl;
 	}
 	cout<<"</table></body></html>";
 }
