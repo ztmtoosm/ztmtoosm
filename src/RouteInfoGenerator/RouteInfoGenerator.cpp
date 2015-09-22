@@ -1142,7 +1142,7 @@ struct MainClass
 		json2Stream<<"]";
 		uzupelnij(lineHTMLStream, pathTemplate+"/theme2.template");
 		if(miasto=="Warszawa")
-			lineHTMLStream<<"<script src=\"rss-test.js\"></script>";
+			lineHTMLStream<<"<script src=\"jq.js\"></script><script src=\"jfeed.js\"></script><script src=\"rss-test.js\"></script>";
 		lineHTMLStream<<"</body></html>";
 		lineHTMLStream.close();
 		json2Stream.close();
