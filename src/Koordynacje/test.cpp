@@ -113,7 +113,6 @@ class CoordinationHandler : public ScheduleHandler
 				frt<<kursy3[i];
 				if(tab[i])
 					frt<<"</b>";
-				frt<<" ";
 				frt<<"<span title=\""<<godz(kursy2[i+1].first)<<" / "<<kursy2[i+1].second<<"\">-</span>";
 			}
 			//cout<<bledix.size()<<" "<<zuo;
@@ -190,7 +189,7 @@ class CoordinationHandler : public ScheduleHandler
 
 	virtual void nowa_linia(string nazwa, vector <vector <string> > trasy)
 	{
-		if(nazwa.size()>0 && nazwa[0]!='N')
+		if(nazwa.size()<=2 && nazwa[0]>='0' && nazwa[0]<='9')
 		{
 			linie[nazwa] = trasy;
 			for(int j=0; j<trasy.size(); j++)
@@ -287,7 +286,7 @@ int main(int argc, char** argv)
 	string str = argv[1];
 	CoordinationHandler hand(str);
 	hand.run();
-	cout<<"<html><body><table>";
+	cout<<"<html><head><meta charset=\"UTF-8\"></head><body><table>";
 	for(auto& it1 : hand.mapa2)
 	{
 
