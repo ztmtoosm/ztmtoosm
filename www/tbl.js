@@ -83,6 +83,22 @@ var BpSpCreator = function (BS_SP, SP_PL, PL_BS)
 	return wynik;
 }
 
+var infoLabel = function (url, desc)
+{
+	return "<a class=\"label label-info\" target=\"_blank\"   href=\""+url+"\">"+desc+"</a>";
+}
+
+var osmInfo = function(lon, lat)
+{
+	var url = "http://openstreetmap.org/?mlat="+lat+"&mlon="+lon+"&zoom=18";
+	var left = lon-0.002;
+	var right = lon+0.002;
+	var topp = lat+0.001;
+	var bottom = lat-0.001;
+	var url2 = "http://localhost:8111/load_and_zoom?left="+left+"&right="+right+"&top="+topp+"&bottom="+bottom;
+	return infoLabel(url, 'OSM')+" "+infoLabel(url2, 'JOSM');
+}
+
 var tbl = function(url)
 {
 	divAll = document.createElement("xyz");
@@ -123,13 +139,32 @@ var tbl = function(url)
 	
 		divQ.setAttribute("class", "collapse");
 		divQ.setAttribute("id", data[i].id+"linie");
+		
+
+		if(data[i].latlon_jakosc>0)
+		{
+			var latLonInfo = "Współrzędne dostarczone przez operatora: "+data[i].lon+" "+data[i].lat+" ";
+			if(data[i].latlon_jakosc==1)
+				latLonInfo += "NIEDOKŁADNE ";
+			latLonInfo+=osmInfo(data[i].lon, data[i].lat);
+			newGroupItem(divGroup, latLonInfo);
+		}
+
+		if(data[i].lat2!=undefined)
+		{
+			var latLonInfo = "Współrzędne z OSM: "+data[i].lon2+" "+data[i].lat2+" ";
+			latLonInfo+=osmInfo(data[i].lon2, data[i].lat2);
+			newGroupItem(divGroup, latLonInfo);
+		}
+
 
 		divGroup.appendChild(divP);
 		divGroup.appendChild(divQ);
 		for(var j=0; j<data[i].kierunki.length; j++)
 			newGroupItem(divQ, data[i].kierunki[j]);
-		newGroupItem(divGroup, data[i].lon);
-		newGroupItem(divGroup, data[i].lat);
+
+		
+
 		divAll.appendChild(div);
 		data[i].div = div;
 		akttable[akttable.length]=data[i];
