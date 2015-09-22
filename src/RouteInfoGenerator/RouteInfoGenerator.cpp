@@ -919,7 +919,11 @@ struct MainClass
 		json2Stream.precision(9);
 		uzupelnij(lineHTMLStream, pathTemplate+"/theme.template");
 		lineHTMLStream<<miasto<<" - linie";
-		uzupelnij(lineHTMLStream, pathTemplate+"/themeA.template");
+
+		htmlGenerator.loadedVariables[0]=miasto+".html";
+		htmlGenerator.loadedVariables[1]="Zestawienie przystanków";
+		lineHTMLStream<<htmlGenerator.loadTemplate(pathTemplate+"/themeA.template");
+
 		lineHTMLStream<<"Stan na: ";
 		lineHTMLStream<<aktTime();
 		uzupelnij(lineHTMLStream, pathTemplate+"/themeB.template");
@@ -927,7 +931,10 @@ struct MainClass
 		przystankiHTMLStream.precision(9);
 		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme.template");
 		przystankiHTMLStream<<miasto<<" - przystanki";
-		uzupelnij(przystankiHTMLStream, pathTemplate+"/themeA.template");
+
+		htmlGenerator.loadedVariables[0]="Pelne"+miasto+".html";
+		htmlGenerator.loadedVariables[1]="Zestawienie linii";
+		przystankiHTMLStream<<htmlGenerator.loadTemplate(pathTemplate+"/themeA.template");
 		przystankiHTMLStream<<"Stan na: ";
 		przystankiHTMLStream<<aktTime();
 		uzupelnij(przystankiHTMLStream, pathTemplate+"/themeB.template");
