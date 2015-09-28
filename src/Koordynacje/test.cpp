@@ -3,6 +3,7 @@
 #include "md5.h"
 #include <map>
 #include <vector>
+#include <fstream>
 using namespace std;
 
 class CoordinationHandler : public ScheduleHandler
@@ -15,6 +16,55 @@ class CoordinationHandler : public ScheduleHandler
 	map <string, string> przystanki;
 	map <string, map <string, set <string> > > mapa7;
 	map <string, string> hashOut;
+	map <string, set<pair<string, int> > > lineInfo;
+	map <string, double> hashLevels;
+	double calculateLevel (vector <string> info)
+	{
+		int value = 100.0;
+		int value2 = 100.0;
+		if(info.size()<2)
+			return value;
+		for(int i=2; i<info.size(); i++)
+		{
+			string akt = info[i];
+			for(auto& it1 : linie[akt])
+			{
+				for(int j=0; j<it1.size(); j++)
+				{
+					if(it1[j]==info[0])
+						value = min(value, j);
+				}
+			}
+		}
+		for(int i=2; i<info.size(); i++)
+		{
+			string akt = info[i];
+			for(auto& it1 : linie[akt])
+			{
+				for(int j=0; j<it1.size(); j++)
+				{
+					if(it1[j]==info[1])
+						value2 = min(value2, (int)it1.size()-j);
+				}
+			}
+		}
+		return (double)value+(double)value2/100.0;
+	}
+	int calculateStopKolejnosc (string stop, string line)
+	{
+		for(int i=0; i<linie[line].size(); i++)
+		{
+			for(int j=0; j<linie[line][i].size(); j++)
+			{
+				if(linie[line][i][j]==stop)
+				{
+					return i*200+j;
+				}
+			}
+		}
+		return 20000;
+	}
+
 	void analizujRelacje(string about, set <pair<int, kurs*> > scz)
 	{
 		stringstream hash;
@@ -33,6 +83,8 @@ class CoordinationHandler : public ScheduleHandler
 		}
 		set<string> mhs;
 
+
+
 		for(auto& it2 : scz)
 		{
 			stringstream tmp5;
@@ -41,6 +93,8 @@ class CoordinationHandler : public ScheduleHandler
 		}
 		for(auto& it2 : mhs)
 			hash<<it2;
+
+		string real_hash = md5(hash.str());
 
 		vector <pair <int, string> > kursy2;
 		for(auto& it2 : scz)
@@ -93,14 +147,15 @@ class CoordinationHandler : public ScheduleHandler
 		if(true)
 		{
 			stringstream frt;
-			frt<<"<tr><td>"<<przystanki[foo[0]]<<" "<<foo[0][4]<<foo[0][5]<<"</td><td>"<<przystanki[foo[1]]<<" "<<foo[1][4]<<foo[1][5]<<"</td><td>";
+			frt<<foo[0]<<"	"<<foo[1]<<"	";
 			for(int i=2; i<foo.size(); i++)
 			{
 				if(i>2)
 					frt<<", ";
 				frt<<foo[i];
+				lineInfo[foo[i]].insert(make_pair<>(real_hash, calculateStopKolejnosc(foo[0], foo[i])));
 			}
-			frt<<"</td><td>";
+			frt<<"	";
 			//frt<<md5(hash.str())<<"</td><td>";
 			for(int i=0; i<kursy3.size(); i++)
 			{
@@ -115,10 +170,12 @@ class CoordinationHandler : public ScheduleHandler
 					frt<<"</b>";
 				frt<<"<span title=\""<<godz(kursy2[i+1].first)<<" / "<<kursy2[i+1].second<<"\">-</span>";
 			}
-			//cout<<bledix.size()<<" "<<zuo;
-			frt<<"</td>";
-			frt<<"</tr>";
-			hashOut[hash.str()]=frt.str();
+			double akt_level = calculateLevel(foo);
+			if(hashLevels.find(real_hash)==hashLevels.end() || hashLevels[real_hash]>akt_level)
+			{
+				hashLevels[real_hash]=akt_level;
+				hashOut[real_hash]=frt.str();
+			}
 		}
 	}
 	bool eq(set<string> a, set<string> b)
@@ -189,8 +246,8 @@ class CoordinationHandler : public ScheduleHandler
 
 	virtual void nowa_linia(string nazwa, vector <vector <string> > trasy)
 	{
-		if(nazwa.size()<=2 && nazwa[0]>='0' && nazwa[0]<='9')
-		{
+		//if(nazwa.size()<=2 && nazwa[0]>='0' && nazwa[0]<='9')
+		//{
 			linie[nazwa] = trasy;
 			for(int j=0; j<trasy.size(); j++)
 			{
@@ -202,7 +259,7 @@ class CoordinationHandler : public ScheduleHandler
 					mapa[make_pair(it1[i], it1[i+1])].insert(nazwa2.str());
 				}
 			}
-		}
+		//}
 	}
 	virtual void nowy_przystanek(przystanek nowy)
 	{
@@ -243,10 +300,10 @@ class CoordinationHandler : public ScheduleHandler
 					pair<string, string> p = make_pair(it2[i], it2[i+1]);
 					if(i>0)
 					{
-						if(!eq(mapa[g], mapa[p]))
-						{
+						//if(!eq(mapa[g], mapa[p]))
+						//{
 							pdd.push_back(it2[i]);
-						}
+						//}
 					}
 					g=p;
 				}
@@ -284,17 +341,37 @@ class CoordinationHandler : public ScheduleHandler
 int main(int argc, char** argv)
 {
 	string str = argv[1];
+	fstream plik1(argv[2], ios::out | ios::trunc);
+	fstream plik2(argv[3], ios::out | ios::trunc);
+	fstream plik3(argv[4], ios::out | ios::trunc);
 	CoordinationHandler hand(str);
 	hand.run();
-	cout<<"<html><head><meta charset=\"UTF-8\"></head><body><table>";
 	for(auto& it1 : hand.mapa2)
 	{
-
 		hand.analizujRelacje(it1.first, it1.second);
 	}
 	for(auto& it1 :hand.hashOut)
 	{
-		cout<<it1.second<<endl;
+		plik1<<it1.first<<"	"<<it1.second<<endl;
 	}
-	cout<<"</table></body></html>";
+	for(auto& it1 : hand.lineInfo)
+	{
+		map <string, int> linePrim;
+		for(auto& it2 : it1.second)
+		{
+			if(linePrim.find(it2.first)==linePrim.end() || linePrim[it2.first]>it2.second)
+			{
+				linePrim[it2.first]=it2.second;
+			}
+
+		}
+		for(auto& it2 : linePrim)
+		{
+			plik2<<it1.first<<"	"<<it2.first<<"	"<<it2.second<<endl;
+		}
+	}
+	for(auto& it1 : hand.przystanki)
+	{
+		plik3<<it1.first<<"	"<<it1.second<<endl;
+	}
 }

@@ -1,0 +1,6 @@
+CREATE DATABASE koordynacje;
+\c koordynacje
+CREATE TABLE stop_names (id char(7) PRIMARY KEY, name char(60));
+CREATE TABLE alternative_conn (fromx char(7), tox char(7), real_from char(7), real_to char(7));
+CREATE TABLE info_super (hashs char(67), fromx char(7), tox char(7), line_info char(300), descript char(50000));
+CREATE TABLE line_info (lineid char(7), hashs char(67), linekol integer);
