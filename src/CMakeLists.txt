@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.6)
 project (ztmtoosm CXX)    
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
-include_directories (xml rapidjson stringspecial osmbase HTMLGenerator ${CMAKE_BINARY_DIR})
+include_directories (xml RareToThickRoutes rapidjson stringspecial osmbase HTMLGenerator RouteInfoGenerator ${CMAKE_BINARY_DIR})
 
 
 get_filename_component(MYPROJECT_DIR ${CMAKE_BINARY_DIR} PATH)
@@ -18,6 +18,7 @@ add_subdirectory (testparse)
 add_subdirectory (RareToThickRoutes)
 add_subdirectory (Koordynacje)
 
+# add_library (ztmtoosm_general ${ALL_SOURCES})
 
 #find_package (Doxygen)
 #if (DOXYGEN_FOUND)

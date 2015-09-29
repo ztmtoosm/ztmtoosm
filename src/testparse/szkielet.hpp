@@ -1,5 +1,5 @@
-#include "../RareToThickRoutes/dijkstra.hpp"
-#include "../osmbase/osm_base.hpp"
+#include "dijkstra.hpp"
+#include "osm_base.hpp"
 
 struct PunktSzkieletowy
 {
@@ -8,14 +8,16 @@ struct PunktSzkieletowy
 	long long getWay(long long destination);
 };
 
+
 class Szkielet
 {
-	public:
-	bool ok;
+	private:
+	map <long long, set <long long> > znajdzWierzcholkiDoSplitowania (vector <long long> posrednie);
+	vector <long long> kolejneDrogi2 (vector <long long> posrednie);
 	map <long long, PunktSzkieletowy> punkty;
 	osm_base* baza;
+	public:
+	bool ok;
 	Szkielet(osm_base* baza, Przelicznik* przel);
-	map <long long, set <long long> > kolejneDrogi (vector <long long> posrednie);
-	vector <long long> kolejneDrogi2 (vector <long long> posrednie);
 	vector <long long> kolejneDrogiFull (vector <long long> posrednie);
 };

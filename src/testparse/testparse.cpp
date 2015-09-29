@@ -102,7 +102,7 @@ struct Generator
 	{
 		Przelicznik* przelicznik = NULL;
 		ok=1;
-		set<pair<long long, long long> > pary;
+		set<pair<long long, long long> > idOfTrackNodes;
 		map <long long, relation> tempRel;
 		map <long long, vector <long long> > tempTracks;
 		vector <long long> allNodes;
@@ -141,13 +141,13 @@ struct Generator
 				cout<<(dupa.size()-1)<<endl;
 				for(int j=0; j<(signed long long)(dupa.size()-1); j++)
 				{
-					pary.insert(make_pair(dupa[j], dupa[j+1]));
+					idOfTrackNodes.insert(make_pair(dupa[j], dupa[j+1]));
 				}
 				if(dupa.size()>0)
 					allNodes.insert(allNodes.end(), dupa.begin(), dupa.end());
 			}
 		}
-		osm_base baza(allNodes, pary, false);
+		osm_base baza(allNodes, idOfTrackNodes, false);
 		Szkielet szkielet(&baza, przelicznik);
 		for(auto& it1 : parRels)
 		{
@@ -185,6 +185,8 @@ struct Generator
 		for(auto& it1 : tempTracks)
 		{
 			vector <long long> xD = szkielet.kolejneDrogiFull(it1.second);
+			if(xD.size()==0)
+				ok = false;
 			for(int i=0; i<xD.size(); i++)
 			{
 				relation_member foo;
@@ -211,7 +213,6 @@ int main(int argc, char** argv)
 	t.seekg(0, std::ios::end);   
 	lol.reserve(t.tellg());
 	t.seekg(0, std::ios::beg);
-
 	lol.assign((std::istreambuf_iterator<char>(t)),
 	            std::istreambuf_iterator<char>());
 	stringstream stt;

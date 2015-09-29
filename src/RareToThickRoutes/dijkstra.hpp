@@ -5,7 +5,7 @@
 #include <vector>
 #include <map>
 #include <sstream>
-#include "../osmbase/osm_base.hpp"
+#include "osm_base.hpp"
 using namespace std;
 
 struct odcinek;

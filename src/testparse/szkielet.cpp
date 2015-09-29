@@ -1,4 +1,7 @@
 #include "szkielet.hpp"
+
+
+
 void PunktSzkieletowy::podmien(long long destination, long long new_way)
 {
 	wychodzace[destination]=new_way;
@@ -33,7 +36,7 @@ Szkielet::Szkielet(osm_base* baza, Przelicznik* przel)
 		}
 	}
 }
-map <long long, set <long long> > Szkielet::kolejneDrogi (vector <long long> posrednie)
+map <long long, set <long long> > Szkielet::znajdzWierzcholkiDoSplitowania (vector <long long> posrednie)
 {
 	map <long long, set <long long> > wynik;
 	long long aktWay = 0;
@@ -89,19 +92,13 @@ vector <long long> Szkielet::kolejneDrogi2 (vector <long long> posrednie)
 }
 vector <long long> Szkielet::kolejneDrogiFull (vector <long long> posrednie)
 {
-	auto posr1 = kolejneDrogi(posrednie);
+	auto posr1 = znajdzWierzcholkiDoSplitowania(posrednie);
 	for(auto& it1 : posr1)
 	{
-		for(auto& it2 : it1.second)
-		{
-			cout<<it2<<" xD ";
-		}
-		cout<<endl;
 		auto posr2 = baza->rozdziel_way(it1.first, it1.second);
 		for(int i=0; i<posr2.size(); i++)
 		{
 			long long id = posr2[i].first;
-			cout<<"ROZDZIEL ID "<<id<<endl;
 			for(int j=0; j<(signed int)(posr2[i].second.size()-1); j++)
 			{
 				long long f1 = posr2[i].second[j];
