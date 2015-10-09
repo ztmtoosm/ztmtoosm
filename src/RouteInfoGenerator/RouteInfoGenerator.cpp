@@ -1289,8 +1289,9 @@ struct MainClass
 			{
 				rels.push_back(it2);
 			}
-		}
-		OsmBazaLoaderBis(rels, bazaOsm, wspRoutePath);
+        }
+        if(miasto=="Warszawa")
+		    OsmBazaLoaderBis(rels, bazaOsm, wspRoutePath);
 	}
 	~MainClass()
 	{
