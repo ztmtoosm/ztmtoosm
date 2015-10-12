@@ -16,7 +16,6 @@ add_subdirectory (RouteInfoGenerator)
 add_subdirectory (ScheduleReader)
 add_subdirectory (testparse)
 add_subdirectory (RareToThickRoutes)
-add_subdirectory (Koordynacje)
 
 # add_library (ztmtoosm_general ${ALL_SOURCES})
 

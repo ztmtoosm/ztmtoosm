@@ -34,13 +34,13 @@ int main(int argc, char** argv)
 {
 	string sciezka, sciezka2, sciezka3;
 	sciezka=SCIEZKA1;
-	sciezka+="/data/ztm_download1.txt";
+	sciezka+="/data/warszawa.txt";
 	sciezka3=SCIEZKA1;
 	sciezka3+="/data/metro.txt";
 	HafasBaza* baza=new HafasBaza();
 	HafasBazaLoader loader(baza, sciezka, sciezka3);
 	//OsmBazaLoader loader2(baza, sciezka2);
-	baza->wypelnij_sciezki();
+	baza->dodajSciezkiPiesze();
 	//baza->dijkstra_print(argv[1], argv[2], time(NULL), cout);
 	//polaczenia.wypisz_polaczenia(argv[1], time(NULL), ">", cout, wyp);
 	//return 0;
@@ -56,6 +56,7 @@ int main(int argc, char** argv)
 			tryb=1;
 		if(env["line"]!="")
 			tryb=2;
+		/*
 		if(tryb==1)
 		{
 			string delim_type=">";
@@ -64,8 +65,7 @@ int main(int argc, char** argv)
 			if(env["delim"]=="2")
 				delim_type="=";
 			baza->wypisz_polaczenia(env["from"], stringtoint(env["time"]), delim_type, false, wyp);
-		//	baza->wypiszRoute(env["line"], wyp);
-		}
+		}*/
 		if(tryb==2)
 		{
 			baza->wypiszKurs2(env["from"], stringtoint(env["time"]), env["line"], wyp);

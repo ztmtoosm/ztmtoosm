@@ -145,7 +145,7 @@ class HafasBaza : public sql_polaczenia
 		}
 		return false;
 	}
-	void wypelnij_sciezki(map<string, HafasStop*>::iterator akt)
+	void dodajSciezkiPiesze(map<string, HafasStop*>::iterator akt)
 	{
 		auto it2=przystanki.begin();
 		auto it1=akt;
@@ -168,12 +168,12 @@ class HafasBaza : public sql_polaczenia
 			it2++;
 		}
 	}
-	void wypelnij_sciezki()
+	void dodajSciezkiPiesze()
 	{
 		auto it1=przystanki.begin();
 		while(it1!=przystanki.end())
 		{
-			wypelnij_sciezki(it1);
+			dodajSciezkiPiesze(it1);
 			it1++;
 		}
 	}
@@ -767,7 +767,7 @@ class HafasBazaLoader : ScheduleHandler
 	public:
 	HafasBazaLoader (HafasBaza* baz, string sciezka, string sciezka2) : baza(baz)
 	{
-		ScheduleReaderZtm readerZtm(sciezka, this);
+		ScheduleReaderWarszawa readerZtm(sciezka, this);
 		ScheduleReaderMetro readerMetro(sciezka2, this);
 		readerZtm.run();
 		readerMetro.run();
