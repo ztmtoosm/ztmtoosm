@@ -1031,7 +1031,9 @@ struct MainClass
 		string jsonPath=pathHTML+"/List"+miasto+".json";
 		string json2Path=pathHTML+"/Przystanki"+miasto+".json";
 		string wspRoutePath=pathHTML+"/Trasy"+miasto+".txt";
+		string wspStopPath=pathHTML+"/Wsp"+miasto+".txt";
 		fstream lineHTMLStream(linieHTMLPath.c_str(), ios::out | ios::trunc);
+		fstream wspStream(wspStopPath.c_str(), ios::out | ios::trunc);
 		fstream przystankiHTMLStream(przystankiHTMLPath.c_str(), ios::out | ios::trunc);
 		fstream jsonStream(jsonPath.c_str(), ios::out | ios::trunc);
 		fstream json2Stream(json2Path.c_str(), ios::out | ios::trunc);
@@ -1182,6 +1184,11 @@ struct MainClass
 				{
 					line<<",\"lon2\": "<<lon2<<" ";
 					line<<",\"lat2\": "<<lat2<<" ";
+					wspStream<<it1.first<<"	"<<lon2<<"	"<<lat2;
+				}
+				else
+				{
+					wspStream<<it1.first<<"	"<<it2.lon<<"	"<<it2.lat;
 				}
 				line<<",\"kierunki\":[";
 				vector <string> kierunki=przystanekKierunki(it1.first);
@@ -1196,6 +1203,10 @@ struct MainClass
 				line<<",\"bus_stop_name\":\""<<escapeJsonString(wyszName('N', it1.second.bus_stop))<<"\"";
 				line<<",\"stop_position\": "<<it1.second.stop_position<<" ";
 				line<<",\"stop_position_name\":\""<<escapeJsonString(wyszName('N', it1.second.stop_position))<<"\"";
+				if(wyszName('N', it1.second.stop_position).length()>0)
+					wspStream<<"	"<<wyszName('N', it1.second.stop_position)<<endl;
+				else
+					wspStream<<"	"<<it2.name<<endl;
 				line<<",\"platform\": "<<it1.second.platform<<" ";
 				line<<",\"platform_name\":\""<<escapeJsonString(wyszName(it1.second.platform_type, it1.second.platform))<<"\"";
 				line<<",\"additional\":\""<<escapeJsonString(it2.stopinfo+" ; "+it2.miejscowosc)<<"\"";
@@ -1252,6 +1263,7 @@ struct MainClass
 				line<<",\"latlon_jakosc\": "<<it2.second.wsp_jakosc<<" ";
 				line<<",\"powod\": "<<powod;
 				line<<",\"kierunki\":[";
+				wspStream<<it2.first<<"	"<<it2.second.lon<<"	"<<it2.second.lat<<"	"<<it2.second.name<<endl;
 				vector <string> kierunki=przystanekKierunki(it2.first);
 				for(int i=0; i<kierunki.size(); i++)
 				{
@@ -1290,8 +1302,10 @@ struct MainClass
 				rels.push_back(it2);
 			}
         }
-        if(miasto=="Warszawa")
-		    OsmBazaLoaderBis(rels, bazaOsm, wspRoutePath);
+		if(miasto=="Warszawa")
+		{
+			OsmBazaLoaderBis(rels, bazaOsm, wspRoutePath);
+		}
 	}
 	~MainClass()
 	{
