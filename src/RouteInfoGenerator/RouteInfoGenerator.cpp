@@ -1206,7 +1206,7 @@ struct MainClass
 				if(wyszName('N', it1.second.stop_position).length()>0)
 					wspStream<<"	"<<wyszName('N', it1.second.stop_position)<<endl;
 				else
-					wspStream<<"	"<<it2.name<<endl;
+					wspStream<<"	"<<it2.name<<" "<<it1.first[4]<<it1.first[5]<<endl;
 				line<<",\"platform\": "<<it1.second.platform<<" ";
 				line<<",\"platform_name\":\""<<escapeJsonString(wyszName(it1.second.platform_type, it1.second.platform))<<"\"";
 				line<<",\"additional\":\""<<escapeJsonString(it2.stopinfo+" ; "+it2.miejscowosc)<<"\"";
