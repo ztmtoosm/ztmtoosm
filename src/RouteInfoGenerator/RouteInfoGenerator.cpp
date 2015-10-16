@@ -296,18 +296,6 @@ struct MainClass
 			czyWszystkie=0;
 		}
 	}
-	/*
-	void addLine(int status, string name, fstream& plik)
-	{
-		string panel_type = "panel-info";
-		if(status==1)
-			panel_type= "panel-danger";
-		if(status==2)
-			panel_type="panel-success";
-		stringstream wew_str;
-		wew_str<<htmlgen::div("panel-heading", "", name);
-		plik<<htmlgen::div("panel "+panel_type, "", wew_str.str());
-	}*/
 	void readInput()
 	{
 		if(czyWszystkie)
