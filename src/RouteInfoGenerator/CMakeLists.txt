@@ -1,4 +1,4 @@
-add_library (RouteInfoGenerator2 HTMLHeadersRouteInfo.cpp PrzeglądanieCzyPrawidloweStareLinie.cpp RouteCohesion.cpp ztmosmpor.cpp WlasciwosciLokalne.hpp)
+add_library (RouteInfoGenerator2 HTMLHeadersRouteInfo.cpp PrzeglądanieCzyPrawidloweStareLinie.cpp RouteCohesion.cpp ztmosmpor.cpp WlasciwosciLokalne.hpp WypisywanieWspolrzednychTras.hpp)
 add_executable (RouteInfoGeneratorPrim RouteInfoGenerator.cpp)
 # add_executable (Generator2 generator2.cpp)
 target_link_libraries (RouteInfoGeneratorPrim RouteInfoGenerator2 HTMLGenerator stringspecial osmbase ScheduleReader)
