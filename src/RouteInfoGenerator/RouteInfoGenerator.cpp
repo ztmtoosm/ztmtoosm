@@ -396,14 +396,19 @@ struct MainClass
 		info += " "+htmlgen::div("znaczniklink", "", znacznikLink(lat, lon));
 		return info;
 	}
-	void generujLinie(string nazwa)
+	void generujLinie(string nazwa, bool newVersion = false)
 	{
 		cout<<"GENEROWANIE "<<nazwa<<endl;
 		vector <long long> stareRelacje=relacje_linia(bazaOsm, wlasciwosci->getRootRelation(), nazwa).second;
 		long long stareId=relacje_linia(bazaOsm, wlasciwosci->getRootRelation(), nazwa).first;
 		if(stareId==0)
 			stareId=-1;
-		string nazwaGEN=pathHTML+"/js"+wlasciwosci->getNazwaMiasta()+nazwa+".json";
+		string nazwaGEN;
+		nazwaGEN=pathHTML+"/js"+wlasciwosci->getNazwaMiasta()+nazwa+".json";
+		if(newVersion)
+		{
+			nazwaGEN=pathHTML+"/jsNew"+wlasciwosci->getNazwaMiasta()+nazwa+".json";
+		}
 		fstream plik(nazwaGEN.c_str(), ios::out | ios::trunc);
 		vector <long long> noweRelacje;
 		int s1 = bazaZtm -> dane_linia[nazwa].size();
@@ -458,7 +463,6 @@ struct MainClass
 				cout<<wariant[j]<<endl;
 				plik<<osmStopData[wariant[j]].stop_position;
 			}
-			cout<<"TRA"<<endl;
 			plik<<"]";
 			plik<<",\"members\":[";
 			for(int j=0; j<wariant.size(); j++)
@@ -482,6 +486,7 @@ struct MainClass
 				cout<<"XI2"<<endl;
 			}
 			plik<<"]}";
+			plik.close();
 			noweRelacje.push_back(wariantOsmRelId);
 		}
 		cout<<"pppp"<<endl;
