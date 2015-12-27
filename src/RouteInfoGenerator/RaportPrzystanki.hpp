@@ -1,5 +1,47 @@
 #ifndef RAPORTPRZYSTANKI
 #define RAPORTPRZYSTANKI
+#include "../rapidjson/writer.h"
+#include "../rapidjson/stringbuffer.h"
+using namespace rapidjson;
+
+/*
+ *
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include <iostream>
+
+using namespace rapidjson;
+using namespace std;
+.
+int main() {
+		StringBuffer s;
+		Writer<StringBuffer> writer(s);
+
+		writer.StartObject();
+		writer.String("hello");
+		writer.String("world");
+		writer.String("t");
+		writer.Bool(true);
+		writer.String("f");
+		writer.Bool(false);
+		writer.String("n");
+		writer.Null();
+		writer.String("i");
+		writer.Uint(123);
+		writer.String("pi");
+		writer.Double(3.1416);
+		writer.String("a");
+		writer.StartArray();
+		for (unsigned i = 0; i < 4; i++)
+				writer.Uint(i);
+		writer.EndArray();
+		writer.EndObject();
+
+		cout << s.GetString() << endl;
+
+		return 0;
+}*/
+
 class RaportPrzystanki
 {
 	string miasto;
@@ -172,130 +214,87 @@ class RaportPrzystanki
 		}
 		return ss.str();
 	}
+
+	int printStop(pair<string, OsmStopData> it1, Writer<StringBuffer>& writer)
+	{
+		int powod = 1000;
+		if(it1.second.stop_position==0)
+			powod = 1;
+
+		auto& it2 = bazaZtm->przystanki[it1.first];
+		writer.StartObject();
+		writer.String("id"); writer.String(it1.first.c_str());
+		writer.String("name"); writer.String(it2.name.c_str());
+		writer.String("lon"); writer.Double(it2.lon);
+		writer.String("lat"); writer.Double(it2.lat);
+		writer.String("latlon_jakosc"); writer.Int(it2.wsp_jakosc);
+
+		double lat2, lon2;
+		bool okWsp2 = getWsp(lat2, lon2, 'N', it1.second.stop_position, 'N', it1.second.bus_stop);
+		if(okWsp2)
+		{
+			writer.String("lon2"); writer.Double(lon2);
+			writer.String("lat2"); writer.Double(lat2);
+		}
+
+		/*
+		line<<",\"kierunki\":[";
+		vector <string> kierunki=przystanekKierunki(it1.first);
+		for(int i=0; i<kierunki.size(); i++)
+		{
+			if(i>0)
+				line<<",";
+			line<<"\""<<escapeJsonString(kierunki[i])<<"\"";
+		}
+		line<<"]";*/
+
+		writer.String("bus_stop"); writer.Int64(it1.second.bus_stop);
+		writer.String("bus_stop_name"); writer.String(wyszName('N', it1.second.bus_stop).c_str());
+		writer.String("stop_position"); writer.Int64(it1.second.stop_position);
+		writer.String("stop_position_name"); writer.String(wyszName('N', it1.second.stop_position).c_str());
+		writer.String("platform"); writer.Int64(it1.second.platform);
+		writer.String("platform_name"); writer.String(wyszName(it1.second.platform_type, it1.second.platform).c_str());
+		writer.String("additional"); writer.String((it2.stopinfo+" ; "+it2.miejscowosc).c_str());
+		writer.String("BS_SP"); writer.Double(getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position));
+		if(it1.second.bus_stop!=0 && powod==1000 && getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position)>150)
+			powod = 3;
+		writer.String("SP_PL"); writer.Double(getDistance(it1.second.platform_type, it1.second.platform, 'N', it1.second.stop_position));
+		writer.String("PL_BS"); writer.Double(getDistance('N', it1.second.bus_stop, it1.second.platform_type, it1.second.platform));
+		writer.String("powod"); writer.Int(powod);
+		if(it1.second.platform_type=='N' || it1.second.platform_type=='W' || it1.second.platform_type=='R')
+			writer.String("platform_type"); writer.String(string(""+it1.second.platform_type).c_str());
+		writer.EndObject();
+		return powod;
+	}
+
 public:
 	RaportPrzystanki(fstream& json2Stream, map <string, OsmStopData>& osmStopDataW, ScheduleHandlerInternal* bazaZtmW, string miastoW, osm_base* bazaOsmW)
 		: osmStopData(osmStopDataW), bazaZtm(bazaZtmW), miasto(miastoW), bazaOsm(bazaOsmW)
 	{
 		int jsonTableRowCount = 0;
 		json2Stream.precision(9);
-		json2Stream<<"[";
+
+		StringBuffer s;
+		Writer<StringBuffer> writer(s);
+		writer.StartArray();
+
 		for(auto& it1 : osmStopData)
 		{
 			if(bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end())
 			{
-				int powod = 1000;
-				if(it1.second.stop_position==0)
-					powod = 1;
-				auto& it2 = bazaZtm->przystanki[it1.first];
-				stringstream line;
-				line.precision(9);
-				if(jsonTableRowCount>0)
-					line<<",";
-				line<<"{";
-				line<<"\"id\":\""<<it1.first<<"\"";
-				line<<",\"name\":\""<<escapeJsonString(it2.name)<<"\"";
-				line<<",\"lon\": "<<it2.lon<<" ";
-				line<<",\"lat\": "<<it2.lat<<" ";
-				line<<",\"latlon_jakosc\": "<<it2.wsp_jakosc<<" ";
-				double lat2, lon2;
-				bool okWsp2 = getWsp(lat2, lon2, 'N', it1.second.stop_position, 'N', it1.second.bus_stop);
-				if(okWsp2)
-				{
-					line<<",\"lon2\": "<<lon2<<" ";
-					line<<",\"lat2\": "<<lat2<<" ";
-				}
-				else
-				{
-				}
-				line<<",\"kierunki\":[";
-				vector <string> kierunki=przystanekKierunki(it1.first);
-				for(int i=0; i<kierunki.size(); i++)
-				{
-					if(i>0)
-						line<<",";
-					line<<"\""<<escapeJsonString(kierunki[i])<<"\"";
-				}
-				line<<"]";
-				line<<",\"bus_stop\":"<<it1.second.bus_stop<<" ";
-				line<<",\"bus_stop_name\":\""<<escapeJsonString(wyszName('N', it1.second.bus_stop))<<"\"";
-				line<<",\"stop_position\": "<<it1.second.stop_position<<" ";
-				line<<",\"stop_position_name\":\""<<escapeJsonString(wyszName('N', it1.second.stop_position))<<"\"";
-				//if(wyszName('N', it1.second.stop_position).length()>0)
-				//	wspStream<<"	"<<wyszName('N', it1.second.stop_position)<<endl;
-				//else
-				//	wspStream<<"	"<<it2.name<<" "<<it1.first[4]<<it1.first[5]<<endl;
-				line<<",\"platform\": "<<it1.second.platform<<" ";
-				line<<",\"platform_name\":\""<<escapeJsonString(wyszName(it1.second.platform_type, it1.second.platform))<<"\"";
-				line<<",\"additional\":\""<<escapeJsonString(it2.stopinfo+" ; "+it2.miejscowosc)<<"\"";
-				line<<",\"BS_SP\": "<<getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position);
-				if(it1.second.bus_stop!=0 && powod==1000 && getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position)>150)
-					powod = 3;
-				line<<",\"SP_PL\": "<<getDistance(it1.second.platform_type, it1.second.platform, 'N', it1.second.stop_position);
-				line<<",\"PL_BS\": "<<getDistance('N', it1.second.bus_stop, it1.second.platform_type, it1.second.platform);
-				line<<",\"powod\": "<<powod;
-				if(it1.second.platform_type=='N' || it1.second.platform_type=='W' || it1.second.platform_type=='R')
-					line<<",\"platform_type\":\""<<it1.second.platform_type<<"\"";
-
-				/*
-				line<<"<tr id=\""<<it1.first<<"\">";
-				line<<"<td>"<<it1.first<<"</td>";
-				line<<"<td>"<<it2.name<<"</td>";
-				line<<"<td>"<<it2.lon<<"</td>";
-				line<<"<td>"<<it2.lat<<"</td>";
-				line<<"<td>"<<it2.stopinfo<<"</td>";
-				line<<"<td>"<<divOsmLink(it1.second.bus_stop, 'N')<<"</td>";
-				line<<"<td>"<<divOsmLink(it1.second.stop_position, 'N')<<"</td>";
-				line<<"<td>"<<divOsmLink(it1.second.platform, it1.second.platform_type)<<"</td>";
-				vector <string> kierunki=przystanekKierunki(it1.first);
-				line<<"<td>"<<kierunki[0]<<"</td>";
-				line<<"<td>"<<kierunki[1]<<"</td>";
-				line<<"<td>"<<kierunki[2]<<"</td>";*/
-				/*
-				string refDiv = htmlgen::div("komorka", "", it1.first);
-				string refName = htmlgen::div("komorka", "", it1.second.name);
-				string k1 = htmlgen::div("komorka", "", kierunki[0]);
-				string k2 = htmlgen::div("komorka", "", kierunki[1]);
-				string k3 = htmlgen::div("komorka", "", kierunki[2]);
-				string row[] = {refDiv, refName, divOsmLink(it1.second.bus_stop, 'N'), divOsmLink(it1.second.stop_position, 'N'), divOsmLink(it1.second.platform, it1.second.platform_type), k1, k2, k3};
-				*/
-				line<<"}"<<endl;
-				json2Stream<<line.str();
-				jsonTableRowCount++;
+				printStop(make_pair(it1.first, it1.second), writer);
 			}
 		}
 		for(auto& it2 : bazaZtm->przystanki)
 		{
 			if(osmStopData.find(it2.first)==osmStopData.end())
 			{
-				int powod = 1000;
-				stringstream line;
-				if(jsonTableRowCount>0)
-					line<<",";
-				line<<"{";
-				line<<"\"id\":\""<<it2.first<<"\"";
-				line<<",\"name\":\""<<escapeJsonString(it2.second.name)<<"\"";
-				line<<",\"lon\": "<<it2.second.lon<<" ";
-				line<<",\"lat\": "<<it2.second.lat<<" ";
-				line<<",\"latlon_jakosc\": "<<it2.second.wsp_jakosc<<" ";
-				line<<",\"powod\": "<<powod;
-				line<<",\"kierunki\":[";
-				//wspStream<<it2.first<<"	"<<it2.second.lon<<"	"<<it2.second.lat<<"	"<<it2.second.name<<endl;
-				vector <string> kierunki=przystanekKierunki(it2.first);
-				for(int i=0; i<kierunki.size(); i++)
-				{
-					if(i>0)
-						line<<",";
-					line<<"\""<<escapeJsonString(kierunki[i])<<"\"";
-				}
-				line<<"]";
-				line<<"}"<<endl;
-				json2Stream<<line.str();
-				jsonTableRowCount++;
+				OsmStopData puste;
+				printStop(make_pair(it2.first, puste), writer);
 			}
 		}
-
-		//przystankiHTMLStream<<divOsmTable(tabela)<<endl;
-		json2Stream<<"]";
+		writer.EndArray();
+		json2Stream<<s.GetString();
 		json2Stream.close();
 	}
 };

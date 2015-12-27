@@ -626,9 +626,10 @@ struct MainClass
 		fstream jsonStream(jsonPath.c_str(), ios::out | ios::trunc);
 		fstream json2Stream(json2Path.c_str(), ios::out | ios::trunc);
 
+		json2Stream.precision(9);
 		RaportPrzystanki rrr(json2Stream, osmStopData, bazaZtm, miasto, bazaOsm);
 
-		json2Stream.precision(9);
+
 
 
 
