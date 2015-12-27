@@ -235,7 +235,7 @@ public:
 			if(bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end())
 			{
 				int powod = printStop(make_pair(it1.first, it1.second), writer);
-				if(powod == 3)
+				if(powod == 1)
 					printStop(make_pair(it1.first, it1.second), writerMode2);
 			}
 		}
