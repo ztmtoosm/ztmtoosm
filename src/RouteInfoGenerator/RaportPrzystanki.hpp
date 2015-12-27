@@ -220,15 +220,29 @@ class RaportPrzystanki
 		int powod = 1000;
 		if(it1.second.stop_position==0)
 			powod = 1;
-
-		auto& it2 = bazaZtm->przystanki[it1.first];
-		writer.StartObject();
+		bool found = bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end();
 		writer.String("id"); writer.String(it1.first.c_str());
-		writer.String("name"); writer.String(it2.name.c_str());
-		writer.String("lon"); writer.Double(it2.lon);
-		writer.String("lat"); writer.Double(it2.lat);
-		writer.String("latlon_jakosc"); writer.Int(it2.wsp_jakosc);
+		writer.StartObject();
 
+		if(found)
+		{
+			auto& it2 = bazaZtm->przystanki[it1.first];
+			writer.String("name"); writer.String(it2.name.c_str());
+			writer.String("lon"); writer.Double(it2.lon);
+			writer.String("lat"); writer.Double(it2.lat);
+			writer.String("latlon_jakosc"); writer.Int(it2.wsp_jakosc);
+			writer.String("additional"); writer.String((it2.stopinfo+" ; "+it2.miejscowosc).c_str());
+			writer.String("kierunki");
+			writer.StartArray();
+			vector <string> kierunki=przystanekKierunki(it1.first);
+			for(int i=0; i<kierunki.size(); i++)
+			{
+				writer.String(kierunki[i]);
+			}
+			writer.EndArray();
+		}
+		else
+			powod = 10;
 		double lat2, lon2;
 		bool okWsp2 = getWsp(lat2, lon2, 'N', it1.second.stop_position, 'N', it1.second.bus_stop);
 		if(okWsp2)
@@ -237,24 +251,13 @@ class RaportPrzystanki
 			writer.String("lat2"); writer.Double(lat2);
 		}
 
-		/*
-		line<<",\"kierunki\":[";
-		vector <string> kierunki=przystanekKierunki(it1.first);
-		for(int i=0; i<kierunki.size(); i++)
-		{
-			if(i>0)
-				line<<",";
-			line<<"\""<<escapeJsonString(kierunki[i])<<"\"";
-		}
-		line<<"]";*/
-
 		writer.String("bus_stop"); writer.Int64(it1.second.bus_stop);
 		writer.String("bus_stop_name"); writer.String(wyszName('N', it1.second.bus_stop).c_str());
 		writer.String("stop_position"); writer.Int64(it1.second.stop_position);
 		writer.String("stop_position_name"); writer.String(wyszName('N', it1.second.stop_position).c_str());
 		writer.String("platform"); writer.Int64(it1.second.platform);
 		writer.String("platform_name"); writer.String(wyszName(it1.second.platform_type, it1.second.platform).c_str());
-		writer.String("additional"); writer.String((it2.stopinfo+" ; "+it2.miejscowosc).c_str());
+
 		writer.String("BS_SP"); writer.Double(getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position));
 		if(it1.second.bus_stop!=0 && powod==1000 && getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position)>150)
 			powod = 3;
@@ -273,7 +276,6 @@ public:
 	RaportPrzystanki(fstream& json2Stream, map <string, OsmStopData>& osmStopDataW, ScheduleHandlerInternal* bazaZtmW, string miastoW, osm_base* bazaOsmW)
 		: osmStopData(osmStopDataW), bazaZtm(bazaZtmW), miasto(miastoW), bazaOsm(bazaOsmW)
 	{
-		int jsonTableRowCount = 0;
 		json2Stream.precision(9);
 
 		StringBuffer s;
