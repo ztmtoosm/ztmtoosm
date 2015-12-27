@@ -48,9 +48,10 @@ class RaportPrzystanki
 	map <string, OsmStopData>& osmStopData;
 	ScheduleHandlerInternal* bazaZtm;
 	osm_base* bazaOsm;
+	WlasciwosciLokalne* wlasciwosci;
 	void dokladnePrzystanki(string idPrzystanek, string idLinia, int idWariantu, int idKol, Writer<StringBuffer>& writer)
 	{
-		/*writer.StartObject();
+		writer.StartObject();
 		string poprzedniId, kolejnyId;
 		if(idKol>0)
 		{
@@ -63,6 +64,8 @@ class RaportPrzystanki
 
 		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
 		string pierwszyId = bazaZtm->dane_linia[idLinia][idWariantu][0];
+		writer.String("linia");
+		if(idLinia!="") writer.String(idLinia.c_str()); else writer.Null();
 		writer.String("pierwszy");
 		if(pierwszyId!="") writer.String(pierwszyId.c_str()); else writer.Null();
 		writer.String("poprzedni");
@@ -71,10 +74,10 @@ class RaportPrzystanki
 		if(kolejnyId!="") writer.String(kolejnyId.c_str()); else writer.Null();
 				writer.String("ostatni");
 		if(ostatniId!="") writer.String(ostatniId.c_str()); else writer.Null();
-		writer.EndObject();*/
+		writer.EndObject();
 	}
 
-	vector <string> przystanekKierunki(string p, Writer<StringBuffer>& writer)
+	void przystanekKierunki(string p, Writer<StringBuffer>& writer)
 	{
 		writer.StartArray();
 		for(auto& it2 : bazaZtm->dane_linia)
@@ -178,6 +181,7 @@ class RaportPrzystanki
 		{
 			auto& it2 = bazaZtm->przystanki[it1.first];
 			writer.String("name"); writer.String(it2.name.c_str());
+			writer.String("long_name"); writer.String(wlasciwosci->getLongNameOfStop(it2.name, it1.first).c_str());
 			writer.String("lon"); writer.Double(it2.lon);
 			writer.String("lat"); writer.Double(it2.lat);
 			writer.String("latlon_jakosc"); writer.Int(it2.wsp_jakosc);
@@ -217,11 +221,9 @@ class RaportPrzystanki
 	}
 
 public:
-	RaportPrzystanki(fstream& json2Stream, map <string, OsmStopData>& osmStopDataW, ScheduleHandlerInternal* bazaZtmW, string miastoW, osm_base* bazaOsmW, int mode = 0)
-		: osmStopData(osmStopDataW), bazaZtm(bazaZtmW), miasto(miastoW), bazaOsm(bazaOsmW)
+	RaportPrzystanki(fstream& json2Stream, map <string, OsmStopData>& osmStopDataW, ScheduleHandlerInternal* bazaZtmW, string miastoW, osm_base* bazaOsmW, WlasciwosciLokalne* wlasciwosciW, int mode = 0)
+		: osmStopData(osmStopDataW), bazaZtm(bazaZtmW), miasto(miastoW), bazaOsm(bazaOsmW), wlasciwosci(wlasciwosciW)
 	{
-		json2Stream.precision(9);
-
 		StringBuffer s;
 		StringBuffer s2;
 		Writer<StringBuffer> writer(s);
@@ -253,7 +255,6 @@ public:
 			json2Stream<<s.GetString();
 		if(mode == 3)
 			json2Stream<<s2.GetString();
-		json2Stream.close();
 	}
 };
 #endif

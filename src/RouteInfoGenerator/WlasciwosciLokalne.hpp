@@ -43,6 +43,10 @@ class WlasciwosciLokalne
 		}
 		return wynik;
 	}
+	virtual string getLongNameOfStop(string shortName, string id)
+	{
+		return shortName;
+	}
 	static WlasciwosciLokalne& getClassByName(string miasto);
 };
 
@@ -116,6 +120,13 @@ class WlasciwosciLokalneWarszawa : public WlasciwosciLokalne
 	string getUrlLine(string line)
 	{
 		return "http://ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+line;
+	}
+
+	string getLongNameOfStop(string shortName, string id)
+	{
+		if(id.length()==6)
+			return shortName+" "+id[4]+id[5];
+		return shortName;
 	}
 };
 

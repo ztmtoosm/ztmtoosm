@@ -618,6 +618,7 @@ struct MainClass
 		string przystankiHTMLPath=pathHTML+"/"+miasto+"bis.html";
 		string jsonPath=pathHTML+"/List"+miasto+".json";
 		string json2Path=pathHTML+"/Przystanki"+miasto+".json";
+		string json2PathBis=pathHTML+"/PrzystankiErr"+miasto+".json";
 		string wspRoutePath=pathHTML+"/Trasy"+miasto+".txt";
 		//string wspStopPath=pathHTML+"/Wsp"+miasto+".txt";
 
@@ -625,12 +626,13 @@ struct MainClass
 		fstream przystankiHTMLStream(przystankiHTMLPath.c_str(), ios::out | ios::trunc);
 		fstream jsonStream(jsonPath.c_str(), ios::out | ios::trunc);
 		fstream json2Stream(json2Path.c_str(), ios::out | ios::trunc);
+		fstream json2StreamBis(json2PathBis.c_str(), ios::out | ios::trunc);
 
 		json2Stream.precision(9);
-		RaportPrzystanki rrr(json2Stream, osmStopData, bazaZtm, miasto, bazaOsm);
-
-
-
+		RaportPrzystanki rrr(json2Stream, osmStopData, bazaZtm, miasto, bazaOsm, wlasciwosci);
+		RaportPrzystanki rrr2(json2StreamBis, osmStopData, bazaZtm, miasto, bazaOsm, wlasciwosci, 3);
+		json2Stream.close();
+		json2StreamBis.close();
 
 
 
