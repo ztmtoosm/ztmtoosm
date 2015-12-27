@@ -48,62 +48,35 @@ class RaportPrzystanki
 	map <string, OsmStopData>& osmStopData;
 	ScheduleHandlerInternal* bazaZtm;
 	osm_base* bazaOsm;
-	string dokladnePrzystanki(string idPrzystanek, string idLinia, int idWariantu, int idKol)
+	void dokladnePrzystanki(string idPrzystanek, string idLinia, int idWariantu, int idKol, Writer<StringBuffer>& writer)
 	{
-		string poprzedni = "POCZĄTKOWY";
-		string kolejny = "KOŃCOWY";
+		writer.StartObject();
 		string poprzedniId, kolejnyId;
 		if(idKol>0)
 		{
 			poprzedniId = bazaZtm->dane_linia[idLinia][idWariantu][idKol-1];
-			poprzedni = bazaZtm->przystanki[poprzedniId].name;
 		}
 		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+1)
 		{
 			kolejnyId = bazaZtm->dane_linia[idLinia][idWariantu][idKol+1];
-			kolejny = bazaZtm->przystanki[kolejnyId].name;
 		}
-		string aktualny = bazaZtm->przystanki[idPrzystanek].name;;
+
 		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
-		string ostatni = bazaZtm->przystanki[ostatniId].name;
 		string pierwszyId = bazaZtm->dane_linia[idLinia][idWariantu][0];
-		string pierwszy = bazaZtm->przystanki[pierwszyId].name;
-		string info=htmlgen::link("Pelne"+miasto+".html#pelne"+idLinia, idLinia);
-		info+=": ";
-		if(idKol>1)
-		{
-			info+=htmlgen::link("#"+pierwszyId, pierwszy+" ("+pierwszyId+")");
-			info+=" - ";
-		}
-		if(idKol>2)
-		{
-			info+="... - ";
-		}
-		if(idKol>0)
-		{
-			info+=htmlgen::link("#"+poprzedniId, poprzedni+" ("+poprzedniId+")");
-			info+=" - ";
-		}
-		info+=aktualny+" ("+idPrzystanek+")";
-		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+1)
-		{
-			info+=" - ";
-			info+=htmlgen::link("#"+kolejnyId, kolejny+" ("+kolejnyId+")");
-		}
-		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+3)
-		{
-			info+=" - ...";
-		}
-		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+2)
-		{
-			info+=" - ";
-			info+=htmlgen::link("#"+ostatniId, ostatni+" ("+ostatniId+")");
-		}
-		return info;
+		writer.String("pierwszy");
+		if(pierwszyId!="") writer.String(pierwszyId.c_str()); else writer.Null();
+		writer.String("poprzedni");
+		if(poprzedniId!="") writer.String(poprzedniId.c_str()); else writer.Null();
+		writer.String("kolejny");
+		if(kolejnyId!="") writer.String(kolejnyId.c_str()); else writer.Null();
+				writer.String("ostatni");
+		if(ostatniId!="") writer.String(ostatniId.c_str()); else writer.Null();
+		writer.EndObject();
 	}
-	vector <string> przystanekKierunki(string p)
+
+	vector <string> przystanekKierunki(string p, Writer<StringBuffer>& writer)
 	{
-		vector <string> wynik;
+		writer.StartArray();
 		for(auto& it2 : bazaZtm->dane_linia)
 		{
 			for(int i=0; i<it2.second.size(); i++)
@@ -111,14 +84,12 @@ class RaportPrzystanki
 				for(int j=0; j<it2.second[i].size(); j++)
 				{
 					if(it2.second[i][j]==p)
-						wynik.push_back(dokladnePrzystanki(p, it2.first, i, j));
+						dokladnePrzystanki(p, it2.first, i, j, writer);
 				}
 			}
 		}
-		return wynik;
+		writer.EndArray();
 	}
-
-
 
 	string wyszName(char type, long long id)
 	{
@@ -195,35 +166,14 @@ class RaportPrzystanki
 		return false;
 	}
 
-	std::string escapeJsonString(const std::string& input) {
-		std::ostringstream ss;
-		for (auto iter = input.cbegin(); iter != input.cend(); iter++) {
-		//C++98/03:
-		//for (std::string::const_iterator iter = input.begin(); iter != input.end(); iter++) {
-			switch (*iter) {
-				case '\\': ss << "\\\\"; break;
-				case '"': ss << "\\\""; break;
-				case '/': ss << "\\/"; break;
-				case '\b': ss << "\\b"; break;
-				case '\f': ss << "\\f"; break;
-				case '\n': ss << "\\n"; break;
-				case '\r': ss << "\\r"; break;
-				case '\t': ss << "\\t"; break;
-				default: ss << *iter; break;
-			}
-		}
-		return ss.str();
-	}
-
 	int printStop(pair<string, OsmStopData> it1, Writer<StringBuffer>& writer)
 	{
 		int powod = 1000;
 		if(it1.second.stop_position==0)
 			powod = 1;
 		bool found = bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end();
-		writer.String("id"); writer.String(it1.first.c_str());
 		writer.StartObject();
-
+		writer.String("id"); writer.String(it1.first.c_str());
 		if(found)
 		{
 			auto& it2 = bazaZtm->przystanki[it1.first];
@@ -233,13 +183,7 @@ class RaportPrzystanki
 			writer.String("latlon_jakosc"); writer.Int(it2.wsp_jakosc);
 			writer.String("additional"); writer.String((it2.stopinfo+" ; "+it2.miejscowosc).c_str());
 			writer.String("kierunki");
-			writer.StartArray();
-			vector <string> kierunki=przystanekKierunki(it1.first);
-			for(int i=0; i<kierunki.size(); i++)
-			{
-				writer.String(kierunki[i].c_str());
-			}
-			writer.EndArray();
+			przystanekKierunki(it1.first, writer);
 		}
 		else
 			powod = 10;
@@ -273,20 +217,24 @@ class RaportPrzystanki
 	}
 
 public:
-	RaportPrzystanki(fstream& json2Stream, map <string, OsmStopData>& osmStopDataW, ScheduleHandlerInternal* bazaZtmW, string miastoW, osm_base* bazaOsmW)
+	RaportPrzystanki(fstream& json2Stream, map <string, OsmStopData>& osmStopDataW, ScheduleHandlerInternal* bazaZtmW, string miastoW, osm_base* bazaOsmW, int mode = 0)
 		: osmStopData(osmStopDataW), bazaZtm(bazaZtmW), miasto(miastoW), bazaOsm(bazaOsmW)
 	{
 		json2Stream.precision(9);
 
 		StringBuffer s;
+		StringBuffer s2;
 		Writer<StringBuffer> writer(s);
+		Writer<StringBuffer> writerMode2(s2);
 		writer.StartArray();
-
+		writerMode2.StartArray();
 		for(auto& it1 : osmStopData)
 		{
 			if(bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end())
 			{
-				printStop(make_pair(it1.first, it1.second), writer);
+				int powod = printStop(make_pair(it1.first, it1.second), writer);
+				if(powod == 3)
+					printStop(make_pair(it1.first, it1.second), writerMode2);
 			}
 		}
 		for(auto& it2 : bazaZtm->przystanki)
@@ -294,11 +242,17 @@ public:
 			if(osmStopData.find(it2.first)==osmStopData.end())
 			{
 				OsmStopData puste;
-				printStop(make_pair(it2.first, puste), writer);
+				int powod = printStop(make_pair(it2.first, puste), writer);
+				if(powod == 3)
+					printStop(make_pair(it2.first, puste), writerMode2);
 			}
 		}
 		writer.EndArray();
-		json2Stream<<s.GetString();
+		writerMode2.EndArray();
+		if(mode == 0)
+			json2Stream<<s.GetString();
+		if(mode == 3)
+			json2Stream<<s2.GetString();
 		json2Stream.close();
 	}
 };
