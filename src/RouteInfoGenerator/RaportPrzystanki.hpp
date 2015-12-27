@@ -245,7 +245,7 @@ public:
 			{
 				OsmStopData puste;
 				int powod = printStop(make_pair(it2.first, puste), writer);
-				if(powod == 3)
+				if(powod == 1)
 					printStop(make_pair(it2.first, puste), writerMode2);
 			}
 		}
