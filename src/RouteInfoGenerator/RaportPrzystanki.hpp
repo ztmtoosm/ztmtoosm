@@ -50,7 +50,7 @@ class RaportPrzystanki
 	osm_base* bazaOsm;
 	void dokladnePrzystanki(string idPrzystanek, string idLinia, int idWariantu, int idKol, Writer<StringBuffer>& writer)
 	{
-		writer.StartObject();
+		/*writer.StartObject();
 		string poprzedniId, kolejnyId;
 		if(idKol>0)
 		{
@@ -71,7 +71,7 @@ class RaportPrzystanki
 		if(kolejnyId!="") writer.String(kolejnyId.c_str()); else writer.Null();
 				writer.String("ostatni");
 		if(ostatniId!="") writer.String(ostatniId.c_str()); else writer.Null();
-		writer.EndObject();
+		writer.EndObject();*/
 	}
 
 	vector <string> przystanekKierunki(string p, Writer<StringBuffer>& writer)
