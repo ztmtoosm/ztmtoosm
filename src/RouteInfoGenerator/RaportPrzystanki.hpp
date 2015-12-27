@@ -262,7 +262,9 @@ class RaportPrzystanki
 		writer.String("PL_BS"); writer.Double(getDistance('N', it1.second.bus_stop, it1.second.platform_type, it1.second.platform));
 		writer.String("powod"); writer.Int(powod);
 		if(it1.second.platform_type=='N' || it1.second.platform_type=='W' || it1.second.platform_type=='R')
+		{
 			writer.String("platform_type"); writer.String(string(""+it1.second.platform_type).c_str());
+		}
 		writer.EndObject();
 		return powod;
 	}
