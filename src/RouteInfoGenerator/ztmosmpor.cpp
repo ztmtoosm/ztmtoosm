@@ -1,4 +1,6 @@
 #include "ztmosmpor.hpp"
+
+
 OsmStopData::OsmStopData()
 {
 	stop_position = 0;
@@ -67,7 +69,7 @@ map<string, OsmStopData> loadOsmStopData(osm_base* baza, string ref_key)
 }
 
 
-ztmread_for_html::ztmread_for_html (string sciez, string type="Warszawa")
+ScheduleHandlerInternal::ScheduleHandlerInternal (string sciez, string type="Warszawa")
 {
 	cout<<type<<endl;
 	ScheduleReader* nowo;
@@ -88,11 +90,11 @@ ztmread_for_html::ztmread_for_html (string sciez, string type="Warszawa")
 	}
 	nowo->run();
 }
-void ztmread_for_html::nowy_przystanek(przystanek nowy)
+void ScheduleHandlerInternal::nowy_przystanek(przystanek nowy)
 {
 	przystanki[nowy.id]=nowy;
 }
-void ztmread_for_html::nowa_linia(string nazwa, vector <vector <string> > trasy)
+void ScheduleHandlerInternal::nowa_linia(string nazwa, vector <vector <string> > trasy)
 {
 	dane_linia[nazwa]=trasy;
 }

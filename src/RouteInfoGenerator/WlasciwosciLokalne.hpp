@@ -5,10 +5,12 @@
 #include <sstream>
 #include <cstring>
 #include "ztmosmpor.hpp"
-#include "osm_base.hpp"
-#include "HTMLHeadersRouteinfo.hpp"
-#include "PrzegladanieCzyPrawidloweStareLinie.hpp"
 using namespace std;
+
+class WlasciwosciLokalneWarszawa;
+class WlasciwosciLokalneGdansk;
+class WlasciwosciLokalneSzczecin;
+class WlasciwosciLokalneLodz;
 
 class WlasciwosciLokalne
 {
@@ -16,7 +18,7 @@ class WlasciwosciLokalne
 	virtual string nazwaMala(string lineName) = 0;
 	virtual string nazwaDuza(string lineName) = 0;
 	virtual long long getParentRelation (string name) = 0;
-	virtual set <string> wszystkieLinie(ztmread_for_html* bazaZtm) = 0;
+	virtual set <string> wszystkieLinie(ScheduleHandlerInternal* bazaZtm) = 0;
 	virtual long long getRootRelation() = 0;
 	virtual string getNazwaMiasta() = 0;
 	virtual string getRefKey() = 0;
@@ -41,6 +43,7 @@ class WlasciwosciLokalne
 		}
 		return wynik;
 	}
+	static WlasciwosciLokalne& getClassByName(string miasto);
 };
 
 class WlasciwosciLokalneWarszawa : public WlasciwosciLokalne
@@ -81,7 +84,7 @@ class WlasciwosciLokalneWarszawa : public WlasciwosciLokalne
 		return 4656333;
 	}
 
-	set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
+	set <string> wszystkieLinie(ScheduleHandlerInternal* bazaZtm)
 	{
 		set <string> wynik;
 		auto it1=bazaZtm->dane_linia.begin();
@@ -136,7 +139,7 @@ string getRefKey()
 		return 5291742;
 	}
 
-	set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
+	set <string> wszystkieLinie(ScheduleHandlerInternal* bazaZtm)
 	{
 		set <string> wynik;
 		auto it1=bazaZtm->dane_linia.begin();
@@ -203,7 +206,7 @@ class WlasciwosciLokalneGdansk : public WlasciwosciLokalne
 		return 5411513;
 	}
 
-	set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
+	set <string> wszystkieLinie(ScheduleHandlerInternal* bazaZtm)
 	{
 		set <string> wynik;
 		auto it1=bazaZtm->dane_linia.begin();
@@ -258,7 +261,7 @@ class WlasciwosciLokalneLodz : public WlasciwosciLokalne
 		return 5467192;
 	}
 
-	set <string> wszystkieLinie(ztmread_for_html* bazaZtm)
+	set <string> wszystkieLinie(ScheduleHandlerInternal* bazaZtm)
 	{
 		set <string> wynik;
 		auto it1=bazaZtm->dane_linia.begin();

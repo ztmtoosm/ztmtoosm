@@ -9,6 +9,10 @@
 #include <fstream>
 #include "../osmbase/osm_base.hpp"
 #include "../ScheduleReader/ScheduleReader.hpp"
+#include "../ScheduleReader/ScheduleReader.hpp"
+#include "../ScheduleReader/ScheduleReaderGdansk.hpp"
+#include "../ScheduleReader/ScheduleReaderSzczecin.hpp"
+#include "../ScheduleReader/ScheduleReaderLodz.hpp"
 using namespace std;
 struct OsmStopData
 {
@@ -22,12 +26,12 @@ struct OsmStopData
 
 map<string, OsmStopData> loadOsmStopData(osm_base* baza, string ref_key="ref");
 
-class ztmread_for_html : public ScheduleHandler
+class ScheduleHandlerInternal : public ScheduleHandler
 {
 	public:
 	map<string, przystanek> przystanki;
 	map <string, vector< vector<string> > > dane_linia;
-	ztmread_for_html (string sciez, string type);
+	ScheduleHandlerInternal (string sciez, string type);
 	void nowy_przystanek(przystanek nowy);
 	void nowa_linia(string nazwa, vector <vector <string> > trasy);
 };

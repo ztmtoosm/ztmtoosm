@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <set>
 #include <vector>
 #include <map>
@@ -10,6 +10,7 @@
 #include "PrzegladanieCzyPrawidloweStareLinie.hpp"
 #include "WlasciwosciLokalne.hpp"
 #include "WypisywanieWspolrzednychTras.hpp"
+#include "RaportPrzystanki.hpp"
 using namespace std;
 
 vector <string> miejscowosci(vector <przystanek> xyz)
@@ -26,6 +27,7 @@ vector <string> miejscowosci(vector <przystanek> xyz)
 	}
 	return wynik;
 }
+
 
 string znacznikLink(double lon, double lat)
 {
@@ -48,34 +50,7 @@ string znacznikLink(double lon, double lat)
 	return htmlgen::div("plinki", "", (htmlgen::link(foo.str(), "X")+"</br>"+htmlgen::link(foo2.str(), "J")));
 }
 
-set <string> linieDoUsuniecia(set <string>& istniejace, osm_base* roo, long long root)
-{
-	set <string> wynik;
-	relation akt=roo->relations[root];
-	map <string, string> tags = akt.getTags();
-	if(istniejace.find(tags["ref"])==istniejace.end())
-	{
-		if(tags["type"]=="route_master")
-		{
-			wynik.insert(tags["ref"]);
-		}
-	}
-	int s1=akt.members.size();
-	for(int i=0; i<s1; i++)
-	{
-		if(akt.members[i].member_type==RELATION)
-		{
-			long long teraz_id=akt.members[i].member_id;
-			if(roo->relations.find(teraz_id)!=roo->relations.end())
-			{
-				relation teraz=roo->relations[teraz_id];
-				auto nowe = linieDoUsuniecia(istniejace, roo, teraz_id);
-				wynik.insert(nowe.begin(), nowe.end());
-			}
-		}
-	}
-	return wynik;
-}
+
 
 set <long long> podpieteRelacje(osm_base* roo, long long root)
 {
@@ -122,77 +97,9 @@ set <long long> dziwneRelacje(osm_base* roo, long long root)
 }
 
 
-set <string> linieDoUsuniecia(ztmread_for_html* baza_ztm, osm_base* roo, long long root)
-{
-	set <string> wsadowy;
-	for(auto& it1 : baza_ztm->dane_linia)
-	{
-		wsadowy.insert(it1.first);
-	}
-	return linieDoUsuniecia(wsadowy, roo, root);
-}
 
-class PrzegladanieCzyPrawidloweNoweLinie
-{
-	set <string> prawidlowe;
-	map <string, set<string> > nieprawidlowe;
-	ztmread_for_html* bazaZtm;
-	map <string, OsmStopData>* osmStops;
-	set <string> sprawdzLinie(string linia, vector <vector <string> > drugi)
-	{
-		set <string> wynik;
-		int s9=drugi.size();
-		for(int i=0; i<s9; i++)
-		{
-			int s8=(drugi)[i].size();
-			for(int j=0; j<s8; j++)
-			{
-				OsmStopData data=(*osmStops)[drugi[i][j]];
-				if(data.stop_position==0)
-				{
-					wynik.insert(drugi[i][j]);
-				}
-			}
-		}
-		return wynik;
-	}
-	public:
-	set <string> getPrawidlowe()
-	{
-		return prawidlowe;
-	}
-	set <string> getNieprawidlowe()
-	{
-		set <string> wynik;
-		for(auto& it1 : nieprawidlowe)
-		{
-			if(it1.first.size()>0)
-				wynik.insert(it1.first);
-		}
-		return wynik;
-	}
-	map <string, set<string> > getNieprawidloweMap()
-	{
-		return nieprawidlowe;
-	}
-	PrzegladanieCzyPrawidloweNoweLinie(map<string, OsmStopData>* osmStopsW, ztmread_for_html* bazaZtmW, set<string> doPrzerobienia)
-	{
-		osmStops = osmStopsW;
-		bazaZtm = bazaZtmW;
-		for(auto& it1 : doPrzerobienia)
-		{
-			set <string> wynTmp = sprawdzLinie(it1, bazaZtm->dane_linia[it1]);
-			if(wynTmp.size()==0)
-			{
-				prawidlowe.insert(it1);
-			}
-			else
-			{
-				nieprawidlowe[it1]=wynTmp;
-			}
-		}
-	}
-};
+
+
 
 string zeraWiodace (string jeden)
 {
@@ -204,26 +111,6 @@ string zeraWiodace (string jeden)
 	wynik+=jeden;
 	return wynik;
 }
-
-
-/*
-class JSONObjectCore
-{
-	map <string, string> tagsNormal;
-	map <string, JSONObject> tagsObject;
-	void addNumber (string key, int value)
-	{
-		stringstream foo;
-		foo<<value;
-		string value2;
-		foo>>value2;
-		tagsNormal[key]=value2;
-	}
-	virtual string print()
-	{
-	}
-};
-*/
 
 struct SpecialSortedString
 {
@@ -266,54 +153,38 @@ struct MainClass
 {
 	WlasciwosciLokalne* wlasciwosci;
 	osm_base* bazaOsm;
-	ztmread_for_html* bazaZtm;
+	ScheduleHandlerInternal* bazaZtm;
 	string miasto;
-	string ztmBasePath;
-	string osmBasePath;
 	string pathHTML;
 	string pathTemplate;
 	string ztmBaseFreshTime;
 	set <string> linieDoPrzerobienia;
 	map <string, OsmStopData> osmStopData;
-	//map <string, vector <WariantTrasy> > warianty;
 	set <long long> changeNodes;
 	set <long long> changeWays;
-	bool czyWszystkie;
 	void readArg(char** argv)
 	{
-		ztmBasePath=argv[1];
-		osmBasePath=argv[2];
+		string ztmBasePath=argv[1];
+		string osmBasePath=argv[2];
 		miasto=argv[3];
 		pathHTML=argv[4];
 		pathTemplate="/ztmtoosm/templates-www";
-		string czyW=argv[5];
-		if(czyW=="-all")
-		{
-			czyWszystkie=1;
-		}
-		else
-		{
-			czyWszystkie=0;
-		}
+		if(miasto=="Warszawa")
+			wlasciwosci = new WlasciwosciLokalneWarszawa();
+		if(miasto=="Szczecin")
+			wlasciwosci = new WlasciwosciLokalneSzczecin();
+		if(miasto=="Gdańsk")
+			wlasciwosci = new WlasciwosciLokalneGdansk();
+		if(miasto=="Łódź")
+			wlasciwosci = new WlasciwosciLokalneLodz();
+		bazaOsm = new osm_base(osmBasePath);
+		cerr<<"BAZA OSM - OK"<<endl;
+		osmStopData = loadOsmStopData(bazaOsm, wlasciwosci->getRefKey());
+		cerr<<"OSM-DATA - OK"<<endl;
+		bazaZtm = new ScheduleHandlerInternal (ztmBasePath, miasto);
+		cerr<<"Załadowano dane "<<bazaZtm<<endl;
 	}
-	void readInput()
-	{
-		if(czyWszystkie)
-		{
-			return;
-		}
-		cout<<"PODAJ LINIE"<<endl;
-		char data[10000];
-		cin.getline(data, 10000);
-		stringstream linki1;
-		linki1<<data;
-		string linki2;
-		while(linki1>>linki2)
-		{
-			linieDoPrzerobienia.insert(linki2);
-		}
 
-	}
 	string jsonEnc (string k)
 	{
 		string wynik;
@@ -705,218 +576,14 @@ struct MainClass
 		foo<<"<a href=\"http://openstreetmap.org/"<<type<<"/"<<id<<"\">"<<type<<" "<<id<<"</a>";
 		return htmlgen::div("komorka", "", foo.str());
 	}
-	string dokladnePrzystanki(string idPrzystanek, string idLinia, int idWariantu, int idKol)
+
+
+
+	void uzupelnijPelne(fstream& lineHTMLStream, HtmlExtraGenerator& htmlGenerator)
 	{
-		string poprzedni = "POCZĄTKOWY";
-		string kolejny = "KOŃCOWY";
-		string poprzedniId, kolejnyId;
-		if(idKol>0)
-		{
-			poprzedniId = bazaZtm->dane_linia[idLinia][idWariantu][idKol-1];
-			poprzedni = bazaZtm->przystanki[poprzedniId].name;
-		}
-		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+1)
-		{
-			kolejnyId = bazaZtm->dane_linia[idLinia][idWariantu][idKol+1];
-			kolejny = bazaZtm->przystanki[kolejnyId].name;
-		}
-		string aktualny = bazaZtm->przystanki[idPrzystanek].name;;
-		string ostatniId = bazaZtm->dane_linia[idLinia][idWariantu][bazaZtm->dane_linia[idLinia][idWariantu].size()-1];
-		string ostatni = bazaZtm->przystanki[ostatniId].name;
-		string pierwszyId = bazaZtm->dane_linia[idLinia][idWariantu][0];
-		string pierwszy = bazaZtm->przystanki[pierwszyId].name;
-		string info=htmlgen::link("Pelne"+miasto+".html#pelne"+idLinia, idLinia);
-		info+=": ";
-		if(idKol>1)
-		{
-			info+=htmlgen::link("#"+pierwszyId, pierwszy+" ("+pierwszyId+")");
-			info+=" - ";
-		}
-		if(idKol>2)
-		{
-			info+="... - ";
-		}
-		if(idKol>0)
-		{
-			info+=htmlgen::link("#"+poprzedniId, poprzedni+" ("+poprzedniId+")");
-			info+=" - ";
-		}
-		info+=aktualny+" ("+idPrzystanek+")";
-		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+1)
-		{
-			info+=" - ";
-			info+=htmlgen::link("#"+kolejnyId, kolejny+" ("+kolejnyId+")");
-		}
-		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+3)
-		{
-			info+=" - ...";
-		}
-		if(bazaZtm->dane_linia[idLinia][idWariantu].size()>idKol+2)
-		{
-			info+=" - ";
-			info+=htmlgen::link("#"+ostatniId, ostatni+" ("+ostatniId+")");
-		}
-		return info;
-	}
-	vector <string> przystanekKierunki(string p)
-	{
-		vector <string> wynik;
-		for(auto& it2 : bazaZtm->dane_linia)
-		{
-			for(int i=0; i<it2.second.size(); i++)
-			{
-				for(int j=0; j<it2.second[i].size(); j++)
-				{
-					if(it2.second[i][j]==p)
-						wynik.push_back(dokladnePrzystanki(p, it2.first, i, j));
-				}
-			}
-		}
-		return wynik;
-	}
-
-	std::string escapeJsonString(const std::string& input) {
-		std::ostringstream ss;
-		for (auto iter = input.cbegin(); iter != input.cend(); iter++) {
-		//C++98/03:
-		//for (std::string::const_iterator iter = input.begin(); iter != input.end(); iter++) {
-			switch (*iter) {
-				case '\\': ss << "\\\\"; break;
-				case '"': ss << "\\\""; break;
-				case '/': ss << "\\/"; break;
-				case '\b': ss << "\\b"; break;
-				case '\f': ss << "\\f"; break;
-				case '\n': ss << "\\n"; break;
-				case '\r': ss << "\\r"; break;
-				case '\t': ss << "\\t"; break;
-				default: ss << *iter; break;
-			}
-		}
-		return ss.str();
-	}
-
-	string wyszName(char type, long long id)
-	{
-		if(type=='N' && bazaOsm->nodes.find(id)!=bazaOsm->nodes.end())
-		{
-			return bazaOsm->nodes[id].getTags()["name"];
-		}
-		if(type=='W' && bazaOsm->nodes.find(id)!=bazaOsm->nodes.end())
-		{
-			return bazaOsm->ways[id].getTags()["name"];
-		}
-		if(type=='R' && bazaOsm->nodes.find(id)!=bazaOsm->nodes.end())
-		{
-			return bazaOsm->relations[id].getTags()["name"];
-		}
-		return "";
-	}
-
-	bool getLatLon(char type, long long id, double& lat, double& lon)
-	{
-		if(type=='R' && bazaOsm->relations.find(id)!=bazaOsm->relations.end())
-		{
-			relation& r = bazaOsm->relations[id];
-			for(int i=0; i<r.members.size(); i++)
-			{
-				if(r.members[i].member_type==WAY)
-				{
-					id=r.members[i].member_id;
-					type='W';
-				}
-			}
-		}
-
-		if(type=='W' && bazaOsm->ways.find(id)!=bazaOsm->ways.end())
-		{
-			way& r = bazaOsm->ways[id];
-			for(int i=0; i<r.nodes.size(); i++)
-			{
-				id=r.nodes[i];
-				type='N';
-			}
-		}
-
-		if(type=='N' && bazaOsm->nodes.find(id)!=bazaOsm->nodes.end())
-		{
-			lat = bazaOsm->nodes[id].lat;
-			lon = bazaOsm->nodes[id].lon;
-			return true;
-		}
-		return false;
-	}
-
-	double getDistance(char type1, long long id1, char type2, long long id2)
-	{
-		double lat1, lon1;
-		double lat2, lon2;
-		bool t1 = getLatLon(type1, id1, lat1, lon1);
-		bool t2 = getLatLon(type2, id2, lat2, lon2);
-		if(t1 && t2)
-		{
-			return distance(lon1, lat1, lon2, lat2)*1000.0;
-		}
-		return -1.0;
-	}
-
-	bool getWsp(double& lat, double& lon, char type1, long long id1, char type2, long long id2)
-	{
-		bool t1 = getLatLon(type1, id1, lat, lon);
-		if(t1)
-			return true;
-		bool t2 = getLatLon(type2, id2, lat, lon);
-		if(t2)
-			return true;
-		return false;
-	}
-
-	MainClass(char** argv)
-	{
-		HtmlExtraGenerator htmlGenerator;
-		readArg(argv);
-		readInput();
-		if(miasto=="Warszawa")
-			wlasciwosci = new WlasciwosciLokalneWarszawa();
-		if(miasto=="Szczecin")
-			wlasciwosci = new WlasciwosciLokalneSzczecin();
-		if(miasto=="Gdańsk")
-			wlasciwosci = new WlasciwosciLokalneGdansk();
-		if(miasto=="Łódź")
-			wlasciwosci = new WlasciwosciLokalneLodz();
-		bazaOsm = new osm_base(osmBasePath);
-		cerr<<"BAZA OSM - OK"<<endl;
-		osmStopData = loadOsmStopData(bazaOsm, wlasciwosci->getRefKey());
-		cerr<<"OSM-DATA - OK"<<endl;
-		bazaZtm = new ztmread_for_html (ztmBasePath, miasto);
-		cerr<<"Załadowano dane "<<bazaZtm<<endl;
-		if(czyWszystkie)
-			linieDoPrzerobienia=wlasciwosci->wszystkieLinie(bazaZtm);
-		PrzegladanieCzyPrawidloweStareLinie przegl0(bazaOsm, bazaZtm, linieDoPrzerobienia, wlasciwosci->getRootRelation(), wlasciwosci->getRefKey());
-		cerr<<"etap1 "<<endl;
-		set <string> etap=przegl0.nieprawidlowe;
-		if(!czyWszystkie)
-			etap=linieDoPrzerobienia;
-		cerr<<"etap2 "<<endl;
-		PrzegladanieCzyPrawidloweNoweLinie przegl(&osmStopData, bazaZtm, etap);
-		cerr<<"etap3 "<<endl;
-		linieDoPrzerobienia=przegl.getPrawidlowe();
-		string linieHTMLPath=pathHTML+"/Pelne"+miasto+"bis.html";
-		string przystankiHTMLPath=pathHTML+"/"+miasto+"bis.html";
-		string jsonPath=pathHTML+"/List"+miasto+".json";
-		string json2Path=pathHTML+"/Przystanki"+miasto+".json";
-		string wspRoutePath=pathHTML+"/Trasy"+miasto+".txt";
-		string wspStopPath=pathHTML+"/Wsp"+miasto+".txt";
-		fstream lineHTMLStream(linieHTMLPath.c_str(), ios::out | ios::trunc);
-		fstream wspStream(wspStopPath.c_str(), ios::out | ios::trunc);
-		fstream przystankiHTMLStream(przystankiHTMLPath.c_str(), ios::out | ios::trunc);
-		fstream jsonStream(jsonPath.c_str(), ios::out | ios::trunc);
-		fstream json2Stream(json2Path.c_str(), ios::out | ios::trunc);
-
 		lineHTMLStream.precision(9);
-		json2Stream.precision(9);
 		uzupelnij(lineHTMLStream, pathTemplate+"/theme.template");
 		lineHTMLStream<<miasto<<" - linie";
-
 		htmlGenerator.loadedVariables[0]=miasto+".html";
 		htmlGenerator.loadedVariables[1]="Zestawienie przystanków";
 		lineHTMLStream<<htmlGenerator.loadTemplate(pathTemplate+"/themeA.template");
@@ -924,6 +591,47 @@ struct MainClass
 		lineHTMLStream<<"Stan na: ";
 		lineHTMLStream<<aktTime();
 		uzupelnij(lineHTMLStream, pathTemplate+"/themeB.template");
+	}
+
+
+
+
+
+	MainClass(char** argv)
+	{
+		HtmlExtraGenerator htmlGenerator;
+		readArg(argv);
+		linieDoPrzerobienia=wlasciwosci->wszystkieLinie(bazaZtm);
+		PrzegladanieCzyPrawidloweStareLinie przeglStare(bazaOsm, bazaZtm, linieDoPrzerobienia, wlasciwosci->getRootRelation(), wlasciwosci->getRefKey());
+		set <string> nieprawidlowe=przeglStare.nieprawidlowe;
+		PrzegladanieCzyPrawidloweNoweLinie przeglNowe(&osmStopData, bazaZtm, nieprawidlowe);
+		linieDoPrzerobienia=przeglNowe.getPrawidlowe();
+
+
+		string linieHTMLPath=pathHTML+"/Pelne"+miasto+"bis.html";
+		fstream lineHTMLStream(linieHTMLPath.c_str(), ios::out | ios::trunc);
+		uzupelnijPelne(lineHTMLStream, htmlGenerator);
+
+
+
+
+		string przystankiHTMLPath=pathHTML+"/"+miasto+"bis.html";
+		string jsonPath=pathHTML+"/List"+miasto+".json";
+		string json2Path=pathHTML+"/Przystanki"+miasto+".json";
+		string wspRoutePath=pathHTML+"/Trasy"+miasto+".txt";
+		//string wspStopPath=pathHTML+"/Wsp"+miasto+".txt";
+
+		//fstream wspStream(wspStopPath.c_str(), ios::out | ios::trunc);
+		fstream przystankiHTMLStream(przystankiHTMLPath.c_str(), ios::out | ios::trunc);
+		fstream jsonStream(jsonPath.c_str(), ios::out | ios::trunc);
+		fstream json2Stream(json2Path.c_str(), ios::out | ios::trunc);
+
+		RaportPrzystanki rrr(json2Stream, osmStopData, bazaZtm, miasto, bazaOsm);
+
+		json2Stream.precision(9);
+
+
+
 
 		przystankiHTMLStream.precision(9);
 		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme.template");
@@ -967,7 +675,7 @@ struct MainClass
 		plik5<<htmlgen::div("dziwne", "", p7_tmp.str())<<endl;
 		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
 		*/
-		lineHTMLStream<<dodajProgress(linieDoPrzerobienia.size(), przegl.getNieprawidlowe().size(), przegl0.prawidlowe.size(), htmlGenerator)<<endl;
+		lineHTMLStream<<dodajProgress(linieDoPrzerobienia.size(), przeglNowe.getNieprawidlowe().size(), przeglStare.prawidlowe.size(), htmlGenerator)<<endl;
 
 		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, wlasciwosci->getRootRelation());
 		if(doUsuniecia.size()>0)
@@ -992,34 +700,32 @@ struct MainClass
 				jsonStream<<",";
 			jsonStream<<"\""<<it1.str<<"\"";
 			generujLinie(it1.str);
-			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
-			message1 += dodajInfoRoznice(przegl0.onlyOsmStop[it1.str], przegl0.onlyZtmStop[it1.str], (przegl0.badLines.find(it1.str)!=przegl0.badLines.end()), it1.str, htmlGenerator);
+			string message1 = dodajInfoNormalne(przeglStare.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przeglStare.badRelations);
+			message1 += dodajInfoRoznice(przeglStare.onlyOsmStop[it1.str], przeglStare.onlyZtmStop[it1.str], (przeglStare.badLines.find(it1.str)!=przeglStare.badLines.end()), it1.str, htmlGenerator);
 			dodajLinieDoHTML(lineHTMLStream, 2, it1.str, message1, htmlGenerator);
 			licznikx++;
 		}
 		jsonStream<<"]";
 		jsonStream.close();
-		auto linieNiewygenerowaneSorted = SpecialSortedString::convertSet(przegl.getNieprawidlowe());
-		auto linieNiewygenerowaneMap = przegl.getNieprawidloweMap();
+		auto linieNiewygenerowaneSorted = SpecialSortedString::convertSet(przeglNowe.getNieprawidlowe());
+		auto linieNiewygenerowaneMap = przeglNowe.getNieprawidloweMap();
 		lineHTMLStream<<"<h2>Linie niewygenerowane <span class=\"badge\">"<<linieNiewygenerowaneSorted.size()<<"</span></h2>";
 		for(auto it1 : linieNiewygenerowaneSorted)
 		{
 			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
-			string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
-			message1 += dodajInfoRoznice(przegl0.onlyOsmStop[it1.str], przegl0.onlyZtmStop[it1.str], (przegl0.badLines.find(it1.str)!=przegl0.badLines.end()), it1.str, htmlGenerator);
+			string message1 = dodajInfoNormalne(przeglStare.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przeglStare.badRelations);
+			message1 += dodajInfoRoznice(przeglStare.onlyOsmStop[it1.str], przeglStare.onlyZtmStop[it1.str], (przeglStare.badLines.find(it1.str)!=przeglStare.badLines.end()), it1.str, htmlGenerator);
 			message1 += dodajInfoNiewygenerowane(errPrzyst, it1.str, htmlGenerator);
 			dodajLinieDoHTML(lineHTMLStream,1, it1.str, message1, htmlGenerator);
 		}
 
-		if(czyWszystkie)
+
+		auto linieNormalneSorted = SpecialSortedString::convertSet(przeglStare.prawidlowe);
+		lineHTMLStream<<"<h2>Linie bez zmian <span class=\"badge\">"<<linieNormalneSorted.size()<<"</span></h2>";
+		for(auto it1 : linieNormalneSorted)
 		{
-			auto linieNormalneSorted = SpecialSortedString::convertSet(przegl0.prawidlowe);
-			lineHTMLStream<<"<h2>Linie bez zmian <span class=\"badge\">"<<linieNormalneSorted.size()<<"</span></h2>";
-			for(auto it1 : linieNormalneSorted)
-			{
-				string message1 = dodajInfoNormalne(przegl0.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przegl0.badRelations);
-				dodajLinieDoHTML(lineHTMLStream, 0, it1.str, message1, htmlGenerator);
-			}
+			string message1 = dodajInfoNormalne(przeglStare.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przeglStare.badRelations);
+			dodajLinieDoHTML(lineHTMLStream, 0, it1.str, message1, htmlGenerator);
 		}
 		/*
 		cout<<"BLUE-END"<<endl;
@@ -1031,129 +737,7 @@ struct MainClass
 		plik5.close();
 		cout<<"ZZZZ-END"<<endl;
 		*/
-		int jsonTableRowCount = 0;
-		json2Stream.precision(9);
-		json2Stream<<"[";
-		for(auto& it1 : osmStopData)
-		{
-			if(bazaZtm->przystanki.find(it1.first)!=bazaZtm->przystanki.end())
-			{
-				int powod = 1000;
-				if(it1.second.stop_position==0)
-					powod = 1;
-				auto& it2 = bazaZtm->przystanki[it1.first];
-				stringstream line;
-				line.precision(9);
-				if(jsonTableRowCount>0)
-					line<<",";
-				line<<"{";
-				line<<"\"id\":\""<<it1.first<<"\"";
-				line<<",\"name\":\""<<escapeJsonString(it2.name)<<"\"";
-				line<<",\"lon\": "<<it2.lon<<" ";
-				line<<",\"lat\": "<<it2.lat<<" ";
-				line<<",\"latlon_jakosc\": "<<it2.wsp_jakosc<<" ";
-				double lat2, lon2;
-				bool okWsp2 = getWsp(lat2, lon2, 'N', it1.second.stop_position, 'N', it1.second.bus_stop);
-				if(okWsp2)
-				{
-					line<<",\"lon2\": "<<lon2<<" ";
-					line<<",\"lat2\": "<<lat2<<" ";
-					wspStream<<it1.first<<"	"<<lon2<<"	"<<lat2;
-				}
-				else
-				{
-					wspStream<<it1.first<<"	"<<it2.lon<<"	"<<it2.lat;
-				}
-				line<<",\"kierunki\":[";
-				vector <string> kierunki=przystanekKierunki(it1.first);
-				for(int i=0; i<kierunki.size(); i++)
-				{
-					if(i>0)
-						line<<",";
-					line<<"\""<<escapeJsonString(kierunki[i])<<"\"";
-				}
-				line<<"]";
-				line<<",\"bus_stop\":"<<it1.second.bus_stop<<" ";
-				line<<",\"bus_stop_name\":\""<<escapeJsonString(wyszName('N', it1.second.bus_stop))<<"\"";
-				line<<",\"stop_position\": "<<it1.second.stop_position<<" ";
-				line<<",\"stop_position_name\":\""<<escapeJsonString(wyszName('N', it1.second.stop_position))<<"\"";
-				if(wyszName('N', it1.second.stop_position).length()>0)
-					wspStream<<"	"<<wyszName('N', it1.second.stop_position)<<endl;
-				else
-					wspStream<<"	"<<it2.name<<" "<<it1.first[4]<<it1.first[5]<<endl;
-				line<<",\"platform\": "<<it1.second.platform<<" ";
-				line<<",\"platform_name\":\""<<escapeJsonString(wyszName(it1.second.platform_type, it1.second.platform))<<"\"";
-				line<<",\"additional\":\""<<escapeJsonString(it2.stopinfo+" ; "+it2.miejscowosc)<<"\"";
-				line<<",\"BS_SP\": "<<getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position);
-				if(it1.second.bus_stop!=0 && powod==1000 && getDistance('N', it1.second.bus_stop, 'N', it1.second.stop_position)>150)
-					powod = 3;
-				line<<",\"SP_PL\": "<<getDistance(it1.second.platform_type, it1.second.platform, 'N', it1.second.stop_position);
-				line<<",\"PL_BS\": "<<getDistance('N', it1.second.bus_stop, it1.second.platform_type, it1.second.platform);
-				line<<",\"powod\": "<<powod;
-				if(it1.second.platform_type=='N' || it1.second.platform_type=='W' || it1.second.platform_type=='R')
-					line<<",\"platform_type\":\""<<it1.second.platform_type<<"\"";
 
-				/*
-				line<<"<tr id=\""<<it1.first<<"\">";
-				line<<"<td>"<<it1.first<<"</td>";
-				line<<"<td>"<<it2.name<<"</td>";
-				line<<"<td>"<<it2.lon<<"</td>";
-				line<<"<td>"<<it2.lat<<"</td>";
-				line<<"<td>"<<it2.stopinfo<<"</td>";
-				line<<"<td>"<<divOsmLink(it1.second.bus_stop, 'N')<<"</td>";
-				line<<"<td>"<<divOsmLink(it1.second.stop_position, 'N')<<"</td>";
-				line<<"<td>"<<divOsmLink(it1.second.platform, it1.second.platform_type)<<"</td>";
-				vector <string> kierunki=przystanekKierunki(it1.first);
-				line<<"<td>"<<kierunki[0]<<"</td>";
-				line<<"<td>"<<kierunki[1]<<"</td>";
-				line<<"<td>"<<kierunki[2]<<"</td>";*/
-				/*
-				string refDiv = htmlgen::div("komorka", "", it1.first);
-				string refName = htmlgen::div("komorka", "", it1.second.name);
-				string k1 = htmlgen::div("komorka", "", kierunki[0]);
-				string k2 = htmlgen::div("komorka", "", kierunki[1]);
-				string k3 = htmlgen::div("komorka", "", kierunki[2]);
-				string row[] = {refDiv, refName, divOsmLink(it1.second.bus_stop, 'N'), divOsmLink(it1.second.stop_position, 'N'), divOsmLink(it1.second.platform, it1.second.platform_type), k1, k2, k3};
-				*/
-				line<<"}"<<endl;
-				json2Stream<<line.str();
-				jsonTableRowCount++;
-			}
-		}
-
-		for(auto& it2 : bazaZtm->przystanki)
-		{
-			if(osmStopData.find(it2.first)==osmStopData.end())
-			{
-				int powod = 1000;
-				stringstream line;
-				if(jsonTableRowCount>0)
-					line<<",";
-				line<<"{";
-				line<<"\"id\":\""<<it2.first<<"\"";
-				line<<",\"name\":\""<<escapeJsonString(it2.second.name)<<"\"";
-				line<<",\"lon\": "<<it2.second.lon<<" ";
-				line<<",\"lat\": "<<it2.second.lat<<" ";
-				line<<",\"latlon_jakosc\": "<<it2.second.wsp_jakosc<<" ";
-				line<<",\"powod\": "<<powod;
-				line<<",\"kierunki\":[";
-				wspStream<<it2.first<<"	"<<it2.second.lon<<"	"<<it2.second.lat<<"	"<<it2.second.name<<endl;
-				vector <string> kierunki=przystanekKierunki(it2.first);
-				for(int i=0; i<kierunki.size(); i++)
-				{
-					if(i>0)
-						line<<",";
-					line<<"\""<<escapeJsonString(kierunki[i])<<"\"";
-				}
-				line<<"]";
-				line<<"}"<<endl;
-				json2Stream<<line.str();
-				jsonTableRowCount++;
-			}
-		}
-
-		//przystankiHTMLStream<<divOsmTable(tabela)<<endl;
-		json2Stream<<"]";
 		uzupelnij(lineHTMLStream, pathTemplate+"/theme2.template");
 		if(miasto=="Warszawa")
 			lineHTMLStream<<"<script src=\"jq.js\"></script><script src=\"jfeed.js\"></script><script src=\"rss-test.js\"></script>";
@@ -1169,13 +753,13 @@ struct MainClass
 		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme4.template");
 		przystankiHTMLStream.close();
 		vector <long long> rels;
-		for(auto& it1 : przegl0.relacjeDlaLinii)
+		for(auto& it1 : przeglStare.relacjeDlaLinii)
 		{
 			for(auto& it2 : it1.second.second)
 			{
 				rels.push_back(it2);
 			}
-        }
+		}
 		if(miasto=="Warszawa")
 		{
 			WypisywanieWspolrzednychTras(rels, bazaOsm, wspRoutePath);

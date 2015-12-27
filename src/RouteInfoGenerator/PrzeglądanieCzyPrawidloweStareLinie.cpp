@@ -1,5 +1,46 @@
 #include "PrzegladanieCzyPrawidloweStareLinie.hpp"
 using namespace std;
+
+set <string> linieDoUsuniecia(set <string>& istniejace, osm_base* roo, long long root)
+{
+	set <string> wynik;
+	relation akt=roo->relations[root];
+	map <string, string> tags = akt.getTags();
+	if(istniejace.find(tags["ref"])==istniejace.end())
+	{
+		if(tags["type"]=="route_master")
+		{
+			wynik.insert(tags["ref"]);
+		}
+	}
+	int s1=akt.members.size();
+	for(int i=0; i<s1; i++)
+	{
+		if(akt.members[i].member_type==RELATION)
+		{
+			long long teraz_id=akt.members[i].member_id;
+			if(roo->relations.find(teraz_id)!=roo->relations.end())
+			{
+				relation teraz=roo->relations[teraz_id];
+				auto nowe = linieDoUsuniecia(istniejace, roo, teraz_id);
+				wynik.insert(nowe.begin(), nowe.end());
+			}
+		}
+	}
+	return wynik;
+}
+
+set <string> linieDoUsuniecia(ScheduleHandlerInternal* baza_ztm, osm_base* roo, long long root)
+{
+	set <string> wsadowy;
+	for(auto& it1 : baza_ztm->dane_linia)
+	{
+		wsadowy.insert(it1.first);
+	}
+	return linieDoUsuniecia(wsadowy, roo, root);
+}
+
+
 pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long root, string linia)
 {
 	pair<long long, vector <long long> > wynik;
@@ -123,7 +164,7 @@ set <string> PrzegladanieCzyPrawidloweStareLinie::oldRelationStops(string linia,
 	return wynik0;
 }
 
-set <string> PrzegladanieCzyPrawidloweStareLinie::newRelationStops(string linia, ztmread_for_html* baza)
+set <string> PrzegladanieCzyPrawidloweStareLinie::newRelationStops(string linia, ScheduleHandlerInternal* baza)
 {
 	set <string> wynik;
 	for(int i=0; i<(baza->dane_linia[linia]).size(); i++)
@@ -136,29 +177,8 @@ set <string> PrzegladanieCzyPrawidloweStareLinie::newRelationStops(string linia,
 	}
 	return wynik;
 }
-/*
-string PrzegladanieCzyPrawidloweStareLinie::infoLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm)
-{
-	vector <long long> rels=relacje_linia(bazaOsm, rootRel, linia).second;
-	long long rel_head=relacje_linia(bazaOsm, rootRel, linia).first;
-	string link_href="http://openstreetmap.org/relation/"+tostring(rel_head);
-	string tmp1;
-	tmp1+=htmlgen::div("linia_head", "poczatek"+linia, htmlgen::div("humer_linii", "", linia)+htmlgen::link("http://www.ztm.waw.pl/rozklad_nowy.php?c=182&l=1&q="+linia, "pokaż rozkład"));
-	tmp1+=htmlgen::div("relglowna", "", "route_master: "+htmlgen::link(link_href, tostring(rel_head)));
-	for(int i=0; i<rels.size(); i++)
-	{
-		link_href="http://openstreetmap.org/relation/"+tostring(rels[i]);
-		string nazwa=bazaOsm->relations[rels[i]].getTags()["name"];
-		string ra_link="http://analyser.openstreetmap.fr/cgi-bin/index.py?relation="+tostring(rels[i]);
-		string links=htmlgen::link(link_href, tostring(rels[i]), nazwa)+" "+htmlgen::link(ra_link, "RA");
-		if(!relationCohesion(rels[i], bazaOsm) && rels[i]!=0)
-			tmp1+=htmlgen::div("relboczna_niespojna", "", "Droga niespójna "+links);
-		else
-			tmp1+=htmlgen::div("relboczna", "", links);
-	}
-	return htmlgen::div("infolinie", "", tmp1);
-}*/
-void PrzegladanieCzyPrawidloweStareLinie::zbadajLinie(string linia, osm_base* bazaOsm, ztmread_for_html* bazaZtm)
+
+void PrzegladanieCzyPrawidloweStareLinie::zbadajLinie(string linia, osm_base* bazaOsm, ScheduleHandlerInternal* bazaZtm)
 {
 	relacjeDlaLinii[linia]=relacje_linia(bazaOsm, rootRel, linia);
 	set <string> osm_list=oldRelationStops(linia, bazaOsm);
@@ -205,7 +225,7 @@ void PrzegladanieCzyPrawidloweStareLinie::zbadajLinie(string linia, osm_base* ba
 	}
 	cout<<"L "<<linia<<endl;
 }
-PrzegladanieCzyPrawidloweStareLinie::PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ztmread_for_html* bazaZtm, set <string> doPrzerobienia, long long rootRelW, string ref_keyW)
+PrzegladanieCzyPrawidloweStareLinie::PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ScheduleHandlerInternal* bazaZtm, set <string> doPrzerobienia, long long rootRelW, string ref_keyW)
 {
 	ref_key = ref_keyW;
 	rootRel = rootRelW;
@@ -217,30 +237,58 @@ PrzegladanieCzyPrawidloweStareLinie::PrzegladanieCzyPrawidloweStareLinie(osm_bas
 	}
 }
 
-/*
-set <long long> wszystkie_route (osm_base* roo, long long root)
+
+set <string> PrzegladanieCzyPrawidloweNoweLinie::sprawdzLinie(string linia, vector <vector <string> > drugi)
 {
-	set <long long> wynik;
-	relation akt=roo->relations[root];
-	auto tags = akt.getTags();
-	int s1=akt.members.size();
-	if(tags["type"]=="route")
+	set <string> wynik;
+	int s9=drugi.size();
+	for(int i=0; i<s9; i++)
 	{
-		wynik.insert(akt.id);
-	}
-	for(int i=0; i<s1; i++)
-	{
-		if(akt.members[i].member_type==RELATION)
+		int s8=(drugi)[i].size();
+		for(int j=0; j<s8; j++)
 		{
-			long long teraz_id=akt.members[i].member_id;
-			if(roo->relations.find(teraz_id)!=roo->relations.end())
+			OsmStopData data=(*osmStops)[drugi[i][j]];
+			if(data.stop_position==0)
 			{
-				relation teraz=roo->relations[teraz_id];
-				set <long long> tmp=wszystkie_route(roo, teraz_id);
-				wynik.insert(tmp.begin(), tmp.end());
+				wynik.insert(drugi[i][j]);
 			}
 		}
 	}
 	return wynik;
 }
-*/
+
+set <string> PrzegladanieCzyPrawidloweNoweLinie::getPrawidlowe()
+{
+	return prawidlowe;
+}
+set <string> PrzegladanieCzyPrawidloweNoweLinie::getNieprawidlowe()
+{
+	set <string> wynik;
+	for(auto& it1 : nieprawidlowe)
+	{
+		if(it1.first.size()>0)
+			wynik.insert(it1.first);
+	}
+	return wynik;
+}
+map <string, set<string> > PrzegladanieCzyPrawidloweNoweLinie::getNieprawidloweMap()
+{
+	return nieprawidlowe;
+}
+PrzegladanieCzyPrawidloweNoweLinie::PrzegladanieCzyPrawidloweNoweLinie(map<string, OsmStopData>* osmStopsW, ScheduleHandlerInternal* bazaZtmW, set<string> doPrzerobienia)
+{
+	osmStops = osmStopsW;
+	bazaZtm = bazaZtmW;
+	for(auto& it1 : doPrzerobienia)
+	{
+		set <string> wynTmp = sprawdzLinie(it1, bazaZtm->dane_linia[it1]);
+		if(wynTmp.size()==0)
+		{
+			prawidlowe.insert(it1);
+		}
+		else
+		{
+			nieprawidlowe[it1]=wynTmp;
+		}
+	}
+}
