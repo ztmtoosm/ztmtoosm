@@ -237,7 +237,7 @@ class RaportPrzystanki
 			vector <string> kierunki=przystanekKierunki(it1.first);
 			for(int i=0; i<kierunki.size(); i++)
 			{
-				writer.String(kierunki[i]);
+				writer.String(kierunki[i].c_str());
 			}
 			writer.EndArray();
 		}
