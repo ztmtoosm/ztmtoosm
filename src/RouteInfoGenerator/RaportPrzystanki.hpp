@@ -66,14 +66,55 @@ class RaportPrzystanki
 		string pierwszyId = bazaZtm->dane_linia[idLinia][idWariantu][0];
 		writer.String("linia");
 		if(idLinia!="") writer.String(idLinia.c_str()); else writer.Null();
+
 		writer.String("pierwszy");
-		if(pierwszyId!="") writer.String(pierwszyId.c_str()); else writer.Null();
+		if(pierwszyId!="")
+		{
+			writer.String(pierwszyId.c_str());
+			writer.String("pierwszyName");
+			writer.String(bazaZtm->przystanki[pierwszyId].name.c_str());
+		}
+		else
+		{
+			writer.Null();
+		}
+
 		writer.String("poprzedni");
-		if(poprzedniId!="") writer.String(poprzedniId.c_str()); else writer.Null();
+		if(pierwszyId!="")
+		{
+			writer.String(poprzedniId.c_str());
+			writer.String("poprzedniName");
+			writer.String(bazaZtm->przystanki[poprzedniId].name.c_str());
+		}
+		else
+		{
+			writer.Null();
+		}
+
 		writer.String("kolejny");
-		if(kolejnyId!="") writer.String(kolejnyId.c_str()); else writer.Null();
-				writer.String("ostatni");
-		if(ostatniId!="") writer.String(ostatniId.c_str()); else writer.Null();
+		if(pierwszyId!="")
+		{
+			writer.String(kolejnyId.c_str());
+			writer.String("kolejnyName");
+			writer.String(bazaZtm->przystanki[kolejnyId].name.c_str());
+		}
+		else
+		{
+			writer.Null();
+		}
+
+		writer.String("ostatni");
+		if(pierwszyId!="")
+		{
+			writer.String(ostatniId.c_str());
+			writer.String("ostatniName");
+			writer.String(bazaZtm->przystanki[ostatniId].name.c_str());
+		}
+		else
+		{
+			writer.Null();
+		}
+
 		writer.EndObject();
 	}
 

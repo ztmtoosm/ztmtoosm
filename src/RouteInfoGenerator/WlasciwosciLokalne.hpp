@@ -124,9 +124,24 @@ class WlasciwosciLokalneWarszawa : public WlasciwosciLokalne
 
 	string getLongNameOfStop(string shortName, string id)
 	{
+		string shortName2 = shortName;
+		for(int i=0; i<shortName2.length(); i++)
+			if(shortName2[i]=='_')
+				shortName2[i] = ' ';
+		//TODO WSTRING
+		/*stringstream foo;
+		foo<<shortName2;
+		vector <string> podslowa;
+		string pds;
+		while(foo>>pds)
+			podslowa.push_back(pds);
+		if(podslowa.size()==1)
+		{
+
+		}*/
 		if(id.length()==6)
-			return shortName+" "+id[4]+id[5];
-		return shortName;
+			return shortName2+" "+id[4]+id[5];
+		return shortName2;
 	}
 };
 
@@ -172,7 +187,6 @@ string getRefKey()
 	}
 	string substituteWhiteCharsBySpace(string nazwa)
 	{
-		cout<<"KUKU!!!!!!!!!!"<<endl;
 		return nazwa;
 	}
 	string getNetworkName()
