@@ -9,4 +9,5 @@ $1"/bin/"Generator2 $1"/data/"gdansk $1"/data/"gdansk.osm $1"/www" Gdańsk ref:z
 $1"/bin/"RouteInfoGeneratorPrim $1"/data/"gdansk $1"/data/"gdansk.osm Gdańsk $1"/www" "-all"
 $1"/bin/"Generator2 $1"/data/"szczecin $1"/data/"szczecin.osm $1"/www" Szczecin ref
 $1"/bin/"Generator2 $1"/data/"warszawa.txt $1"/data/"warszawa.osm $1"/www" Warszawa ref
+$1"/bin/"RouteInfoGeneratorPrim $1"/data/"warszawa.txt $1"/data/"warszawa.osm $1"/www" Warszawa ref
 service apache2 start
