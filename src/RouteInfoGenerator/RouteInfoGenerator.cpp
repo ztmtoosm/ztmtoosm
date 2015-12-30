@@ -418,7 +418,7 @@ struct MainClass
 		plik<<gen.loadTemplate(pathTemplate+"/lineHeader.template");
 		cout<<"LOADER STOP"<<endl;
 	}
-	string dodajInfoNiewygenerowane(set <string> errPrzyst, string linia, Writer<StringBuffer>& gen)
+	string dodajInfoNiewygenerowane(set <string> errPrzyst, string linia, Writer<StringBuffer>& writer)
 	{
 		writer.String("dupaPrzystanki");
 		writer.StartArray();
