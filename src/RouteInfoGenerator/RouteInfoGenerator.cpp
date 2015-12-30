@@ -435,65 +435,53 @@ struct MainClass
 		gen.loadedVariables[2]=foo1.str();
 		return gen.loadTemplate(pathTemplate+"/errLine.template");
 	}
-	string dodajInfoRoznice(set <string> ein, set <string> zwei, bool brakRelacji, string linia, HtmlExtraGenerator& gen)
+	void dodajInfoRoznice(set <string> ein, set <string> zwei, bool brakRelacji, string linia, Writer<StringBuffer>& writer)
 	{
 		stringstream foo1;
 		foo1<<ein.size()+zwei.size()+(int)(brakRelacji);
 		string message = "Przystanki na których nie zatrzymuje się linia, ale OSM twierdzi inaczej: ";
-		int licznik = 0;
 		if(ein.size()==0)
 			message+="brak";
+
+
+		writer.String("rozniceEin");
+		writer.StartArray();
 		for(auto it1 : ein)
 		{
-			if(licznik>0)
-				message+=", ";
-			message+=htmlgen::link(miasto+".html#"+it1, osmStopData[it1].name+" ("+it1+")", "");
-			licznik++;
+			writer.String(it1.c_str());
 		}
-		message += ". Przystanki na których zatrzymuje się linia nieuwzględnione w OSM: ";
-		licznik = 0;
+		writer.EndArray();
+
+		writer.String("rozniceZwei");
+		writer.StartArray();
 		for(auto it1 : zwei)
 		{
-			if(licznik>0)
-				message+=", ";
-			message+=htmlgen::link(miasto+".html#"+it1, bazaZtm->przystanki[it1].name+" ("+it1+")", "");
-			licznik++;
+			writer.String(it1.c_str());
 		}
-		if(zwei.size()==0)
-			message+="brak";
-		message+=". ";
-		if(brakRelacji)
-			message += "Niespójność/brak relacji.";
-		gen.loadedVariables[0]=linia+"roznice";
-		gen.loadedVariables[1]=message;
-		gen.loadedVariables[2]=foo1.str();
-		return gen.loadTemplate(pathTemplate+"/diffLine.template");
+		writer.EndArray();
+		writer.String("brakRelacji");
+		writer.Bool(brakRelacji);
 	}
-	string dodajInfoNormalne(pair <long long, vector <long long> > daneLinia, string linia, HtmlExtraGenerator& gen, set<long long>& niespojne)
+	void dodajInfoNormalne(pair <long long, vector <long long> > daneLinia, string linia, Writer<StringBuffer>& writer, set<long long>& niespojne)
 	{
-		stringstream messageStream;
-		messageStream<<"<li class=\"list-group-item\">";
-		messageStream<<"route_master: ";
-		if(daneLinia.first!=0)
-			messageStream<<htmlgen::link("http://openstreetmap.org/relation/"+toXstring(daneLinia.first), toXstring(daneLinia.first), "");
-		else
-			messageStream<<" <span class=\"label label-danger\">BRAK</span>";
-		messageStream<<"</li>";
-		for(int i=0; i<daneLinia.second.size(); i++)
+		writer.String("mainRel");
+		writer.Int64(daneLinia.first);
+		writer.String("smiecRel");
+		writer.StartArray();
+		for(long long ll : daneLinia.second)
 		{
-			messageStream<<"<li class=\"list-group-item\">";
-			messageStream<<"route: ";
-			messageStream<<htmlgen::link("http://openstreetmap.org/relation/"+toXstring(daneLinia.second[i]), toXstring(daneLinia.second[i]), "");
-			if(niespojne.find(daneLinia.second[i])!=niespojne.end())
-			{
-				messageStream<<" <span class=\"label label-danger\">NIESPÓJNA</span>";
-			}
-			messageStream<<" <a class=\"label label-info\" href=\""<<"http://analyser.openstreetmap.fr/cgi-bin/index.py?relation="<<daneLinia.second[i]<<"\">RA</a>";
-			messageStream<<"</li>";
+			if(niespojne.find(ll)==niespojne.end())
+				writer.Int64(ll);
 		}
-		gen.loadedVariables[0]=linia+"info";
-		gen.loadedVariables[1]=messageStream.str();
-		return gen.loadTemplate(pathTemplate+"/infoLine.template");
+		writer.EndArray();
+		writer.String("smiecRelNiespojne");
+		writer.StartArray();
+		for(long long ll : daneLinia.second)
+		{
+			if(niespojne.find(ll)!=niespojne.end())
+				writer.Int64(ll);
+		}
+		writer.EndArray();
 	}
 	string dodajProgress(int val1, int val2, int val3, HtmlExtraGenerator& gen)
 	{
@@ -599,7 +587,6 @@ struct MainClass
 
 	MainClass(char** argv)
 	{
-		HtmlExtraGenerator htmlGenerator;
 		readArg(argv);
 		linieDoPrzerobienia=wlasciwosci->wszystkieLinie(bazaZtm);
 		PrzegladanieCzyPrawidloweStareLinie przeglStare(bazaOsm, bazaZtm, linieDoPrzerobienia, wlasciwosci->getRootRelation(), wlasciwosci->getRefKey());
@@ -607,107 +594,61 @@ struct MainClass
 		PrzegladanieCzyPrawidloweNoweLinie przeglNowe(&osmStopData, bazaZtm, nieprawidlowe);
 		linieDoPrzerobienia=przeglNowe.getPrawidlowe();
 
-
-		string linieHTMLPath=pathHTML+"/Pelne"+miasto+"bis.html";
-		fstream lineHTMLStream(linieHTMLPath.c_str(), ios::out | ios::trunc);
-		uzupelnijPelne(lineHTMLStream, htmlGenerator);
-
-
-
-
-		string przystankiHTMLPath=pathHTML+"/"+miasto+"bis.html";
-		string jsonPath=pathHTML+"/List"+miasto+".json";
 		string json2Path=pathHTML+"/Przystanki"+miasto+".json";
 		string json2PathBis=pathHTML+"/PrzystankiErr"+miasto+".json";
-		string wspRoutePath=pathHTML+"/Trasy"+miasto+".txt";
-		//string wspStopPath=pathHTML+"/Wsp"+miasto+".txt";
-
-		//fstream wspStream(wspStopPath.c_str(), ios::out | ios::trunc);
-		fstream przystankiHTMLStream(przystankiHTMLPath.c_str(), ios::out | ios::trunc);
-		fstream jsonStream(jsonPath.c_str(), ios::out | ios::trunc);
 		fstream json2Stream(json2Path.c_str(), ios::out | ios::trunc);
 		fstream json2StreamBis(json2PathBis.c_str(), ios::out | ios::trunc);
-
-		json2Stream.precision(9);
 		RaportPrzystanki rrr(json2Stream, osmStopData, bazaZtm, miasto, bazaOsm, wlasciwosci);
 		RaportPrzystanki rrr2(json2StreamBis, osmStopData, bazaZtm, miasto, bazaOsm, wlasciwosci, 3);
 		json2Stream.close();
 		json2StreamBis.close();
 
+		/*string linieHTMLPath=pathHTML+"/Pelne"+miasto+"bis.html";
+		fstream lineHTMLStream(linieHTMLPath.c_str(), ios::out | ios::trunc);
+		uzupelnijPelne(lineHTMLStream, htmlGenerator);*/
+
+		string jsonPath=pathHTML+"/List"+miasto+".json";
+		fstream jsonStream(jsonPath.c_str(), ios::out | ios::trunc);
+		jsonStream.precision(9);
+		StringBuffer s;
+		Writer<StringBuffer> writer(s);
 
 
-		przystankiHTMLStream.precision(9);
-		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme.template");
-		przystankiHTMLStream<<miasto<<" - przystanki";
 
-		htmlGenerator.loadedVariables[0]="Pelne"+miasto+".html";
-		htmlGenerator.loadedVariables[1]="Zestawienie linii";
-		przystankiHTMLStream<<htmlGenerator.loadTemplate(pathTemplate+"/themeA.template");
-		przystankiHTMLStream<<"Stan na: ";
-		przystankiHTMLStream<<aktTime();
-		uzupelnij(przystankiHTMLStream, pathTemplate+"/themeB.template");
-
-
-		/*
-		stringstream p5_tmp, p6_tmp, p7_tmp;
-		for(string it1 : blednePrzystanki)
-		{
-			p5_tmp<<htmlgen::div("bprzyst", "", wypiszBlednyPrzystanek(it1))<<endl;
-		}
-		plik5<<htmlgen::div("blstops", "", p5_tmp.str())<<endl;
-		plik5<<htmlgen::div("partx", "", "Linie do usunięcia")<<endl;
-		*/
-
-		/*
-		plik5<<htmlgen::div("partx", "", "Inne relacje komunikacji w bazie OSM")<<endl;
-		auto dziwne = dziwneRelacje(bazaOsm, wlasciwosci->getRootRelation());
-		for(auto& it1 : dziwne)
-		{
-			stringstream wyn, wyn0;
-			wyn0<<it1;
-			wyn<<htmlgen::div("dziwna_linia_id", "", wyn0.str());
-			auto tags = bazaOsm->relations[it1].getTags();
-			for(auto& it2 : tags)
-			{
-				wyn<<htmlgen::div("dziwna_linia_dup", "", it2.first+" = "+it2.second);
-			}
-			p7_tmp<<htmlgen::div("dziwna_linia", "", wyn.str())<<"</br>";
-		}
-
-		cout<<"AAA-END"<<endl;
-		plik5<<htmlgen::div("dziwne", "", p7_tmp.str())<<endl;
-		plik5<<htmlgen::div("partx", "", "Trasy wygenerowane...")<<endl;
-		*/
-		lineHTMLStream<<dodajProgress(linieDoPrzerobienia.size(), przeglNowe.getNieprawidlowe().size(), przeglStare.prawidlowe.size(), htmlGenerator)<<endl;
 
 		auto doUsuniecia = linieDoUsuniecia(bazaZtm, bazaOsm, wlasciwosci->getRootRelation());
-		if(doUsuniecia.size()>0)
+		writer.StartObject();
+		writer.String("toDelete");
+		writer.StartArray();
+		for(auto& it1 : doUsuniecia)
 		{
-			stringstream p6_tmp;
-			lineHTMLStream<<"<h2>Linie do usunięcia <span class=\"badge\">"<<doUsuniecia.size()<<"</span></h2>";
-			for(auto& it1 : doUsuniecia)
-			{
-				p6_tmp<<it1<<" ";
-			}
-			string p6_xxx = p6_tmp.str();
-			lineHTMLStream<<htmlgen::div("do_usuniecia", "", p6_xxx)<<endl;
+			writer.String(it1.c_str());
 		}
-
-		jsonStream<<"[";
-		int licznikx=0;
+		writer.EndArray();
 		auto linieDoPrzerobieniaSorted = SpecialSortedString::convertSet(linieDoPrzerobienia);
-		lineHTMLStream<<"<h2>Linie wygenerowane <span class=\"badge\">"<<linieDoPrzerobieniaSorted.size()<<"</span></h2>";
+		writer.String("doPrzerobienia");
+		writer.StartArray();
 		for(auto it1 : linieDoPrzerobieniaSorted)
 		{
-			if(licznikx>0)
-				jsonStream<<",";
-			jsonStream<<"\""<<it1.str<<"\"";
+			writer.StartObject();
 			generujLinie(it1.str);
-			string message1 = dodajInfoNormalne(przeglStare.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przeglStare.badRelations);
-			message1 += dodajInfoRoznice(przeglStare.onlyOsmStop[it1.str], przeglStare.onlyZtmStop[it1.str], (przeglStare.badLines.find(it1.str)!=przeglStare.badLines.end()), it1.str, htmlGenerator);
-			dodajLinieDoHTML(lineHTMLStream, 2, it1.str, message1, htmlGenerator);
-			licznikx++;
+			writer.String("id");
+			writer.String(it1.str.c_str());
+			dodajInfoNormalne(przeglStare.relacjeDlaLinii[it1.str], it1.str, writer, przeglStare.badRelations);
+			dodajInfoRoznice(przeglStare.onlyOsmStop[it1.str], przeglStare.onlyZtmStop[it1.str], (przeglStare.badLines.find(it1.str)!=przeglStare.badLines.end()), it1.str, writer);
+			writer.EndObject();
 		}
+		writer.EndArray();
+		writer.EndObject();
+
+		jsonStream<<s.GetString();
+		jsonStream.close();
+
+/*
+		int licznikx=0;
+
+		lineHTMLStream<<"<h2>Linie wygenerowane <span class=\"badge\">"<<linieDoPrzerobieniaSorted.size()<<"</span></h2>";
+
 		jsonStream<<"]";
 		jsonStream.close();
 		auto linieNiewygenerowaneSorted = SpecialSortedString::convertSet(przeglNowe.getNieprawidlowe());
@@ -730,16 +671,7 @@ struct MainClass
 			string message1 = dodajInfoNormalne(przeglStare.relacjeDlaLinii[it1.str], it1.str, htmlGenerator, przeglStare.badRelations);
 			dodajLinieDoHTML(lineHTMLStream, 0, it1.str, message1, htmlGenerator);
 		}
-		/*
-		cout<<"BLUE-END"<<endl;
-		plik5<<testBadStops()<<endl;
-		bool rss=false;
-		if(miasto=="Warszawa")
-			rss=true;
-		htmlTile(plik5, rss);
-		plik5.close();
-		cout<<"ZZZZ-END"<<endl;
-		*/
+
 
 		uzupelnij(lineHTMLStream, pathTemplate+"/theme2.template");
 		if(miasto=="Warszawa")
@@ -763,10 +695,15 @@ struct MainClass
 				rels.push_back(it2);
 			}
 		}
-		if(miasto=="Warszawa")
+
+*/
+
+
+		/*if(miasto=="Warszawa")
 		{
+			string wspRoutePath=pathHTML+"/Trasy"+miasto+".txt";
 			WypisywanieWspolrzednychTras(rels, bazaOsm, wspRoutePath);
-		}
+		}*/
 	}
 	~MainClass()
 	{
