@@ -598,7 +598,7 @@ struct MainClass
 		json2Stream.close();
 		json2StreamBis.close();
 
-		string jsonPath=pathHTML+"/List"+miasto+".json";
+		string jsonPath=pathHTML+"/ListExtr"+miasto+".json";
 		fstream jsonStream(jsonPath.c_str(), ios::out | ios::trunc);
 		jsonStream.precision(9);
 		StringBuffer s;
