@@ -631,6 +631,7 @@ struct MainClass
 
 		auto linieNiewygenerowaneSorted = SpecialSortedString::convertSet(przeglNowe.getNieprawidlowe());
 		auto linieNiewygenerowaneMap = przeglNowe.getNieprawidloweMap();
+		cerr<<"ELO1"<<endl;
 		writer.String("niewygenerowane");
 		writer.StartArray();
 		for(auto it1 : linieNiewygenerowaneSorted)
@@ -645,7 +646,7 @@ struct MainClass
 			writer.EndObject();
 		}
 		writer.EndArray();
-
+		cerr<<"ELO2"<<endl;
 
 		auto linieNormalneSorted = SpecialSortedString::convertSet(przeglStare.prawidlowe);
 		writer.String("normalne");
@@ -659,7 +660,7 @@ struct MainClass
 			writer.EndObject();
 		}
 		writer.EndArray();
-
+		cerr<<"ELO3"<<endl;
 
 		writer.EndObject();
 
