@@ -387,6 +387,7 @@ struct MainClass
 			addMember(i, "R", noweRelacje[i], "", plik);
 		}
 		plik<<"]}]";
+		plik.close();
 	}
 
 	map <string, string> infoHTML;
@@ -417,23 +418,15 @@ struct MainClass
 		plik<<gen.loadTemplate(pathTemplate+"/lineHeader.template");
 		cout<<"LOADER STOP"<<endl;
 	}
-	string dodajInfoNiewygenerowane(set <string> errPrzyst, string linia, HtmlExtraGenerator& gen)
+	string dodajInfoNiewygenerowane(set <string> errPrzyst, string linia, Writer<StringBuffer>& gen)
 	{
-		stringstream foo1;
-		foo1<<errPrzyst.size();
-		string message = "Brak stop_position dla przystanków: ";
-		int licznik = 0;
+		writer.String("dupaPrzystanki");
+		writer.StartArray();
 		for(auto it1 : errPrzyst)
 		{
-			if(licznik>0)
-				message+=", ";
-			message+=htmlgen::link(miasto+".html#"+it1, bazaZtm->przystanki[it1].name+" ("+it1+")", "");
-			licznik++;
+			writer.String(it1.c_str());
 		}
-		gen.loadedVariables[0]=linia+"niewygenerowane";
-		gen.loadedVariables[1]=message;
-		gen.loadedVariables[2]=foo1.str();
-		return gen.loadTemplate(pathTemplate+"/errLine.template");
+		writer.EndArray();
 	}
 	void dodajInfoRoznice(set <string> ein, set <string> zwei, bool brakRelacji, string linia, Writer<StringBuffer>& writer)
 	{
@@ -603,10 +596,6 @@ struct MainClass
 		json2Stream.close();
 		json2StreamBis.close();
 
-		/*string linieHTMLPath=pathHTML+"/Pelne"+miasto+"bis.html";
-		fstream lineHTMLStream(linieHTMLPath.c_str(), ios::out | ios::trunc);
-		uzupelnijPelne(lineHTMLStream, htmlGenerator);*/
-
 		string jsonPath=pathHTML+"/List"+miasto+".json";
 		fstream jsonStream(jsonPath.c_str(), ios::out | ios::trunc);
 		jsonStream.precision(9);
@@ -639,6 +628,39 @@ struct MainClass
 			writer.EndObject();
 		}
 		writer.EndArray();
+
+		auto linieNiewygenerowaneSorted = SpecialSortedString::convertSet(przeglNowe.getNieprawidlowe());
+		auto linieNiewygenerowaneMap = przeglNowe.getNieprawidloweMap();
+		writer.String("niewygenerowane");
+		writer.StartArray();
+		for(auto it1 : linieNiewygenerowaneSorted)
+		{
+			writer.StartObject();
+			writer.String("id");
+			writer.String(it1.str.c_str());
+			set<string> errPrzyst = linieNiewygenerowaneMap[it1.str];
+			dodajInfoNormalne(przeglStare.relacjeDlaLinii[it1.str], it1.str, writer, przeglStare.badRelations);
+			dodajInfoRoznice(przeglStare.onlyOsmStop[it1.str], przeglStare.onlyZtmStop[it1.str], (przeglStare.badLines.find(it1.str)!=przeglStare.badLines.end()), it1.str, writer);
+			dodajInfoNiewygenerowane(errPrzyst, it1.str, writer);
+			writer.EndObject();
+		}
+		writer.EndArray();
+
+
+		auto linieNormalneSorted = SpecialSortedString::convertSet(przeglStare.prawidlowe);
+		writer.String("normalne");
+		writer.StartArray();
+		for(auto it1 : linieNormalneSorted)
+		{
+			writer.StartObject();
+			writer.String("id");
+			writer.String(it1.str.c_str());
+			dodajInfoNormalne(przeglStare.relacjeDlaLinii[it1.str], it1.str, writer, przeglStare.badRelations);
+			writer.EndObject();
+		}
+		writer.EndArray();
+
+
 		writer.EndObject();
 
 		jsonStream<<s.GetString();
@@ -687,7 +709,13 @@ struct MainClass
 		przystankiHTMLStream<<"Przystanki"<<miasto<<".json";
 		uzupelnij(przystankiHTMLStream, pathTemplate+"/theme4.template");
 		przystankiHTMLStream.close();
-		vector <long long> rels;
+
+*/
+
+
+		/*
+		 *
+		 * 		vector <long long> rels;
 		for(auto& it1 : przeglStare.relacjeDlaLinii)
 		{
 			for(auto& it2 : it1.second.second)
@@ -696,11 +724,10 @@ struct MainClass
 			}
 		}
 
-*/
-
-
-		/*if(miasto=="Warszawa")
+		 *
+		 * if(miasto=="Warszawa")
 		{
+
 			string wspRoutePath=pathHTML+"/Trasy"+miasto+".txt";
 			WypisywanieWspolrzednychTras(rels, bazaOsm, wspRoutePath);
 		}*/
