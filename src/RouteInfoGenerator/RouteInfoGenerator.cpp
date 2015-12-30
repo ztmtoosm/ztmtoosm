@@ -357,7 +357,7 @@ struct MainClass
 				cout<<"XI2"<<endl;
 			}
 			plik<<"]}";
-			plik.close();
+
 			noweRelacje.push_back(wariantOsmRelId);
 		}
 		cout<<"pppp"<<endl;
@@ -368,6 +368,8 @@ struct MainClass
 				plik<<",{\"track\":[],\"members\":[], \"id\":"<<stareRelacje[i]<<",\"tags\":[], \"todelete\":true}";
 			}
 		}
+
+
 		cout<<"qqqqqqq"<<endl;
 		map <string, string> tags;
 		tags["type"] = "route_master";

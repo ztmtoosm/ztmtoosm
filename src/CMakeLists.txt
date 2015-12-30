@@ -1,7 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 project (ztmtoosm CXX)    
-set(CMAKE_CXX_FLAGS "-wall")
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -std=c++11")
 
 include_directories (xml RareToThickRoutes rapidjson stringspecial osmbase HTMLGenerator RouteInfoGenerator ${CMAKE_BINARY_DIR})
 
