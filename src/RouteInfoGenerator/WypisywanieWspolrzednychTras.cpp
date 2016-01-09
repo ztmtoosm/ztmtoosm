@@ -96,9 +96,8 @@ void WypisywanieWspolrzednychTras::easyNodes(long long rel, osm_base* base, fstr
 			{
 				double lat=base->nodes[bfstmp[j]].lat;
 				double lon=base->nodes[bfstmp[j]].lon;
-				plikOut<<ref1[i]<<"	"<<ref1[i+1]<<"	"<<j+1<<"	"<<lat<<"	"<<lon<<endl;
+				plikOut<<ref1[i]<<"\t"<<ref1[i+1]<<"\t"<<j+1<<"\t"<<lat<<"\t"<<lon<<"\t"<<bfstmp[j]<<endl;
 			}
-
 		}
 	}
 }

@@ -715,10 +715,7 @@ struct MainClass
 
 */
 
-
-		/*
-		 *
-		 * 		vector <long long> rels;
+		vector <long long> rels;
 		for(auto& it1 : przeglStare.relacjeDlaLinii)
 		{
 			for(auto& it2 : it1.second.second)
@@ -726,14 +723,12 @@ struct MainClass
 				rels.push_back(it2);
 			}
 		}
-
-		 *
-		 * if(miasto=="Warszawa")
+		if(miasto=="Warszawa")
 		{
 
 			string wspRoutePath=pathHTML+"/Trasy"+miasto+".txt";
 			WypisywanieWspolrzednychTras(rels, bazaOsm, wspRoutePath);
-		}*/
+		}
 	}
 	~MainClass()
 	{
