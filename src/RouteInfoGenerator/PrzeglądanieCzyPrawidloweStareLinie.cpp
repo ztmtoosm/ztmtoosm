@@ -205,7 +205,6 @@ void PrzegladanieCzyPrawidloweStareLinie::zbadajLinie(string linia, osm_base* ba
 		}
 		it1++;
 	}
-  <<"a2.7"<<endl;
 	while(it2!=ztm_list.end())
 	{
 		if(osm_list.find(*it2)==osm_list.end())
@@ -223,7 +222,6 @@ void PrzegladanieCzyPrawidloweStareLinie::zbadajLinie(string linia, osm_base* ba
 	{
 		nieprawidlowe.insert(linia);
 	}
-  <<"L "<<linia<<endl;
 }
 PrzegladanieCzyPrawidloweStareLinie::PrzegladanieCzyPrawidloweStareLinie(osm_base* bazaOsm, ScheduleHandlerInternal* bazaZtm, set <string> doPrzerobienia, long long rootRelW, string ref_keyW)
 {
