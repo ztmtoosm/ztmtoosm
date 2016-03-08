@@ -70,8 +70,8 @@ int main(int argc, char** argv)
   }
 
   MyHand hnd(db);
-  //ScheduleReaderWarszawa reader(tmp1, &hnd);
-  //reader.run();
-   sqlite3_close(db);
+  ScheduleReaderWarszawa reader(tmp1, &hnd);
+  reader.run();
+  sqlite3_close(db);
   return 0;
 }
