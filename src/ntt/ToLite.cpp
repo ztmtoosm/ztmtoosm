@@ -1,4 +1,6 @@
 #include "ScheduleReader/ScheduleReader.hpp"
+#include "ScheduleReader/ScheduleReaderSzczecin.hpp"
+#include "ScheduleReader/ScheduleReaderGdansk.hpp"
 #include "sqlite3.h"
 using namespace std;
 
@@ -28,8 +30,8 @@ void MyHand::nowa_linia(string nazwa, vector <vector <string> > trasy)
       char *zErrMsg = 0;
       int rc;
       stringstream sql;
-      sql << "INSERT INTO OPERATOR_ROUTES(ROUTE_ID, DIRECTION, STOP_ON_DIRECTION, STOP_ID) VALUES('";
-      cout<<nazwa<<"', "<<i+1<<", "<<j+1<<", '"<<trasy[i][j]<<"');";
+      sql << "INSERT INTO OPERATOR_ROUTES(ROUTE_ID, DIRECTION, STOP_ON_DIRECTION_NUMBER, STOP_ID) VALUES('";
+      sql << nazwa << "', " << i+1 << ", " << j+1 << ", '" << trasy[i][j] << "');";
       rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
       if(rc != SQLITE_OK)
       {
@@ -43,8 +45,9 @@ void MyHand::nowa_linia(string nazwa, vector <vector <string> > trasy)
 
 int main(int argc, char** argv)
 {
-  string tmp1 = argv[1];
-  string tmp2 = argv[2];
+	string tmp0 = argv[1];
+  string tmp1 = argv[2];
+  string tmp2 = argv[3];
 
   sqlite3 *db;
   char *zErrMsg = 0;
@@ -70,8 +73,21 @@ int main(int argc, char** argv)
   }
 
   MyHand hnd(db);
+if(tmp0 == "Warszawa")
+{
   ScheduleReaderWarszawa reader(tmp1, &hnd);
   reader.run();
+}
+if(tmp0 == "Gdańsk")
+{
+  ScheduleReaderGdansk reader(tmp1, &hnd);
+  reader.run();
+}
+if(tmp0 == "Szczecin")
+{
+  ScheduleReaderSzczecin reader(tmp1, &hnd);
+  reader.run();
+}
   sqlite3_close(db);
   return 0;
 }
