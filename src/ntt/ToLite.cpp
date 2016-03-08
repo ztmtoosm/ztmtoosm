@@ -1,9 +1,21 @@
 #include "ScheduleReader/ScheduleReader.hpp"
+#include "sqlite3.h"
 using namespace std;
+
+static int callback(void *NotUsed, int argc, char **argv, char **azColName){
+   /*int i;
+   for(i=0; i<argc; i++){
+      printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+   }
+   printf("\n");*/
+   return 0;
+}
 
 class MyHand : public ScheduleHandler
 {
+  sqlite3* db;
   public:
+  MyHand(sqlite3* db2) : db(db2) {}
   void nowa_linia(string nazwa, vector <vector <string> > trasy);
 };
 
@@ -13,15 +25,53 @@ void MyHand::nowa_linia(string nazwa, vector <vector <string> > trasy)
   {
     for(int j=0; j<trasy[i].size(); j++)
     {
-      cout<<nazwa<<" "<<i+1<<" "<<j+1<<" "<<trasy[i][j]<<endl;
+      char *zErrMsg = 0;
+      int rc;
+      stringstream sql;
+      sql << "INSERT INTO OPERATOR_ROUTES(ROUTE_ID, DIRECTION, STOP_ON_DIRECTION, STOP_ID) VALUES('";
+      cout<<nazwa<<"', "<<i+1<<", "<<j+1<<", '"<<trasy[i][j]<<"');";
+      rc = sqlite3_exec(db, sql.str().c_str(), callback, 0, &zErrMsg);
+      if(rc != SQLITE_OK)
+      {
+        //cerr << "SQL error: " << zErrMsg << endl;
+        sqlite3_free(zErrMsg);
+        exit(3);
+      }
     }
   }
 }
 
 int main(int argc, char** argv)
 {
-  MyHand hnd;
   string tmp1 = argv[1];
-  ScheduleReaderWarszawa reader(tmp1, &hnd);
-  reader.run();
+  string tmp2 = argv[2];
+
+  sqlite3 *db;
+  char *zErrMsg = 0;
+  int rc;
+  rc = sqlite3_open(tmp2.c_str(), &db);
+
+  if(rc)
+  {
+    return 1;
+  }
+
+  string sql = "CREATE TABLE IF NOT EXISTS OPERATOR_ROUTES("  \
+               "ROUTE_ID CHAR(20)," \
+               "DIRECTION INTEGER," \
+               "STOP_ON_DIRECTION_NUMBER INTEGER," \
+               "STOP_ID CHAR(10));";
+  rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+  if(rc != SQLITE_OK)
+  {
+    //cerr << "SQL error: " << zErrMsg << endl;
+    sqlite3_free(zErrMsg);
+    return 2;
+  }
+
+  MyHand hnd(db);
+  //ScheduleReaderWarszawa reader(tmp1, &hnd);
+  //reader.run();
+   sqlite3_close(db);
+  return 0;
 }
