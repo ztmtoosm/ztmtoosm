@@ -10,6 +10,7 @@
 #include "osm_base.hpp"
 #include "stringspecial.hpp"
 #include "ztmosmpor.hpp"
+#include "OsmStopData.hpp"
 using namespace std;
 pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long root, string linia);
 
