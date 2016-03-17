@@ -1,6 +1,8 @@
 add_library(sqlite3 sqlite3.c)
 add_executable (mgen ToLite.cpp)
 add_executable (osmlite OsmLite.cpp)
+add_executable (treelite TreeLite.cpp)
 target_link_libraries (sqlite3 pthread dl)
 target_link_libraries (mgen ScheduleReader sqlite3)
 target_link_libraries (osmlite OsmStopData sqlite3)
+target_link_libraries (treelite RouteInfoGenerator2 OsmStopData sqlite3)

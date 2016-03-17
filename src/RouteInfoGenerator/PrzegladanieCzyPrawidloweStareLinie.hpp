@@ -12,6 +12,8 @@
 #include "ztmosmpor.hpp"
 #include "OsmStopData.hpp"
 using namespace std;
+
+set <string> extract_ref(osm_base* baza, long long rel, string ref_key);
 pair <long long, vector <long long> > relacje_linia(osm_base* roo, long long root, string linia);
 
 set <string> linieDoUsuniecia(set <string>& istniejace, osm_base* roo, long long root);

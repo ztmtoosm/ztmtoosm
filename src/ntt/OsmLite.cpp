@@ -4,29 +4,29 @@
 #include "RouteInfoGenerator/OsmStopData.hpp"
 int main(int argc, char** argv)
 {
-  string sciezka = argv[1];
+  string OsmFile = argv[1];
 
-  osm_base osmData(sciezka);
+  osm_base osmData(OsmFile);
   map<string, OsmStopData> data = loadOsmStopData(&osmData);
   
 cout<<data.size()<<endl;
 
-  string tmp2 = argv[2];
+  string databaseFile = argv[2];
   sqlite3 *db;
   int rc;
-  rc = sqlite3_open(tmp2.c_str(), &db);
+  rc = sqlite3_open(databaseFile.c_str(), &db);
   if(rc)
   {
     return 1;
   }
 
-  string sql = "CREATE TABLE IF NOT EXISTS OSM_STOPS("  \
+  string sql = "BEGIN TRANSACTION; CREATE TABLE IF NOT EXISTS OSM_STOPS("  \
                "NORMAL_STOP BIGINT," \
                "STOP_POSITION BIGINT," \
-               "REF_ID CHAR(10) PRIMARY KEY," \
+               "REF_ID CHAR(10) PRIMARY KEY NOT NULL," \
                "NORMAL_STOP_NAME CHAR(255)," \
                "STOP_POSITION_NAME CHAR(255)" \
-               ");";
+               "); DELETE FROM OSM_STOPS;";
       sqlite_execute_easy(db, sql, 2);
       cout<<"OK1"<<endl;
         for(auto& it1 : data)
@@ -42,6 +42,6 @@ cout<<data.size()<<endl;
       sqlite_execute_easy(db, zSQL2, 3);
   	cout<<"OK2"<<" "<<it1.first<<endl;
 	}
-  
+  sqlite_execute_easy(db, "END TRANSACTION;", 5);
   sqlite3_close(db);
 }
