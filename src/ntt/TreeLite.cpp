@@ -80,15 +80,15 @@ int main(int argc, char** argv)
   }
 
   string sql = "BEGIN; CREATE TABLE IF NOT EXISTS OSM_TREE("  \
-               "RELATION_ID BIGINT," \
+               "RELATION_ID BIGINT PRIMARY KEY NOT NULL," \
                "RELATION_PARENT BIGINT," \
                "NAME CHAR(255)," \
                "TYPE CHAR(1)," \
-               "ROUTE_ID CHAR(20)); DELETE FROM OSM_TREE;";
+               "ROUTE_ID CHAR(20), FOREIGN KEY(RELATION_PARENT) REFERENCES OSM_TREE(RELATION_ID)); DELETE FROM OSM_TREE;";
       sqlite_execute_easy(db, sql, 2);
   sql = "CREATE TABLE IF NOT EXISTS OSM_RELATIONS("  \
-               "RELATION_ID BIGINT," \
-               "REF_ID CHAR(10)); DELETE FROM OSM_RELATIONS;";
+               "RELATION_ID BIGINT NOT NULL," \
+               "REF_ID CHAR(10) NOT NULL, PRIMARY KEY(RELATION_ID, REF_ID)); DELETE FROM OSM_RELATIONS;";
       sqlite_execute_easy(db, sql, 2);
   
 	browseTree(&osmData, db, 0, atoi(argv[3]));
