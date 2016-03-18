@@ -60,7 +60,7 @@ void create_tables_if_not_exist(sqlite3* db)
   sqlite_execute_easy(db, sql, 2);
 }
 
-string if0(int val)
+string if0(long long val)
 {
   if(val == 0)
     return "NULL";
