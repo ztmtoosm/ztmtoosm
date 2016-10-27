@@ -46,7 +46,7 @@ string ScheduleReaderWarszawa::doprzecinka(stringstream& ttt)
 	while(ok && ttt>>lol)
 	{
 		if(licznik>0)
-			wynik+="_";
+			wynik+=" ";
 		wynik+=lol;
 		licznik++;
 		if(lol.length()>0)
@@ -377,6 +377,12 @@ void ScheduleReaderWarszawa::readpr(string nazwa, fstream& plik, string akt, str
 			liczbaJakosc+=(int)wprowadzone;
 			przystanek foo;
 			foo.miejscowosc=aktmiasto;
+			if(lll.length()==6)
+			{
+				akt+=" ";
+				akt+=lll[4];
+				akt+=lll[5];
+			}
 			foo.name=akt;
 			foo.id=lll;
 			foo.lon=x1;
