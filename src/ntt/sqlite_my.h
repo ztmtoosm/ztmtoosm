@@ -6,6 +6,8 @@ void sqlite_execute_easy(sqlite3* db, string pol, int errorcode);
 void create_tables_if_not_exist(sqlite3* db);
 void create_tables_if_not_exist_schedule(sqlite3* db);
 string if0(long long val);
+
+const string OPERATOR_ROUTES2;
 /*
 class sqlite_insert
 {
