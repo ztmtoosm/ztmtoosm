@@ -98,7 +98,7 @@ int main(int argc, char** argv)
   string cityName = argv[1];
   string operatorFile = argv[2];
 
-  PGconn *conn = PQconnectdb("user=marcin dbname=nexty");
+  PGconn *conn = PQconnectdb("host=localhost user=marcin dbname=nexty");
 
   if (PQstatus(conn) == CONNECTION_BAD) {
     fprintf(stderr, "Connection to database failed: %s\n",
