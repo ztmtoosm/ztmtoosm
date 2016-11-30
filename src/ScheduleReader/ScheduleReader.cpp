@@ -377,13 +377,14 @@ void ScheduleReaderWarszawa::readpr(string nazwa, fstream& plik, string akt, str
 			liczbaJakosc+=(int)wprowadzone;
 			przystanek foo;
 			foo.miejscowosc=aktmiasto;
+			string akt2 = akt;
 			if(lll.length()==6)
 			{
-				akt+=" ";
-				akt+=lll[4];
-				akt+=lll[5];
+				akt2+=" ";
+				akt2+=lll[4];
+				akt2+=lll[5];
 			}
-			foo.name=akt;
+			foo.name=akt2;
 			foo.id=lll;
 			foo.lon=x1;
 			foo.lat=y1;

@@ -1,7 +1,3 @@
 add_library (OsmStopData OsmStopData.cpp)
 target_link_libraries(OsmStopData osmbase)
 add_library (RouteInfoGenerator2 HTMLHeadersRouteInfo.cpp PrzeglądanieCzyPrawidloweStareLinie.cpp RouteCohesion.cpp ztmosmpor.cpp WlasciwosciLokalne.hpp WypisywanieWspolrzednychTras.hpp WypisywanieWspolrzednychTras.cpp)
-add_executable (RouteInfoGeneratorPrim RouteInfoGenerator.cpp)
-# add_executable (Generator2 generator2.cpp)
-target_link_libraries (RouteInfoGeneratorPrim RouteInfoGenerator2 HTMLGenerator stringspecial osmbase ScheduleReader OsmStopData)
-# target_link_libraries (Generator2 RouteInfoGenerator2 HTMLGenerator stringspecial osmbase ScheduleReader)

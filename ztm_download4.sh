@@ -37,21 +37,21 @@ mv $1"/data/"ztm_download1.txt $1"/data/"warszawa.txt
 wget "http://www.ztm.waw.pl/rss.php?l=1&IDRss=3" -O $1"/www/rss.xml"
 
 # SZCZECIN
-
-rm -r $1"/data/szczecin"
-wget http://zditm.szczecin.pl/rozklady/GTFS/latest/google_gtfs.zip -O $1"/data/szczecin.zip"
-unzip $1"/data/szczecin.zip" -d $1"/data/szczecin"
-
-chmod -R 777 $1"/data"
+#
+#rm -r $1"/data/szczecin"
+#wget http://zditm.szczecin.pl/rozklady/GTFS/latest/google_gtfs.zip -O $1"/data/szczecin.zip"
+#unzip $1"/data/szczecin.zip" -d $1"/data/szczecin"
+#
+#chmod -R 777 $1"/data"
 
 #GDAŃSK
 
-rm -r $1"/data/gdansk2"
-rm -r $1"/data/gdansk"
-wget http://www.ztm.gda.pl/rozklady/pobierz_rozklady.php -O $1"/data/gdansk.zip"
-unzip $1"/data/gdansk.zip" -d $1"/data/gdansk2"
-mkdir $1"/data/gdansk"
-cp -r $1"/data/gdansk2"/*/* $1"/data/gdansk"
-rm -r $1/"data/gdansk"/0F*
-$1"/osm_download.sh" $1
+#rm -r $1"/data/gdansk2"
+#rm -r $1"/data/gdansk"
+#wget http://www.ztm.gda.pl/rozklady/pobierz_rozklady.php -O $1"/data/gdansk.zip"
+#unzip $1"/data/gdansk.zip" -d $1"/data/gdansk2"
+#mkdir $1"/data/gdansk"
+#cp -r $1"/data/gdansk2"/*/* $1"/data/gdansk"
+#rm -r $1/"data/gdansk"/0F*
+#$1"/osm_download.sh" $1
 # mysql -u root --local-infile < $1"/ztm_download/"ztm_download3.txt
