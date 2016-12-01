@@ -34,7 +34,7 @@ mv $1"/data/"$today2 $1"/data/ztm_download1.txt"
 iconv -f windows-1250 -t utf-8 $1"/data/"ztm_download1.txt > $1"/data/"ztm_downloade.txt
 mv $1"/data/"ztm_downloade.txt $1"/data/"ztm_download1.txt
 mv $1"/data/"ztm_download1.txt $1"/data/"warszawa.txt
-wget "http://www.ztm.waw.pl/rss.php?l=1&IDRss=3" -O $1"/www/rss.xml"
+#wget "http://www.ztm.waw.pl/rss.php?l=1&IDRss=3" -O $1"/www/rss.xml"
 
 # SZCZECIN
 #
