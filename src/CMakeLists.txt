@@ -11,7 +11,6 @@ configure_file(${CMAKE_SOURCE_DIR}/conf.h.in ${CMAKE_BINARY_DIR}/conf.h)
 
 add_subdirectory (stringspecial)
 add_subdirectory (osmbase)
-add_subdirectory (HTMLGenerator)
 add_subdirectory (RouteInfoGenerator)
 add_subdirectory (ScheduleReader)
 # add_subdirectory (testparse)

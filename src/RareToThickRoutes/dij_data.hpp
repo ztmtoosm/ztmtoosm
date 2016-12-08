@@ -7,13 +7,13 @@
 #include <sstream>
 #include "dijkstra.hpp"
 using namespace std;
-
+/*
 struct way_part_data
 {
 	long long way_id;
 	long long from;
 	long long to;
-};
+};*/
 struct dij_data
 {
 	bool ok;
@@ -22,5 +22,4 @@ struct dij_data
 	map<long long, set<long long> > split_data;
 	dij_data(vector <long long> stop_nodes, dijkstra* dij, int przelicznikId);
 };
-
 #endif

@@ -11,7 +11,6 @@ OsmStopData::OsmStopData()
 map<string, OsmStopData> loadOsmStopData(osm_base* baza, string ref_key)
 {
 	map <string, OsmStopData> wynik;
-	cout<<"ŁADOWANIE..."<<endl;
 	map<long long, node>::iterator it1=baza->nodes.begin();
 	while(it1!=baza->nodes.end())
 	{
