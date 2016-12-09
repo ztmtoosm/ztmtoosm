@@ -1,12 +1,11 @@
 #include "osmbase/osm_base.hpp"
 #include "RouteInfoGenerator/PrzegladanieCzyPrawidloweStareLinie.hpp"
 #include "RouteInfoGenerator/RouteCohesion.hpp"
+#include "RouteInfoGenerator/WypisywanieWspolrzednychTras.hpp"
 #include "sqlite3.h"
 #include "sqlite_my.h"
 #include <libpq-fe.h>
 #include <PgSql.h>
-
-
 
 vector <pair<long long, string> > extract_ref2(osm_base* baza, long long rel, string ref_key)
 {
@@ -62,6 +61,7 @@ vector <pair<long long, string> > extract_ref2(osm_base* baza, long long rel, st
 	}
 	return wynik;
 }
+vector <long long> rels;
 
 void addExtractedRef(osm_base* base, PGconn* db, long long current)
 {
@@ -90,6 +90,7 @@ void browseTree (osm_base* base, PGconn* db, long long parent, long long current
   string cohesionType = "X";
   if(tags["type"] == "route")
   {
+    rels.push_back(current);
     if(!relationCohesion(current, base))
       cohesionType = "N";
     else
@@ -186,5 +187,6 @@ int main(int argc, char** argv)
     prep.doIt(conn);
   }
   browseTree(&osmData, conn, 0, atoi(argv[3]));
+  //WypisywanieWspolrzednychTras(rels, &osmData, "foo.xxx");
   //StartStopPreparator().add("COMMIT").doIt(conn, "");
 }

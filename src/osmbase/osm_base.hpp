@@ -1,5 +1,10 @@
 #ifndef OSMAPI
 #define OSMAPI
+
+
+/* Biblioteka do parsowania plików .osm i innych */
+
+
 #include <vector>
 #include <cstring>
 #include <map>
@@ -155,7 +160,6 @@ struct osm_base
 				}
 			}
 		}
-		cout<<"ok partit"<<endl;
 		if(partial.size()>1)
 		{
 			if(id>0)
@@ -412,7 +416,6 @@ struct osm_base
 		plik<<" id=\""<<teraz.id<<"\"";
 		if(teraz.todelete==true)
 		{
-			cout<<"TODELETE TODELETE TODELETE"<<" "<<teraz.id<<endl;
 				plik<<" action=\"delete\"";
 		}
 		else

@@ -36,7 +36,7 @@ vector <long long> WypisywanieWspolrzednychTras::bfs(long long start, long long 
 	return wynik;
 }
 
-void WypisywanieWspolrzednychTras::easyNodes(long long rel, osm_base* base, fstream& plikOut)
+void WypisywanieWspolrzednychTras::easyNodes(long long rel, osm_base* base, WypisywanieWspolrzednychTrasHandler* handler)
 {
 	relation akt_rel = base->relations[rel];
 	map <long long, vector <long long> > prepareBfs;
@@ -94,9 +94,14 @@ void WypisywanieWspolrzednychTras::easyNodes(long long rel, osm_base* base, fstr
 			dodane.insert(pair<string,string>(ref1[i], ref1[i+1]));
 			for(int j=0; j<bfstmp.size(); j++)
 			{
-				double lat=base->nodes[bfstmp[j]].lat;
-				double lon=base->nodes[bfstmp[j]].lon;
-				plikOut<<ref1[i]<<"\t"<<ref1[i+1]<<"\t"<<j+1<<"\t"<<lat<<"\t"<<lon<<"\t"<<bfstmp[j]<<endl;
+                WspolrzedneTrasData data;
+				data.lat=base->nodes[bfstmp[j]].lat;
+				data.lon=base->nodes[bfstmp[j]].lon;
+                data.ordinalId = j+1;
+                data.id = bfstmp[j];
+                data.refStart = ref1[i];
+                data.refEnd = ref1[i+1];
+                handler->onNewData(data);
 			}
 		}
 	}
