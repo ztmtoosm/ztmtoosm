@@ -6,6 +6,7 @@
        $function$;
 
 
+DROP MATERIALIZED VIEW trip_paritition;
 CREATE MATERIALIZED VIEW trip_paritition AS
 SELECT
     g.trip AS trip,
@@ -15,7 +16,6 @@ SELECT
             schedule.line,
             schedule.trip
            FROM schedule
-          WHERE schedule.day_type = 'DP'::text
           GROUP BY schedule.trip, schedule.line) g
   ORDER BY g.line;
 

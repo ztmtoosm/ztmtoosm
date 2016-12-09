@@ -6,15 +6,76 @@
 #include <libpq-fe.h>
 #include <PgSql.h>
 
+
+
+vector <pair<long long, string> > extract_ref2(osm_base* baza, long long rel, string ref_key)
+{
+	vector <pair<long long, string> > wynik;
+	relation akt=baza->relations[rel];
+	int s1=akt.members.size();
+	for(int i=0; i<s1; i++)
+	{
+		if(akt.members[i].member_type==NODE)
+		{
+			long long teraz_id=akt.members[i].member_id;
+			if(baza->nodes.find(teraz_id)!=baza->nodes.end())
+			{
+				node teraz=baza->nodes[teraz_id];
+				auto tags=teraz.getTags();
+				if(tags["highway"]=="bus_stop" || tags["railway"]=="tram_stop" || tags["public_transport"]=="stop_position")
+				{
+					if(tags.find(ref_key)!=tags.end())
+					{
+						wynik.push_back(make_pair(teraz_id, "N"));
+					}
+				}
+			}
+		}
+		if(akt.members[i].member_type==WAY)
+		{
+			long long teraz_id=akt.members[i].member_id;
+			if(baza->ways.find(teraz_id)!=baza->ways.end())
+			{
+				way teraz=baza->ways[teraz_id];
+				auto tags = teraz.getTags();
+				if(tags["highway"]=="platform" || tags["railway"]=="platform")
+				{
+					if(tags.find(ref_key)!=tags.end())
+					{
+						wynik.push_back(make_pair(teraz_id, "W"));
+					}
+				}
+			}
+			if(baza->relations.find(teraz_id)!=baza->relations.end())
+			{
+				relation teraz=baza->relations[teraz_id];
+				auto tags = teraz.getTags();
+				if(tags["highway"]=="platform" || tags["railway"]=="platform")
+				{
+					if(tags.find(ref_key)!=tags.end())
+					{
+						wynik.push_back(make_pair(teraz_id, "R"));
+					}
+				}
+			}
+		}
+	}
+	return wynik;
+}
+
 void addExtractedRef(osm_base* base, PGconn* db, long long current)
 {
-  set<string> list = extract_ref(base, current, "ref");
-  for(string it1 : list)
+  vector<pair<long long, string> > list = extract_ref2(base, current, "ref");
+  int i = 0;
+  for(pair <long long, string> it1 : list)
   {
     InsertionPreparator prep("OSM_RELATIONS");
     prep.add("RELATION_ID", current);
-    prep.add("REF_ID", it1);
+    prep.add("OBJECT_ID", it1.first);
+    prep.add("OBJECT_TYPE", it1.second);
+    prep.add("ORDINAL_ID", i);
     prep.doIt(db);
+    i++;
   }
 }
 
@@ -103,10 +164,14 @@ int main(int argc, char** argv)
       .add("FOREIGN KEY(RELATION_PARENT) REFERENCES OSM_TREE(RELATION_ID)");
   StartStopPreparator().add("CREATE TABLE IF NOT EXISTS OSM_TREE").add(prep4, ",", "(").doIt(conn, "");
   StartStopPreparator prep3;
-  prep3.add("RELATION_ID BIGINT NOT NULL")
-      .add("REF_ID VARCHAR(10) NOT NULL, PRIMARY KEY(RELATION_ID, REF_ID)");
-  StartStopPreparator().add("CREATE TABLE IF NOT EXISTS OSM_RELATIONS").add(prep3, ",", "(").doIt(conn, "");
 
+  prep3.add("RELATION_ID BIGINT NOT NULL")
+      .add("OBJECT_ID BIGINT NOT NULL")
+      .add("OBJECT_TYPE VARCHAR(2) NOT NULL")
+      .add("ORDINAL_ID INTEGER");
+  StartStopPreparator().add("CREATE TABLE IF NOT EXISTS OSM_RELATIONS").add(prep3, ",", "(").doIt(conn, "");
+  StartStopPreparator().add("CREATE INDEX ON OSM_RELATIONS(RELATION_ID, ORDINAL_ID)").doIt(conn, "");
+  StartStopPreparator().add("CREATE INDEX ON OSM_RELATIONS(OBJECT_ID, OBJECT_TYPE)").doIt(conn, "");
   //StartStopPreparator().add("BEGIN").doIt(conn, "");
 
   for(auto& it1 : data)

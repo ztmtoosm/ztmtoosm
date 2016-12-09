@@ -74,6 +74,7 @@ void MyHand::nowy_kurs(kurs p)
     preparator.add("STOP_ID", k.stop_id);
     preparator.add("DIRECTION", lat.stop_id);
     preparator.doIt(db);
+    i++;
   }
   kk++;
 }
@@ -135,10 +136,13 @@ int main(int argc, char** argv)
   prep4.add("STOP_ID varchar(6)");
   prep4.add("DIRECTION varchar(6)");
   StartStopPreparator().add("CREATE TABLE IF NOT EXISTS SCHEDULE").add(prep4, ",", "(").doIt(conn, "");
-
+  StartStopPreparator().add("CREATE INDEX ON SCHEDULE(TRIP, NEXT_STOP_TRIP)").doIt(conn, "");
+    StartStopPreparator().add("CREATE INDEX ON SCHEDULE(LINE)").doIt(conn, "");
+      StartStopPreparator().add("CREATE INDEX ON SCHEDULE(STOP_ID, TIME_SECONDS)").doIt(conn, "");
   StartStopPreparator prep5;
   prep5.add("DATE varchar(20)");
   prep5.add("DAY_TYPE varchar(3)");
+  prep5.add("UNIQUE(DATE, DAY_TYPE)");
   StartStopPreparator().add("CREATE TABLE IF NOT EXISTS OPERATOR_CALENDAR").add(prep5, ",", "(").doIt(conn, "");
 
   MyHand hnd(conn);
