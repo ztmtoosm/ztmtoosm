@@ -11,6 +11,6 @@ cd src && make && cd ../
 #createdb nexty
 #$1/bin/mgen2 Warszawa $1/data/warszawa.txt
 #$1/bin/treelite $1/data/warszawa.osm  xx 3651336
-$1/bin/operatorpg Warszawa $1/data/warszawa.txt
+#$1/bin/operatorpg Warszawa $1/data/warszawa.txt
 $1/bin/osmpg $1/data/warszawa.osm xx 3651336
 echo $?

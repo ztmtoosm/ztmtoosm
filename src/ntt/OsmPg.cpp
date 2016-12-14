@@ -7,6 +7,26 @@
 #include <libpq-fe.h>
 #include <PgSql.h>
 
+class WWTHandler : public WypisywanieWspolrzednychTrasHandler
+{
+public:
+    PGconn* databaseConn;
+    WWTHandler(PGconn* db) {
+        databaseConn = db;
+    }    
+    void onNewData(WspolrzedneTrasData data) {
+        cerr << "Insertion preparator WWTHandler " << endl;
+        InsertionPreparator prep("OSM_PATHS");
+        prep.add("REF_BEGIN", data.refStart);
+        prep.add("REF_END", data.refEnd);
+        prep.add("ORDINAL_ID", data.ordinalId);
+        prep.add("NODE_ID", data.id);
+        prep.add("LON", data.lon);
+        prep.add("LAT", data.lat);
+        prep.doIt(databaseConn);
+    }
+};
+
 vector <pair<long long, string> > extract_ref2(osm_base* baza, long long rel, string ref_key)
 {
 	vector <pair<long long, string> > wynik;
@@ -174,7 +194,6 @@ int main(int argc, char** argv)
   StartStopPreparator().add("CREATE INDEX ON OSM_RELATIONS(RELATION_ID, ORDINAL_ID)").doIt(conn, "");
   StartStopPreparator().add("CREATE INDEX ON OSM_RELATIONS(OBJECT_ID, OBJECT_TYPE)").doIt(conn, "");
   //StartStopPreparator().add("BEGIN").doIt(conn, "");
-
   for(auto& it1 : data)
   {
     string aktName = it1.first;
@@ -187,6 +206,19 @@ int main(int argc, char** argv)
     prep.doIt(conn);
   }
   browseTree(&osmData, conn, 0, atoi(argv[3]));
-  //WypisywanieWspolrzednychTras(rels, &osmData, "foo.xxx");
+  StartStopPreparator prep9;
+
+  prep9.add("LAT DOUBLE PRECISION")
+      .add("LON DOUBLE PRECISION")
+      .add("REF_BEGIN VARCHAR(20)")
+      .add("REF_END VARCHAR(20)")
+      .add("ORDINAL_ID INTEGER NOT NULL")
+      .add("NODE_ID BIGINT NOT NULL"); 
+  StartStopPreparator().add("CREATE TABLE IF NOT EXISTS OSM_PATHS").add(prep9, ",", "(").doIt(conn, "");
+  StartStopPreparator().add("CREATE INDEX ON OSM_PATHS(REF_BEGIN, REF_END, ORDINAL_ID)").doIt(conn, "");
+  StartStopPreparator().add("CREATE INDEX ON OSM_PATHS(NODE_ID)").doIt(conn, "");
+  cerr << "all ok" << endl;
+  WWTHandler hnd(conn);
+  WypisywanieWspolrzednychTras(rels, &osmData, &hnd);
   //StartStopPreparator().add("COMMIT").doIt(conn, "");
 }

@@ -54,6 +54,7 @@ public:
     cerr << str << endl;
     PGresult *res = PQexec(connection, str.c_str());
     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        cerr << PQresultErrorMessage(res) << endl;
     }
   }
 };
