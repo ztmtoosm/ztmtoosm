@@ -205,7 +205,7 @@ int main(int argc, char** argv)
     (aktData.name.length() > 0 ? prep.add("STOP_POSITION_NAME", aktData.name) : prep.addNull("STOP_POSITION_NAME"));
     prep.doIt(conn);
   }
-  browseTree(&osmData, conn, 0, atoi(argv[3]));
+  browseTree(&osmData, conn, 0, atoi(argv[2]));
   StartStopPreparator prep9;
 
   prep9.add("LAT DOUBLE PRECISION")
